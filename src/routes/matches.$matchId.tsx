@@ -7,7 +7,7 @@ import { StatusBadge } from "@/components/ds/status-badge";
 import { TeamCrest } from "@/components/ds/team-crest";
 import { ComingSoon } from "@/components/ds/coming-soon";
 import { EmptyState } from "@/components/ds/states";
-import { getCompetition, getOrganization, getTeam } from "@/data/repository";
+import { getCompetition, getMatch, getOrganization, getTeam } from "@/data/repository";
 import type { MatchEvent } from "@/data/types";
 import { fmtDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -15,7 +15,8 @@ import { pageHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/matches/$matchId")({
   loader: ({ params }) => {
-    const match = getMatchOrThrow(params.matchId);
+    const match = getMatch(params.matchId);
+    if (!match) throw notFound();
     return { match };
   },
   head: ({ loaderData }) => {
@@ -26,13 +27,6 @@ export const Route = createFileRoute("/matches/$matchId")({
   notFoundComponent: () => <EmptyState title="Match not found" action={<Button asChild variant="outline"><Link to="/matches">Back to matches</Link></Button>} />,
   component: MatchDetail,
 });
-
-import { getMatch } from "@/data/repository";
-function getMatchOrThrow(id: string) {
-  const m = getMatch(id);
-  if (!m) throw notFound();
-  return m;
-}
 
 function EventIcon({ e }: { e: MatchEvent }) {
   const base = "grid size-8 place-items-center rounded-full ring-4 ring-card text-xs font-bold";

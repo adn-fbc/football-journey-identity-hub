@@ -13,6 +13,10 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as FootballIdRouteImport } from './routes/football-id'
 import { Route as ChildrenIndexRouteImport } from './routes/children.index'
 import { Route as ChildrenPlayerIdRouteImport } from './routes/children.$playerId'
+import { Route as CompetitionsIndexRouteImport } from './routes/competitions.index'
+import { Route as CompetitionsCompetitionIdRouteImport } from './routes/competitions.$competitionId'
+import { Route as MatchesIndexRouteImport } from './routes/matches.index'
+import { Route as MatchesMatchIdRouteImport } from './routes/matches.$matchId'
 import { Route as OrganizationsIndexRouteImport } from './routes/organizations.index'
 import { Route as OrganizationsOrgIdRouteImport } from './routes/organizations.$orgId'
 import { Route as PlayersIndexRouteImport } from './routes/players.index'
@@ -38,6 +42,27 @@ const ChildrenIndexRoute = ChildrenIndexRouteImport.update({
 const ChildrenPlayerIdRoute = ChildrenPlayerIdRouteImport.update({
   id: '/children/$playerId',
   path: '/children/$playerId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompetitionsIndexRoute = CompetitionsIndexRouteImport.update({
+  id: '/competitions/',
+  path: '/competitions/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompetitionsCompetitionIdRoute =
+  CompetitionsCompetitionIdRouteImport.update({
+    id: '/competitions/$competitionId',
+    path: '/competitions/$competitionId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const MatchesIndexRoute = MatchesIndexRouteImport.update({
+  id: '/matches/',
+  path: '/matches/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MatchesMatchIdRoute = MatchesMatchIdRouteImport.update({
+  id: '/matches/$matchId',
+  path: '/matches/$matchId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OrganizationsIndexRoute = OrganizationsIndexRouteImport.update({
@@ -75,10 +100,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/football-id': typeof FootballIdRoute
   '/children/$playerId': typeof ChildrenPlayerIdRoute
+  '/competitions/$competitionId': typeof CompetitionsCompetitionIdRoute
+  '/matches/$matchId': typeof MatchesMatchIdRoute
   '/organizations/$orgId': typeof OrganizationsOrgIdRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
   '/teams/$teamId': typeof TeamsTeamIdRoute
   '/children/': typeof ChildrenIndexRoute
+  '/competitions/': typeof CompetitionsIndexRoute
+  '/matches/': typeof MatchesIndexRoute
   '/organizations/': typeof OrganizationsIndexRoute
   '/players/': typeof PlayersIndexRoute
   '/teams/': typeof TeamsIndexRoute
@@ -87,10 +116,14 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/football-id': typeof FootballIdRoute
   '/children/$playerId': typeof ChildrenPlayerIdRoute
+  '/competitions/$competitionId': typeof CompetitionsCompetitionIdRoute
+  '/matches/$matchId': typeof MatchesMatchIdRoute
   '/organizations/$orgId': typeof OrganizationsOrgIdRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
   '/teams/$teamId': typeof TeamsTeamIdRoute
   '/children': typeof ChildrenIndexRoute
+  '/competitions': typeof CompetitionsIndexRoute
+  '/matches': typeof MatchesIndexRoute
   '/organizations': typeof OrganizationsIndexRoute
   '/players': typeof PlayersIndexRoute
   '/teams': typeof TeamsIndexRoute
@@ -100,10 +133,14 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/football-id': typeof FootballIdRoute
   '/children/$playerId': typeof ChildrenPlayerIdRoute
+  '/competitions/$competitionId': typeof CompetitionsCompetitionIdRoute
+  '/matches/$matchId': typeof MatchesMatchIdRoute
   '/organizations/$orgId': typeof OrganizationsOrgIdRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
   '/teams/$teamId': typeof TeamsTeamIdRoute
   '/children/': typeof ChildrenIndexRoute
+  '/competitions/': typeof CompetitionsIndexRoute
+  '/matches/': typeof MatchesIndexRoute
   '/organizations/': typeof OrganizationsIndexRoute
   '/players/': typeof PlayersIndexRoute
   '/teams/': typeof TeamsIndexRoute
@@ -114,10 +151,14 @@ export interface FileRouteTypes {
     | '/'
     | '/football-id'
     | '/children/$playerId'
+    | '/competitions/$competitionId'
+    | '/matches/$matchId'
     | '/organizations/$orgId'
     | '/players/$playerId'
     | '/teams/$teamId'
     | '/children/'
+    | '/competitions/'
+    | '/matches/'
     | '/organizations/'
     | '/players/'
     | '/teams/'
@@ -126,10 +167,14 @@ export interface FileRouteTypes {
     | '/'
     | '/football-id'
     | '/children/$playerId'
+    | '/competitions/$competitionId'
+    | '/matches/$matchId'
     | '/organizations/$orgId'
     | '/players/$playerId'
     | '/teams/$teamId'
     | '/children'
+    | '/competitions'
+    | '/matches'
     | '/organizations'
     | '/players'
     | '/teams'
@@ -138,10 +183,14 @@ export interface FileRouteTypes {
     | '/'
     | '/football-id'
     | '/children/$playerId'
+    | '/competitions/$competitionId'
+    | '/matches/$matchId'
     | '/organizations/$orgId'
     | '/players/$playerId'
     | '/teams/$teamId'
     | '/children/'
+    | '/competitions/'
+    | '/matches/'
     | '/organizations/'
     | '/players/'
     | '/teams/'
@@ -151,10 +200,14 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   FootballIdRoute: typeof FootballIdRoute
   ChildrenPlayerIdRoute: typeof ChildrenPlayerIdRoute
+  CompetitionsCompetitionIdRoute: typeof CompetitionsCompetitionIdRoute
+  MatchesMatchIdRoute: typeof MatchesMatchIdRoute
   OrganizationsOrgIdRoute: typeof OrganizationsOrgIdRoute
   PlayersPlayerIdRoute: typeof PlayersPlayerIdRoute
   TeamsTeamIdRoute: typeof TeamsTeamIdRoute
   ChildrenIndexRoute: typeof ChildrenIndexRoute
+  CompetitionsIndexRoute: typeof CompetitionsIndexRoute
+  MatchesIndexRoute: typeof MatchesIndexRoute
   OrganizationsIndexRoute: typeof OrganizationsIndexRoute
   PlayersIndexRoute: typeof PlayersIndexRoute
   TeamsIndexRoute: typeof TeamsIndexRoute
@@ -188,6 +241,34 @@ declare module '@tanstack/react-router' {
       path: '/children/$playerId'
       fullPath: '/children/$playerId'
       preLoaderRoute: typeof ChildrenPlayerIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/competitions/': {
+      id: '/competitions/'
+      path: '/competitions'
+      fullPath: '/competitions/'
+      preLoaderRoute: typeof CompetitionsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/competitions/$competitionId': {
+      id: '/competitions/$competitionId'
+      path: '/competitions/$competitionId'
+      fullPath: '/competitions/$competitionId'
+      preLoaderRoute: typeof CompetitionsCompetitionIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/matches/': {
+      id: '/matches/'
+      path: '/matches'
+      fullPath: '/matches/'
+      preLoaderRoute: typeof MatchesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/matches/$matchId': {
+      id: '/matches/$matchId'
+      path: '/matches/$matchId'
+      fullPath: '/matches/$matchId'
+      preLoaderRoute: typeof MatchesMatchIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/organizations/': {
@@ -239,10 +320,14 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   FootballIdRoute: FootballIdRoute,
   ChildrenPlayerIdRoute: ChildrenPlayerIdRoute,
+  CompetitionsCompetitionIdRoute: CompetitionsCompetitionIdRoute,
+  MatchesMatchIdRoute: MatchesMatchIdRoute,
   OrganizationsOrgIdRoute: OrganizationsOrgIdRoute,
   PlayersPlayerIdRoute: PlayersPlayerIdRoute,
   TeamsTeamIdRoute: TeamsTeamIdRoute,
   ChildrenIndexRoute: ChildrenIndexRoute,
+  CompetitionsIndexRoute: CompetitionsIndexRoute,
+  MatchesIndexRoute: MatchesIndexRoute,
   OrganizationsIndexRoute: OrganizationsIndexRoute,
   PlayersIndexRoute: PlayersIndexRoute,
   TeamsIndexRoute: TeamsIndexRoute,
