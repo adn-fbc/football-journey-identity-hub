@@ -11,12 +11,16 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as FootballIdRouteImport } from './routes/football-id'
+import { Route as NotificationsRouteImport } from './routes/notifications'
+import { Route as ScheduleRouteImport } from './routes/schedule'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ChildrenIndexRouteImport } from './routes/children.index'
 import { Route as ChildrenPlayerIdRouteImport } from './routes/children.$playerId'
 import { Route as CompetitionsIndexRouteImport } from './routes/competitions.index'
 import { Route as CompetitionsCompetitionIdRouteImport } from './routes/competitions.$competitionId'
 import { Route as MatchesIndexRouteImport } from './routes/matches.index'
 import { Route as MatchesMatchIdRouteImport } from './routes/matches.$matchId'
+import { Route as ModulesModuleIdRouteImport } from './routes/modules.$moduleId'
 import { Route as OrganizationsIndexRouteImport } from './routes/organizations.index'
 import { Route as OrganizationsOrgIdRouteImport } from './routes/organizations.$orgId'
 import { Route as PlayersIndexRouteImport } from './routes/players.index'
@@ -32,6 +36,21 @@ const IndexRoute = IndexRouteImport.update({
 const FootballIdRoute = FootballIdRouteImport.update({
   id: '/football-id',
   path: '/football-id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ScheduleRoute = ScheduleRouteImport.update({
+  id: '/schedule',
+  path: '/schedule',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChildrenIndexRoute = ChildrenIndexRouteImport.update({
@@ -63,6 +82,11 @@ const MatchesIndexRoute = MatchesIndexRouteImport.update({
 const MatchesMatchIdRoute = MatchesMatchIdRouteImport.update({
   id: '/matches/$matchId',
   path: '/matches/$matchId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ModulesModuleIdRoute = ModulesModuleIdRouteImport.update({
+  id: '/modules/$moduleId',
+  path: '/modules/$moduleId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OrganizationsIndexRoute = OrganizationsIndexRouteImport.update({
@@ -99,9 +123,13 @@ const TeamsTeamIdRoute = TeamsTeamIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/football-id': typeof FootballIdRoute
+  '/notifications': typeof NotificationsRoute
+  '/schedule': typeof ScheduleRoute
+  '/settings': typeof SettingsRoute
   '/children/$playerId': typeof ChildrenPlayerIdRoute
   '/competitions/$competitionId': typeof CompetitionsCompetitionIdRoute
   '/matches/$matchId': typeof MatchesMatchIdRoute
+  '/modules/$moduleId': typeof ModulesModuleIdRoute
   '/organizations/$orgId': typeof OrganizationsOrgIdRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
   '/teams/$teamId': typeof TeamsTeamIdRoute
@@ -115,9 +143,13 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/football-id': typeof FootballIdRoute
+  '/notifications': typeof NotificationsRoute
+  '/schedule': typeof ScheduleRoute
+  '/settings': typeof SettingsRoute
   '/children/$playerId': typeof ChildrenPlayerIdRoute
   '/competitions/$competitionId': typeof CompetitionsCompetitionIdRoute
   '/matches/$matchId': typeof MatchesMatchIdRoute
+  '/modules/$moduleId': typeof ModulesModuleIdRoute
   '/organizations/$orgId': typeof OrganizationsOrgIdRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
   '/teams/$teamId': typeof TeamsTeamIdRoute
@@ -132,9 +164,13 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/football-id': typeof FootballIdRoute
+  '/notifications': typeof NotificationsRoute
+  '/schedule': typeof ScheduleRoute
+  '/settings': typeof SettingsRoute
   '/children/$playerId': typeof ChildrenPlayerIdRoute
   '/competitions/$competitionId': typeof CompetitionsCompetitionIdRoute
   '/matches/$matchId': typeof MatchesMatchIdRoute
+  '/modules/$moduleId': typeof ModulesModuleIdRoute
   '/organizations/$orgId': typeof OrganizationsOrgIdRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
   '/teams/$teamId': typeof TeamsTeamIdRoute
@@ -150,9 +186,13 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/football-id'
+    | '/notifications'
+    | '/schedule'
+    | '/settings'
     | '/children/$playerId'
     | '/competitions/$competitionId'
     | '/matches/$matchId'
+    | '/modules/$moduleId'
     | '/organizations/$orgId'
     | '/players/$playerId'
     | '/teams/$teamId'
@@ -166,9 +206,13 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/football-id'
+    | '/notifications'
+    | '/schedule'
+    | '/settings'
     | '/children/$playerId'
     | '/competitions/$competitionId'
     | '/matches/$matchId'
+    | '/modules/$moduleId'
     | '/organizations/$orgId'
     | '/players/$playerId'
     | '/teams/$teamId'
@@ -182,9 +226,13 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/football-id'
+    | '/notifications'
+    | '/schedule'
+    | '/settings'
     | '/children/$playerId'
     | '/competitions/$competitionId'
     | '/matches/$matchId'
+    | '/modules/$moduleId'
     | '/organizations/$orgId'
     | '/players/$playerId'
     | '/teams/$teamId'
@@ -199,9 +247,13 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   FootballIdRoute: typeof FootballIdRoute
+  NotificationsRoute: typeof NotificationsRoute
+  ScheduleRoute: typeof ScheduleRoute
+  SettingsRoute: typeof SettingsRoute
   ChildrenPlayerIdRoute: typeof ChildrenPlayerIdRoute
   CompetitionsCompetitionIdRoute: typeof CompetitionsCompetitionIdRoute
   MatchesMatchIdRoute: typeof MatchesMatchIdRoute
+  ModulesModuleIdRoute: typeof ModulesModuleIdRoute
   OrganizationsOrgIdRoute: typeof OrganizationsOrgIdRoute
   PlayersPlayerIdRoute: typeof PlayersPlayerIdRoute
   TeamsTeamIdRoute: typeof TeamsTeamIdRoute
@@ -227,6 +279,27 @@ declare module '@tanstack/react-router' {
       path: '/football-id'
       fullPath: '/football-id'
       preLoaderRoute: typeof FootballIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/schedule': {
+      id: '/schedule'
+      path: '/schedule'
+      fullPath: '/schedule'
+      preLoaderRoute: typeof ScheduleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/children/': {
@@ -269,6 +342,13 @@ declare module '@tanstack/react-router' {
       path: '/matches/$matchId'
       fullPath: '/matches/$matchId'
       preLoaderRoute: typeof MatchesMatchIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/modules/$moduleId': {
+      id: '/modules/$moduleId'
+      path: '/modules/$moduleId'
+      fullPath: '/modules/$moduleId'
+      preLoaderRoute: typeof ModulesModuleIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/organizations/': {
@@ -319,9 +399,13 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   FootballIdRoute: FootballIdRoute,
+  NotificationsRoute: NotificationsRoute,
+  ScheduleRoute: ScheduleRoute,
+  SettingsRoute: SettingsRoute,
   ChildrenPlayerIdRoute: ChildrenPlayerIdRoute,
   CompetitionsCompetitionIdRoute: CompetitionsCompetitionIdRoute,
   MatchesMatchIdRoute: MatchesMatchIdRoute,
+  ModulesModuleIdRoute: ModulesModuleIdRoute,
   OrganizationsOrgIdRoute: OrganizationsOrgIdRoute,
   PlayersPlayerIdRoute: PlayersPlayerIdRoute,
   TeamsTeamIdRoute: TeamsTeamIdRoute,
