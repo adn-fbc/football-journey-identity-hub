@@ -23,7 +23,7 @@ function SchedulePage() {
   const { role } = useRole();
   const [type, setType] = useState<T>("all");
   const teamIds =
-    role === "parent" ? guardians[0].childIds.map((id) => getPlayer(id)?.teamId).filter(Boolean) as string[]
+    role === "parent" ? (guardians[0]?.childIds ?? []).map((id) => getPlayer(id)?.teamId).filter(Boolean) as string[]
     : role === "player" ? ["garuda-u10"]
     : role === "coach" ? ["garuda-u8"]
     : undefined;

@@ -35,7 +35,7 @@ function CompetitionDetail() {
   const all = listMatches({ competitionId: c.id });
   const played = all.filter((m) => m.status === "completed");
   const teamCount = c.categories.reduce((s, k) => s + k.teamIds.length, 0);
-  const [cat, setCat] = useState(c.categories.find((k) => k.id === "u10")?.id ?? c.categories[0].id);
+  const [cat, setCat] = useState(c.categories.find((k) => k.id === "u10")?.id ?? c.categories[0]?.id ?? "");
   const catMatches = all.filter((m) => m.categoryId === cat);
   const category = c.categories.find((k) => k.id === cat)!;
   const byDate = Object.entries(all.reduce<Record<string, typeof all>>((acc, m) => ((acc[m.date] ??= []).push(m), acc), {}));

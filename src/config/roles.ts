@@ -22,4 +22,4 @@ export const ROLES: RoleDefinition[] = [
 
 export const DEFAULT_ROLE: RoleId = "org_admin";
 
-export const getRole = (id: RoleId) => ROLES.find((r) => r.id === id) ?? ROLES[0];
+export const getRole = (id: RoleId) => ROLES.find((r) => r.id === id) ?? ROLES[0]!;

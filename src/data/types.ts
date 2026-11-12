@@ -120,7 +120,7 @@ export interface Match {
   venue: string;
   homeId: string;
   awayId: string;
-  score?: { home: number | undefined; away: number };
+  score?: { home: number; away: number } | undefined;
   status: Status;
   events: MatchEvent[];
   duration: string;
