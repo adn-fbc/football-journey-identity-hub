@@ -12,7 +12,7 @@ const META = {
   meeting: { icon: Users, label: "Meeting", cls: "bg-warning/15 text-warning" },
 } as const;
 
-export function ScheduleRow({ item, showDate = true }: { item: ScheduleItem; showDate?: boolean }) {
+export function ScheduleRow({ item, showDate = true }: { item: ScheduleItem; showDate?: boolean | undefined }) {
   const m = META[item.type];
   const team = getTeam(item.teamId);
   const body = (

@@ -13,7 +13,7 @@ const sizes = cva("shrink-0", {
 
 export function PersonAvatar({
   name, src, size, className, ring,
-}: { name: string; src?: string; className?: string; ring?: boolean } & VariantProps<typeof sizes>) {
+}: { name: string; src?: string | undefined; className?: string | undefined; ring?: boolean | undefined } & VariantProps<typeof sizes>) {
   return (
     <Avatar className={cn(sizes({ size }), ring && "ring-2 ring-card", className)}>
       {src && <AvatarImage src={src} alt={name} className="object-cover" />}
@@ -33,7 +33,7 @@ const crestSizes = cva("grid shrink-0 place-items-center font-display font-bold 
 /** Generated crest for organizations and teams. Hue comes from organization data. */
 export function Crest({
   label, hue, size, tone, className,
-}: { label: string; hue: string; className?: string } & VariantProps<typeof crestSizes>) {
+}: { label: string; hue: string; className?: string | undefined } & VariantProps<typeof crestSizes>) {
   return (
     <span className={cn(crestSizes({ size, tone }), className)} style={{ "--crest-hue": hue } as CSSProperties} aria-hidden>
       {label}

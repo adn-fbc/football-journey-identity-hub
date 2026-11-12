@@ -3,7 +3,7 @@ import { Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /** Placeholder for capabilities planned in later phases. Keeps layouts stable as modules ship. */
-export function ComingSoon({ icon: Icon = Lock, title, description, className }: { icon?: LucideIcon; title: string; description: string; className?: string }) {
+export function ComingSoon({ icon: Icon = Lock, title, description, className }: { icon?: LucideIcon | undefined; title: string; description: string; className?: string | undefined }) {
   return (
     <div className={cn("relative flex flex-col gap-2 rounded-xl border border-dashed bg-muted/30 p-5", className)}>
       <div className="flex items-center justify-between">

@@ -23,7 +23,7 @@ export interface AppModule {
   status: ModuleStatus;
   roles: RoleId[];
   /** Appears in the mobile bottom bar for these roles (max 4 per role). */
-  mobileFor?: RoleId[];
+  mobileFor?: RoleId[] | undefined;
 }
 
 const ALL: RoleId[] = ["player", "parent", "coach", "org_admin", "competition_organizer"];

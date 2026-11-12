@@ -20,7 +20,7 @@ const TONE: Record<JourneyEvent["type"], string> = {
 };
 
 /** The football passport timeline: grouped by year, newest last, ends with a "Now" marker. */
-export function JourneyTimeline({ events, compact }: { events: JourneyEvent[]; compact?: boolean }) {
+export function JourneyTimeline({ events, compact }: { events: JourneyEvent[]; compact?: boolean | undefined }) {
   const years = [...new Set(events.map((e) => e.year))].sort();
   return (
     <ol className="relative">

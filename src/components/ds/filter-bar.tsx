@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 export function SearchInput({
   value, onChange, placeholder = "Search…", className,
-}: { value: string; onChange: (v: string) => void; placeholder?: string; className?: string }) {
+}: { value: string; onChange: (v: string) => void; placeholder?: string | undefined; className?: string | undefined }) {
   return (
     <div className={cn("relative", className)}>
       <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -22,7 +22,7 @@ export function SearchInput({
 
 export function FilterSelect({
   value, onChange, options, placeholder, className,
-}: { value: string; onChange: (v: string) => void; options: { value: string; label: string }[]; placeholder: string; className?: string }) {
+}: { value: string; onChange: (v: string) => void; options: { value: string; label: string }[]; placeholder: string; className?: string | undefined }) {
   return (
     <Select value={value} onValueChange={onChange}>
       <SelectTrigger className={cn("h-9 w-full bg-card sm:w-40", className)} aria-label={placeholder}>
@@ -37,14 +37,14 @@ export function FilterSelect({
   );
 }
 
-export function FilterBar({ children, className }: { children: ReactNode; className?: string }) {
+export function FilterBar({ children, className }: { children: ReactNode; className?: string | undefined }) {
   return <div className={cn("flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center", className)}>{children}</div>;
 }
 
 /** Pill toggles for quick filters (e.g. schedule type). */
 export function FilterChips<T extends string>({
   value, onChange, options,
-}: { value: T; onChange: (v: T) => void; options: { value: T; label: string; count?: number }[] }) {
+}: { value: T; onChange: (v: T) => void; options: { value: T; label: string; count?: number | undefined }[] }) {
   return (
     <div className="scrollbar-none -mx-4 flex gap-2 overflow-x-auto px-4 md:mx-0 md:px-0">
       {options.map((o) => (

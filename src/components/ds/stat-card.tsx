@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 export function StatCard({
   label, value, hint, icon: Icon, trend, className,
-}: { label: string; value: ReactNode; hint?: ReactNode; icon?: LucideIcon; trend?: "up" | "down"; className?: string }) {
+}: { label: string; value: ReactNode; hint?: ReactNode | undefined; icon?: LucideIcon | undefined; trend?: "up" | "down" | undefined; className?: string | undefined }) {
   return (
     <div className={cn("surface p-4 md:p-5", className)}>
       <div className="flex items-center justify-between">

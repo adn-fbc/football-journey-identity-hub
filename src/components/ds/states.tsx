@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 
 export function EmptyState({
   icon: Icon = Inbox, title, description, action, className,
-}: { icon?: LucideIcon; title: string; description?: string; action?: ReactNode; className?: string }) {
+}: { icon?: LucideIcon | undefined; title: string; description?: string | undefined; action?: ReactNode | undefined; className?: string | undefined }) {
   return (
     <div className={cn("flex flex-col items-center justify-center rounded-xl border border-dashed px-6 py-12 text-center", className)}>
       <span className="grid size-11 place-items-center rounded-full bg-muted text-muted-foreground">
@@ -20,7 +20,7 @@ export function EmptyState({
   );
 }
 
-export function LoadingState({ rows = 4, className }: { rows?: number; className?: string }) {
+export function LoadingState({ rows = 4, className }: { rows?: number | undefined; className?: string | undefined }) {
   return (
     <div className={cn("space-y-3", className)} aria-busy="true" aria-label="Loading">
       {Array.from({ length: rows }).map((_, i) => (
@@ -39,7 +39,7 @@ export function LoadingState({ rows = 4, className }: { rows?: number; className
 
 export function ErrorState({
   title = "Something went wrong", description = "We couldn't load this information. Please try again.", onRetry, className,
-}: { title?: string; description?: string; onRetry?: () => void; className?: string }) {
+}: { title?: string | undefined; description?: string | undefined; onRetry?: () => void; className?: string | undefined }) {
   return (
     <div className={cn("flex flex-col items-center rounded-xl border border-destructive/25 bg-destructive/5 px-6 py-10 text-center", className)}>
       <span className="grid size-11 place-items-center rounded-full bg-destructive/10 text-destructive">

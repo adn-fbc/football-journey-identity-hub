@@ -5,7 +5,7 @@ import { OrgCrest } from "@/components/ds/team-crest";
 import { getOrganization, getTeam } from "@/data/repository";
 import type { Player } from "@/data/types";
 
-export function PlayerHeader({ player, actions }: { player: Player; actions?: ReactNode }) {
+export function PlayerHeader({ player, actions }: { player: Player; actions?: ReactNode | undefined }) {
   const team = getTeam(player.teamId);
   const org = getOrganization(player.orgId);
   return (

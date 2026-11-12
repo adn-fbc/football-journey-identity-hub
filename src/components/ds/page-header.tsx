@@ -3,12 +3,12 @@ import { Link } from "@tanstack/react-router";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export interface Crumb { label: string; to?: string }
+export interface Crumb { label: string; to?: string | undefined }
 
 export function PageHeader({
   eyebrow, title, description, actions, crumbs, className,
 }: {
-  eyebrow?: ReactNode; title: ReactNode; description?: ReactNode; actions?: ReactNode; crumbs?: Crumb[]; className?: string;
+  eyebrow?: ReactNode | undefined; title: ReactNode; description?: ReactNode | undefined; actions?: ReactNode | undefined; crumbs?: Crumb[] | undefined; className?: string | undefined;
 }) {
   return (
     <header className={cn("flex flex-col gap-4 md:flex-row md:items-end md:justify-between", className)}>

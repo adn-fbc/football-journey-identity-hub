@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 /** Inline Football ID token — mono, copyable. Use anywhere an identity is referenced. */
-export function FootballIdTag({ id, className, copy = true, tone = "default" }: { id: string; className?: string; copy?: boolean; tone?: "default" | "ink" }) {
+export function FootballIdTag({ id, className, copy = true, tone = "default" }: { id: string; className?: string | undefined; copy?: boolean | undefined; tone?: "default" | "ink" | undefined }) {
   return (
     <span
       className={cn(
@@ -33,7 +33,7 @@ export function FootballIdTag({ id, className, copy = true, tone = "default" }: 
   );
 }
 
-export function VerifiedMark({ verified, className }: { verified: boolean; className?: string }) {
+export function VerifiedMark({ verified, className }: { verified: boolean; className?: string | undefined }) {
   if (!verified) return null;
   return <BadgeCheck aria-label="Verified" className={cn("size-4 fill-info text-card", className)} />;
 }

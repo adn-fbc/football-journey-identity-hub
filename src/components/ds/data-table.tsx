@@ -8,9 +8,9 @@ export interface Column<T> {
   key: string;
   header: ReactNode;
   cell: (row: T) => ReactNode;
-  className?: string;
+  className?: string | undefined;
   /** Hide below this breakpoint. */
-  hideBelow?: "sm" | "md" | "lg";
+  hideBelow?: "sm" | "md" | "lg" | undefined;
 }
 
 const hide = { sm: "hidden sm:table-cell", md: "hidden md:table-cell", lg: "hidden lg:table-cell" };
@@ -22,8 +22,8 @@ const hide = { sm: "hidden sm:table-cell", md: "hidden md:table-cell", lg: "hidd
 export function DataTable<T>({
   rows, columns, getRowId, onRowClick, pageSize = 8, mobileRow, empty, className,
 }: {
-  rows: T[]; columns: Column<T>[]; getRowId: (r: T) => string; onRowClick?: (r: T) => void; pageSize?: number;
-  mobileRow?: (r: T) => ReactNode; empty?: ReactNode; className?: string;
+  rows: T[]; columns: Column<T>[]; getRowId: (r: T) => string; onRowClick?: (r: T) => void; pageSize?: number | undefined;
+  mobileRow?: (r: T) => ReactNode; empty?: ReactNode | undefined; className?: string | undefined;
 }) {
   const [page, setPage] = useState(0);
   const pages = Math.max(1, Math.ceil(rows.length / pageSize));

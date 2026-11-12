@@ -30,7 +30,7 @@ export interface Team {
   ageCategory: string;
   season: string;
   coach: string;
-  assistant?: string;
+  assistant?: string | undefined;
   record: { w: number; d: number; l: number };
   status: Status;
 }
@@ -39,19 +39,19 @@ export interface Player {
   id: string;
   footballId: string;
   name: string;
-  nickname?: string;
+  nickname?: string | undefined;
   birthYear: number;
   gender: "M" | "F";
   position: Position;
   positionLabel: string;
   foot: Foot;
-  orgId?: string;
-  teamId?: string;
-  jersey?: number;
+  orgId?: string | undefined;
+  teamId?: string | undefined;
+  jersey?: number | undefined;
   membership: Status; // relationship to current organization
   verification: Status;
-  memberSince?: string;
-  photo?: string;
+  memberSince?: string | undefined;
+  photo?: string | undefined;
   stats: { matches: number; goals: number; assists: number; minutes: number };
   attendance: number; // percent, last 30 days
   guardianIds: string[];
@@ -64,15 +64,15 @@ export interface JourneyEvent {
   type: "identity" | "join" | "leave" | "team" | "competition" | "achievement" | "verification";
   title: string;
   detail: string;
-  orgId?: string;
-  verifiedBy?: string;
+  orgId?: string | undefined;
+  verifiedBy?: string | undefined;
 }
 
 export interface Membership {
   orgId: string;
   role: string;
   from: string;
-  to?: string;
+  to?: string | undefined;
   status: Status;
   teams: string[];
 }
@@ -90,7 +90,7 @@ export interface Competition {
   venues: string[];
   format: string;
   description: string;
-  registrationDeadline?: string;
+  registrationDeadline?: string | undefined;
 }
 
 export interface CompetitionCategory {
@@ -105,9 +105,9 @@ export interface CompetitionCategory {
 export interface MatchEvent {
   minute: number;
   type: "goal" | "yellow" | "red" | "sub" | "half" | "kickoff" | "fulltime";
-  side?: "home" | "away";
-  player?: string;
-  detail?: string;
+  side?: "home" | "away" | undefined;
+  player?: string | undefined;
+  detail?: string | undefined;
 }
 
 export interface Match {
@@ -120,7 +120,7 @@ export interface Match {
   venue: string;
   homeId: string;
   awayId: string;
-  score?: { home: number; away: number };
+  score?: { home: number | undefined; away: number };
   status: Status;
   events: MatchEvent[];
   duration: string;
@@ -133,9 +133,9 @@ export interface ScheduleItem {
   end: string;
   type: "training" | "match" | "event" | "meeting";
   title: string;
-  teamId?: string;
+  teamId?: string | undefined;
   venue: string;
-  matchId?: string;
+  matchId?: string | undefined;
 }
 
 export interface Notification {
@@ -146,7 +146,7 @@ export interface Notification {
   time: string;
   read: boolean;
   roles: string[];
-  href?: string;
+  href?: string | undefined;
 }
 
 export interface Achievement {

@@ -9,7 +9,7 @@ const ICON: Record<Notification["type"], LucideIcon> = {
   registration: UserPlus, match: Swords, consent: ShieldCheck, verification: BadgeCheck, schedule: CalendarClock, system: Info,
 };
 
-export function NotificationItem({ n, large }: { n: Notification; large?: boolean }) {
+export function NotificationItem({ n, large }: { n: Notification; large?: boolean | undefined }) {
   const { isRead, markRead } = useNotificationState();
   const Icon = ICON[n.type];
   const read = isRead(n);

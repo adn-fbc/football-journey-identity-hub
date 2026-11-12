@@ -5,7 +5,7 @@ import { PersonAvatar } from "./avatars";
 import { FootballIdTag, VerifiedMark } from "./football-id";
 import { StatusBadge } from "./status-badge";
 
-export function PlayerCard({ player, to = "player" }: { player: Player; to?: "player" | "child" }) {
+export function PlayerCard({ player, to = "player" }: { player: Player; to?: "player" | "child" | undefined }) {
   const team = getTeam(player.teamId);
   const org = getOrganization(player.orgId);
   const inner = (

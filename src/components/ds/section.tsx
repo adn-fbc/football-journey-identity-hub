@@ -5,8 +5,8 @@ import { cn } from "@/lib/utils";
 export function Section({
   title, description, action, children, className, bodyClassName, flush,
 }: {
-  title?: ReactNode; description?: ReactNode; action?: ReactNode; children: ReactNode;
-  className?: string; bodyClassName?: string; flush?: boolean;
+  title?: ReactNode | undefined; description?: ReactNode | undefined; action?: ReactNode | undefined; children: ReactNode;
+  className?: string | undefined; bodyClassName?: string | undefined; flush?: boolean | undefined;
 }) {
   return (
     <section className={cn("surface overflow-hidden", className)}>
@@ -24,7 +24,7 @@ export function Section({
   );
 }
 
-export function InfoList({ items, className }: { items: { label: string; value: ReactNode }[]; className?: string }) {
+export function InfoList({ items, className }: { items: { label: string; value: ReactNode }[]; className?: string | undefined }) {
   return (
     <dl className={cn("grid grid-cols-2 gap-x-6 gap-y-4", className)}>
       {items.map((i) => (

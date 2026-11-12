@@ -13,7 +13,7 @@ function mrz(player: Player) {
 }
 
 /** The Football ID "passport". Persistent identity — the organization is shown as a current relationship only. */
-export function FootballPassport({ player, className }: { player: Player; className?: string }) {
+export function FootballPassport({ player, className }: { player: Player; className?: string | undefined }) {
   const team = getTeam(player.teamId);
   const org = getOrganization(player.orgId);
   const verified = player.verification === "verified";

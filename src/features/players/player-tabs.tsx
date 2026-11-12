@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 
 const ACH_ICON: Record<Achievement["kind"], typeof Trophy> = { trophy: Trophy, award: Award, milestone: Medal };
 
-export function AchievementList({ playerId, limit }: { playerId: string; limit?: number }) {
+export function AchievementList({ playerId, limit }: { playerId: string; limit?: number | undefined }) {
   const items = getAchievements(playerId).slice(0, limit);
   if (!items.length) return <EmptyState icon={Trophy} title="No achievements yet" description="Trophies, awards and milestones will appear here." />;
   return (

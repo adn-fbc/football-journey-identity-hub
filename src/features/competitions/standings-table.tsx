@@ -3,7 +3,7 @@ import { TeamCrest } from "@/components/ds/team-crest";
 import { getTeam, type StandingRow } from "@/data/repository";
 import { cn } from "@/lib/utils";
 
-export function StandingsTable({ rows, compact, qualify = 2 }: { rows: StandingRow[]; compact?: boolean; qualify?: number }) {
+export function StandingsTable({ rows, compact, qualify = 2 }: { rows: StandingRow[]; compact?: boolean | undefined; qualify?: number | undefined }) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm tabular-nums">

@@ -1,7 +1,7 @@
 import { Fingerprint } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export function BrandMark({ className }: { className?: string }) {
+export function BrandMark({ className }: { className?: string | undefined }) {
   return (
     <span className={cn("grid size-8 shrink-0 place-items-center rounded-lg bg-signal text-signal-foreground", className)}>
       <Fingerprint className="size-[18px]" strokeWidth={2.25} />
@@ -9,7 +9,7 @@ export function BrandMark({ className }: { className?: string }) {
   );
 }
 
-export function BrandWordmark({ tone = "ink" }: { tone?: "ink" | "default" }) {
+export function BrandWordmark({ tone = "ink" }: { tone?: "ink" | "default" | undefined }) {
   return (
     <span className="flex items-center gap-2.5">
       <BrandMark />

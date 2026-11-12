@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { StatusBadge } from "./status-badge";
 import { TeamCrest } from "./team-crest";
 
-function Score({ match, className }: { match: Match; className?: string }) {
+function Score({ match, className }: { match: Match; className?: string | undefined }) {
   if (match.score)
     return (
       <span className={cn("font-display text-lg font-semibold tabular-nums", match.status === "live" && "text-live", className)}>
@@ -19,7 +19,7 @@ function Score({ match, className }: { match: Match; className?: string }) {
 }
 
 /** Compact, scannable fixture row. Use in lists, dashboards and competition schedules. */
-export function MatchRow({ match, showCompetition = true, className }: { match: Match; showCompetition?: boolean; className?: string }) {
+export function MatchRow({ match, showCompetition = true, className }: { match: Match; showCompetition?: boolean | undefined; className?: string | undefined }) {
   const home = getTeam(match.homeId);
   const away = getTeam(match.awayId);
   const comp = getCompetition(match.competitionId);
@@ -52,7 +52,7 @@ export function MatchRow({ match, showCompetition = true, className }: { match: 
 }
 
 /** Featured match card with venue — for "next match" slots. */
-export function MatchCard({ match, label = "Next match" }: { match: Match; label?: string }) {
+export function MatchCard({ match, label = "Next match" }: { match: Match; label?: string | undefined }) {
   const home = getTeam(match.homeId);
   const away = getTeam(match.awayId);
   const comp = getCompetition(match.competitionId);

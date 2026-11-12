@@ -8,8 +8,8 @@ import { buttonVariants } from "@/components/ui/button";
 export function ConfirmDialog({
   trigger, title, description, confirmLabel = "Confirm", destructive, onConfirm, open, onOpenChange,
 }: {
-  trigger?: ReactNode; title: string; description: ReactNode; confirmLabel?: string; destructive?: boolean;
-  onConfirm: () => void; open?: boolean; onOpenChange?: (o: boolean) => void;
+  trigger?: ReactNode | undefined; title: string; description: ReactNode; confirmLabel?: string | undefined; destructive?: boolean | undefined;
+  onConfirm: () => void; open?: boolean | undefined; onOpenChange?: (o: boolean) => void;
 }) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>

@@ -32,7 +32,7 @@ const dot: Partial<Record<Status, string>> = {
   cancelled: "bg-destructive", archived: "bg-muted-foreground", scheduled: "bg-muted-foreground", live: "bg-live animate-live",
 };
 
-export function StatusBadge({ status, label, className }: { status: Status; label?: string; className?: string }) {
+export function StatusBadge({ status, label, className }: { status: Status; label?: string | undefined; className?: string | undefined }) {
   return (
     <span className={cn(statusVariants({ status }), className)}>
       {dot[status] && <span className={cn("size-1.5 rounded-full", dot[status])} />}

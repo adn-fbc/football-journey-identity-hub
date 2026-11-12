@@ -18,10 +18,10 @@ export const getMatch = (id?: string) => matches.find((m) => m.id === id);
 
 export const listOrganizations = () => organizations;
 export const listTeams = (orgId?: string) => (orgId ? teams.filter((t) => t.orgId === orgId) : teams);
-export const listPlayers = (filter?: { orgId?: string; teamId?: string }) =>
+export const listPlayers = (filter?: { orgId?: string | undefined; teamId?: string | undefined }) =>
   players.filter((p) => (!filter?.orgId || p.orgId === filter.orgId) && (!filter?.teamId || p.teamId === filter.teamId));
 export const listCompetitions = () => competitions;
-export const listMatches = (filter?: { competitionId?: string; teamId?: string; categoryId?: string }) =>
+export const listMatches = (filter?: { competitionId?: string | undefined; teamId?: string | undefined; categoryId?: string | undefined }) =>
   matches
     .filter((m) =>
       (!filter?.competitionId || m.competitionId === filter.competitionId) &&
