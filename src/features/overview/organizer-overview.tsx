@@ -53,7 +53,7 @@ export function OrganizerOverview() {
             </ul>
           </Section>
           <Section title="U10 · Group A" flush>
-            <StandingsTable rows={computeStandings(u10.groups[0].teamIds, all)} compact />
+            <StandingsTable rows={computeStandings(u10.groups[0]?.teamIds ?? [], all)} compact />
           </Section>
         </div>
       </div>

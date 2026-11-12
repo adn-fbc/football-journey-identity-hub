@@ -52,7 +52,7 @@ export function ConsentPanel({ child }: { child: Player }) {
               </label>
               <div className="flex items-center gap-2 pt-1">
                 <span className="hidden w-7 text-right text-small font-semibold text-muted-foreground sm:block">{state[c.id] ? "On" : "Off"}</span>
-                <Switch id={`consent-${c.id}`} checked={state[c.id]} onCheckedChange={(v) => toggle(c.id, c.title, v)} />
+                <Switch id={`consent-${c.id}`} checked={state[c.id] ?? false} onCheckedChange={(v) => toggle(c.id, c.title, v)} />
               </div>
             </li>
           ))}

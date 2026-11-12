@@ -11,7 +11,7 @@ import type { Player } from "@/data/types";
 import { ChildCard } from "@/features/children/child-card";
 
 export function ParentOverview() {
-  const children = guardians[0].childIds.map((id) => getPlayer(id)).filter(Boolean) as Player[];
+  const children = (guardians[0]?.childIds ?? []).map((id) => getPlayer(id)).filter(Boolean) as Player[];
   const teamIds = children.map((c) => c.teamId!).filter(Boolean);
   const sched = listSchedule(teamIds).filter((s) => !s.teamId || teamIds.includes(s.teamId));
   const results = teamIds.flatMap((t) => recentMatches(t)).slice(0, 3);

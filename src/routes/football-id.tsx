@@ -25,8 +25,8 @@ export const Route = createFileRoute("/football-id")({
 function FootballIdPage() {
   const { role } = useRole();
   const navigate = useNavigate();
-  const childIds = guardians[0].childIds;
-  const [selected, setSelected] = useState(childIds[0]);
+  const childIds = guardians[0]?.childIds ?? [];
+  const [selected, setSelected] = useState<string>(childIds[0] ?? "p-123");
   const [lookup, setLookup] = useState("");
   const player = getPlayer(role === "parent" ? selected : "p-123")!;
   const journey = getJourney(player.id);

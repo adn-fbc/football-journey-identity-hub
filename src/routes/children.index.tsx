@@ -15,7 +15,7 @@ export const Route = createFileRoute("/children/")({
 });
 
 function ChildrenPage() {
-  const kids = guardians[0].childIds.map((id) => getPlayer(id)).filter(Boolean) as Player[];
+  const kids = (guardians[0]?.childIds ?? []).map((id) => getPlayer(id)).filter(Boolean) as Player[];
   return (
     <div className="space-y-6">
       <PageHeader
