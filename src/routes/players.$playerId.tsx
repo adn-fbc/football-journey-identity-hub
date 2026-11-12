@@ -2,7 +2,7 @@ import { createFileRoute, notFound, Link } from "@tanstack/react-router";
 import { MessageSquare, UserMinus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { PageHeader } from "@/components/ds/page-header";
+import { Breadcrumbs } from "@/components/ds/page-header";
 import { PageTabs, PageTabsContent, PageTabsList, PageTabsTrigger } from "@/components/ds/page-tabs";
 import { ConfirmDialog } from "@/components/ds/confirm-dialog";
 import { EmptyState } from "@/components/ds/states";
@@ -33,7 +33,7 @@ function PlayerProfile() {
   const { player } = Route.useLoaderData();
   return (
     <div className="space-y-6">
-      <PageHeader title="" crumbs={[{ label: "Players", to: "/players" }, { label: player.name }]} className="[&_h1]:hidden" />
+      <Breadcrumbs crumbs={[{ label: "Players", to: "/players" }, { label: player.name }]} />
       <PlayerHeader
         player={player}
         actions={
