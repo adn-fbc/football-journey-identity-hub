@@ -39,7 +39,7 @@ export function LoadingState({ rows = 4, className }: { rows?: number | undefine
 
 export function ErrorState({
   title = "Something went wrong", description = "We couldn't load this information. Please try again.", onRetry, className,
-}: { title?: string | undefined; description?: string | undefined; onRetry?: () => void; className?: string | undefined }) {
+}: { title?: string | undefined; description?: string | undefined; onRetry?: (() => void) | undefined; className?: string | undefined }) {
   return (
     <div role="alert" aria-live="assertive" className={cn("flex flex-col items-center rounded-xl border border-error/25 bg-error/5 px-6 py-10 text-center", className)}>
       <span className="grid size-11 place-items-center rounded-full bg-error/10 text-error">
