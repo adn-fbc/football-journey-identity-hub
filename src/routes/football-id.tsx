@@ -144,7 +144,7 @@ function FootballIdPage() {
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-sm font-semibold">{org?.name}</div>
                       <div className="text-small text-muted-foreground">
-                        {fmtDate(m.from, "MMM yyyy")} –{" "}
+                        {m.from ? fmtDate(m.from, "MMM yyyy") : "Start date not recorded"} –{" "}
                         {m.to ? fmtDate(m.to, "MMM yyyy") : "present"}
                       </div>
                     </div>

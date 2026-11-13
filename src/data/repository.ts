@@ -3,23 +3,47 @@
  * Swap these implementations for real API / database calls later without touching UI code.
  */
 import {
-  achievements, childPayments, childRegistrations, competitions, documents, journeys, matches, memberships,
+  achievements, childPayments, childRegistrations, competitions, documents, journeys, matches, playerAffiliations,
   notifications, organizations, players, schedule, teams, guardians, CURRENT_USER, MOCK_TODAY,
 } from "./mock";
-import type { JourneyEvent, Match, Player } from "./types";
+import type { JourneyEvent, Match, Membership, Player, PlayerAffiliation, PlayerIdentity, PrimaryPlayerContext } from "./types";
 import { ageCategoryFor } from "@/lib/format";
 
 const playerUpdates = new Map<string, Partial<Player>>();
+const affiliationUpdates = new Map<string, PlayerAffiliation[]>();
+const primaryContextPreferences = new Map<string, PrimaryPlayerContext>();
+const journeyUpdates = new Map<string, JourneyEvent[]>();
+let nextAffiliationId = 1;
 
 export const getCurrentUser = () => CURRENT_USER;
+export const getCurrentGuardianId = () => guardians.find((guardian) => guardian.footballId === CURRENT_USER.footballId)?.id;
 export const getOrganization = (id?: string) => organizations.find((o) => o.id === id);
 export const getTeam = (id?: string) => teams.find((t) => t.id === id);
 export const getPlayer = (id?: string) => {
   const player = players.find((p) => p.id === id);
   return player ? { ...player, ...playerUpdates.get(player.id) } : undefined;
 };
-export const getPlayerByFootballId = (fid: string) =>
-  players.find((p) => p.footballId.toLowerCase() === fid.trim().toLowerCase());
+export const getPlayerIdentity = (playerId: string): PlayerIdentity | undefined => {
+  const identityMatches = players.filter((player) => player.id === playerId);
+  if (identityMatches.length !== 1) return undefined;
+  const player = identityMatches[0]!;
+  const normalizedFootballId = player.footballId.trim().toLowerCase();
+  if (players.filter((item) => item.footballId.trim().toLowerCase() === normalizedFootballId).length !== 1) {
+    return undefined;
+  }
+  return { id: player.id, footballId: player.footballId };
+};
+export const getPlayerByFootballId = (fid: string) => {
+  const matches = players.filter((player) => player.footballId.toLowerCase() === fid.trim().toLowerCase());
+  if (matches.length !== 1 || players.filter((player) => player.id === matches[0]!.id).length !== 1) {
+    return undefined;
+  }
+  return getPlayer(matches[0]!.id);
+};
+export const getPlayerIdentityByFootballId = (fid: string): PlayerIdentity | undefined => {
+  const player = getPlayerByFootballId(fid);
+  return player ? { id: player.id, footballId: player.footballId } : undefined;
+};
 export const getCompetition = (id?: string) => competitions.find((c) => c.id === id);
 export const getMatch = (id?: string) => matches.find((m) => m.id === id);
 
@@ -29,6 +53,228 @@ export const listPlayers = (filter?: { orgId?: string | undefined; teamId?: stri
   players
     .map((p) => ({ ...p, ...playerUpdates.get(p.id) }))
     .filter((p) => (!filter?.orgId || p.orgId === filter.orgId) && (!filter?.teamId || p.teamId === filter.teamId));
+
+function allPlayerAffiliations(playerId: string) {
+  const updates = affiliationUpdates.get(playerId) ?? [];
+  const updatedIds = new Set(updates.map((affiliation) => affiliation.id));
+  return [
+    ...playerAffiliations.filter((affiliation) => affiliation.playerId === playerId && !updatedIds.has(affiliation.id)),
+    ...updates,
+  ];
+}
+
+function appendAffiliationJourneyEvent(affiliation: PlayerAffiliation, action: "started" | "ended", date: string) {
+  const team = affiliation.teamId ? getTeam(affiliation.teamId) : undefined;
+  const organization = getOrganization(affiliation.organizationId);
+  const title = action === "started"
+    ? `Joined ${team?.name ?? organization?.name ?? "organization"}`
+    : `Left ${team?.name ?? organization?.name ?? "organization"}`;
+  const event: JourneyEvent = {
+    id: `${affiliation.id}-${action}`,
+    date,
+    year: Number(date.slice(0, 4)),
+    type: action === "ended" ? "leave" : affiliation.kind === "team" ? "team" : "join",
+    title,
+    detail: `${affiliation.kind === "team" ? "Team" : "Organization"} affiliation ${action}`,
+    orgId: affiliation.organizationId,
+    provenance: {
+      sourceDomain: affiliation.kind === "team" ? "team_affiliation" : "player_affiliation",
+      sourceRecordId: affiliation.id,
+      sourceOrganizationId: affiliation.sourceOrganizationId,
+      recordedBy: affiliation.recordedBy,
+    },
+  };
+  journeyUpdates.set(affiliation.playerId, [...(journeyUpdates.get(affiliation.playerId) ?? []), event]);
+}
+
+export function listPlayerAffiliations(
+  playerId: string,
+  options: { status?: PlayerAffiliation["status"] | undefined; includeHistorical?: boolean | undefined } = {},
+) {
+  if (!getPlayer(playerId)) return [];
+  return allPlayerAffiliations(playerId)
+    .filter((affiliation) => !options.status || affiliation.status === options.status)
+    .filter((affiliation) => options.includeHistorical !== false || affiliation.status !== "ended")
+    .map((affiliation) => ({ ...affiliation, legacyTeamNames: affiliation.legacyTeamNames ? [...affiliation.legacyTeamNames] : undefined }))
+    .sort((a, b) => (a.effectiveFrom ?? "9999-12-31").localeCompare(b.effectiveFrom ?? "9999-12-31") || a.id.localeCompare(b.id));
+}
+
+export type AffiliationMutationResult =
+  | { ok: true; affiliation: PlayerAffiliation }
+  | { ok: false; reason: "player_not_found" | "organization_not_found" | "team_not_found" | "team_organization_mismatch" | "organization_affiliation_required" | "invalid_scope" | "invalid_effective_date" | "affiliation_overlap" | "affiliation_not_found" | "already_ended" | "active_team_affiliations" };
+
+export type PrimaryContextActor =
+  | { role: "player"; playerId: string }
+  | { role: "parent"; guardianId: string };
+
+export type PrimaryContextResult =
+  | { ok: true; context: PrimaryPlayerContext | undefined }
+  | { ok: false; reason: "player_not_found" | "forbidden" | "organization_affiliation_not_active" | "team_affiliation_not_active" | "team_organization_mismatch" };
+
+export function getPrimaryPlayerContext(playerId: string): PrimaryPlayerContext | undefined {
+  const context = primaryContextPreferences.get(playerId);
+  if (!context) return undefined;
+  const affiliations = allPlayerAffiliations(playerId);
+  const organizationAffiliation = affiliations.find((item) =>
+    item.id === context.organizationAffiliationId && item.kind === "organization" && item.status === "active",
+  );
+  const teamAffiliation = context.teamAffiliationId
+    ? affiliations.find((item) => item.id === context.teamAffiliationId && item.kind === "team" && item.status === "active")
+    : undefined;
+  if (!organizationAffiliation || (context.teamAffiliationId && !teamAffiliation)) {
+    primaryContextPreferences.delete(playerId);
+    return undefined;
+  }
+  if (teamAffiliation && teamAffiliation.organizationAffiliationId !== organizationAffiliation.id) {
+    primaryContextPreferences.delete(playerId);
+    return undefined;
+  }
+  return { ...context };
+}
+
+export function setPrimaryPlayerContext(
+  playerId: string,
+  context: Omit<PrimaryPlayerContext, "playerId"> | null,
+  actor: PrimaryContextActor,
+): PrimaryContextResult {
+  if (!getPlayer(playerId)) return { ok: false, reason: "player_not_found" };
+  const authorized = actor.role === "player"
+    ? actor.playerId === playerId
+    : listGuardianChildren(actor.guardianId).some((child) => child.id === playerId);
+  if (!authorized) return { ok: false, reason: "forbidden" };
+  if (context === null) {
+    primaryContextPreferences.delete(playerId);
+    return { ok: true, context: undefined };
+  }
+
+  const affiliations = allPlayerAffiliations(playerId);
+  const organizationAffiliation = affiliations.find((item) =>
+    item.id === context.organizationAffiliationId && item.kind === "organization" && item.status === "active",
+  );
+  if (!organizationAffiliation) return { ok: false, reason: "organization_affiliation_not_active" };
+  if (context.teamAffiliationId) {
+    const teamAffiliation = affiliations.find((item) =>
+      item.id === context.teamAffiliationId && item.kind === "team" && item.status === "active",
+    );
+    if (!teamAffiliation) return { ok: false, reason: "team_affiliation_not_active" };
+    if (teamAffiliation.organizationAffiliationId !== organizationAffiliation.id) {
+      return { ok: false, reason: "team_organization_mismatch" };
+    }
+  }
+  const updated = { playerId, ...context };
+  primaryContextPreferences.set(playerId, updated);
+  return { ok: true, context: { ...updated } };
+}
+
+export interface NewPlayerAffiliation {
+  playerId: string;
+  organizationId: string;
+  kind: PlayerAffiliation["kind"];
+  teamId?: string | undefined;
+  organizationAffiliationId?: string | undefined;
+  role: string;
+  status?: "active" | "pending" | undefined;
+  effectiveFrom: string;
+  recordedBy?: string | undefined;
+}
+
+function isCalendarDate(value: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return !Number.isNaN(date.valueOf()) && date.toISOString().slice(0, 10) === value;
+}
+
+function affiliationTargetMatches(a: PlayerAffiliation, b: NewPlayerAffiliation) {
+  return a.kind === b.kind && a.organizationId === b.organizationId && a.teamId === b.teamId;
+}
+
+export function addPlayerAffiliation(input: NewPlayerAffiliation): AffiliationMutationResult {
+  if (!getPlayer(input.playerId)) return { ok: false, reason: "player_not_found" };
+  if (!getOrganization(input.organizationId)) return { ok: false, reason: "organization_not_found" };
+  if (!isCalendarDate(input.effectiveFrom)) return { ok: false, reason: "invalid_effective_date" };
+
+  let organizationAffiliation: PlayerAffiliation | undefined;
+  if (input.kind === "organization") {
+    if (input.teamId || input.organizationAffiliationId) return { ok: false, reason: "invalid_scope" };
+  } else {
+    if (!input.teamId) return { ok: false, reason: "invalid_scope" };
+    const team = getTeam(input.teamId);
+    if (!team) return { ok: false, reason: "team_not_found" };
+    if (team.orgId !== input.organizationId) return { ok: false, reason: "team_organization_mismatch" };
+    organizationAffiliation = allPlayerAffiliations(input.playerId).find((affiliation) =>
+      affiliation.id === input.organizationAffiliationId &&
+      affiliation.kind === "organization" &&
+      affiliation.organizationId === input.organizationId &&
+      affiliation.status !== "ended",
+    );
+    if (!organizationAffiliation) return { ok: false, reason: "organization_affiliation_required" };
+    if (organizationAffiliation.effectiveFrom && input.effectiveFrom < organizationAffiliation.effectiveFrom) {
+      return { ok: false, reason: "invalid_effective_date" };
+    }
+  }
+
+  const existing = allPlayerAffiliations(input.playerId).filter((affiliation) => affiliationTargetMatches(affiliation, input));
+  if (existing.some((affiliation) => affiliation.status !== "ended")) {
+    return { ok: false, reason: "affiliation_overlap" };
+  }
+  if (existing.some((affiliation) => !affiliation.effectiveTo || input.effectiveFrom <= affiliation.effectiveTo)) {
+    return { ok: false, reason: "affiliation_overlap" };
+  }
+
+  const affiliation: PlayerAffiliation = {
+    id: `player-affiliation-${nextAffiliationId++}`,
+    playerId: input.playerId,
+    organizationId: input.organizationId,
+    kind: input.kind,
+    teamId: input.teamId,
+    organizationAffiliationId: input.kind === "team" ? organizationAffiliation?.id : undefined,
+    role: input.role,
+    status: input.status ?? "active",
+    effectiveFrom: input.effectiveFrom,
+    recordedBy: input.recordedBy,
+    sourceOrganizationId: input.organizationId,
+  };
+  affiliationUpdates.set(input.playerId, [...(affiliationUpdates.get(input.playerId) ?? []), affiliation]);
+  if (affiliation.status === "active") appendAffiliationJourneyEvent(affiliation, "started", input.effectiveFrom);
+  return { ok: true, affiliation: { ...affiliation } };
+}
+
+export function endPlayerAffiliation(
+  playerId: string,
+  affiliationId: string,
+  effectiveTo: string,
+  endReason?: string,
+): AffiliationMutationResult {
+  if (!isCalendarDate(effectiveTo)) return { ok: false, reason: "invalid_effective_date" };
+  const affiliation = allPlayerAffiliations(playerId).find((item) => item.id === affiliationId);
+  if (!affiliation) return { ok: false, reason: "affiliation_not_found" };
+  if (affiliation.status === "ended") return { ok: false, reason: "already_ended" };
+  if (affiliation.effectiveFrom && effectiveTo < affiliation.effectiveFrom) {
+    return { ok: false, reason: "invalid_effective_date" };
+  }
+  if (affiliation.kind === "organization" && allPlayerAffiliations(playerId).some((item) =>
+    item.kind === "team" && item.organizationAffiliationId === affiliationId && item.status !== "ended",
+  )) {
+    return { ok: false, reason: "active_team_affiliations" };
+  }
+
+  const ended: PlayerAffiliation = { ...affiliation, status: "ended", effectiveTo, endReason };
+  const updates = affiliationUpdates.get(playerId) ?? [];
+  affiliationUpdates.set(playerId, [...updates.filter((item) => item.id !== affiliationId), ended]);
+  if (affiliation.status === "active") appendAffiliationJourneyEvent(ended, "ended", effectiveTo);
+  const primaryContext = primaryContextPreferences.get(playerId);
+  if (primaryContext?.organizationAffiliationId === affiliationId || primaryContext?.teamAffiliationId === affiliationId) {
+    primaryContextPreferences.delete(playerId);
+  }
+  const player = getPlayer(playerId);
+  if (player && affiliation.kind === "team" && player.teamId === affiliation.teamId) {
+    playerUpdates.set(playerId, { ...playerUpdates.get(playerId), teamId: undefined, jersey: undefined });
+  }
+  if (player && affiliation.kind === "organization" && player.orgId === affiliation.organizationId) {
+    playerUpdates.set(playerId, { ...playerUpdates.get(playerId), orgId: undefined, teamId: undefined, jersey: undefined, membership: "completed" });
+  }
+  return { ok: true, affiliation: { ...ended } };
+}
 
 export const listGuardianChildren = (guardianId: string) => {
   const guardian = guardians.find((item) => item.id === guardianId);
@@ -46,10 +292,39 @@ export const assignPlayerToTeam = (playerId: string, teamId: string) => {
   const player = getPlayer(playerId);
   const team = getTeam(teamId);
   if (!player || !team || player.orgId !== team.orgId || player.membership !== "active" || ageCategoryFor(player.birthYear) !== team.ageCategory) return false;
+  if (player.teamId === teamId) return false;
+  const organizationAffiliation = allPlayerAffiliations(playerId).find((affiliation) =>
+    affiliation.kind === "organization" && affiliation.organizationId === team.orgId && affiliation.status === "active",
+  );
+  if (!organizationAffiliation) return false;
+  const targetTeamAffiliations = allPlayerAffiliations(playerId).filter((affiliation) =>
+    affiliation.kind === "team" && affiliation.teamId === teamId,
+  );
+  if (targetTeamAffiliations.some((affiliation) =>
+    affiliation.status !== "ended" || !affiliation.effectiveTo || MOCK_TODAY <= affiliation.effectiveTo,
+  )) return false;
+  const currentTeamAffiliation = player.teamId
+    ? allPlayerAffiliations(playerId).find((affiliation) =>
+        affiliation.kind === "team" && affiliation.teamId === player.teamId && affiliation.status !== "ended",
+      )
+    : undefined;
+  if (currentTeamAffiliation?.effectiveFrom && MOCK_TODAY < currentTeamAffiliation.effectiveFrom) return false;
   const takenNumbers = new Set(listPlayers({ teamId }).map((member) => member.jersey).filter((number): number is number => number !== undefined));
   let jersey = 1;
   while (takenNumbers.has(jersey) && jersey <= 99) jersey++;
   if (jersey > 99) return false;
+  if (currentTeamAffiliation && !endPlayerAffiliation(playerId, currentTeamAffiliation.id, MOCK_TODAY, "Reassigned to another team").ok) return false;
+  const addedAffiliation = addPlayerAffiliation({
+    playerId,
+    organizationId: team.orgId,
+    kind: "team",
+    teamId: team.id,
+    organizationAffiliationId: organizationAffiliation.id,
+    role: "Player",
+    effectiveFrom: MOCK_TODAY,
+    recordedBy: getCurrentUser().name,
+  });
+  if (!addedAffiliation.ok) return false;
   playerUpdates.set(playerId, { ...playerUpdates.get(playerId), teamId, jersey });
   return true;
 };
@@ -57,8 +332,10 @@ export const assignPlayerToTeam = (playerId: string, teamId: string) => {
 export const removePlayerFromTeam = (playerId: string, teamId: string) => {
   const player = getPlayer(playerId);
   if (!player || player.teamId !== teamId) return false;
-  playerUpdates.set(playerId, { ...playerUpdates.get(playerId), teamId: undefined });
-  return true;
+  const affiliation = allPlayerAffiliations(playerId).find((item) =>
+    item.kind === "team" && item.teamId === teamId && item.status !== "ended",
+  );
+  return affiliation ? endPlayerAffiliation(playerId, affiliation.id, MOCK_TODAY, "Removed from team").ok : false;
 };
 export const listCompetitions = () => competitions;
 export const listMatches = (filter?: { competitionId?: string | undefined; teamId?: string | undefined; categoryId?: string | undefined }) =>
@@ -84,27 +361,45 @@ export const listTodaySchedule = (teamIds?: string[]) =>
 
 export const listNotifications = (role: string) => notifications.filter((n) => n.roles.includes(role));
 
-export const getJourney = (playerId: string): JourneyEvent[] => {
-  if (journeys[playerId]) return journeys[playerId];
-  const p = getPlayer(playerId);
-  if (!p) return [];
-  const created = `${Math.max(p.birthYear + 6, 2020)}-02-01`;
-  const events: JourneyEvent[] = [
-    { id: `${p.id}-id`, date: created, year: Number(created.slice(0, 4)), type: "identity", title: "Football ID created", detail: "Registered by guardian", verifiedBy: p.verification === "verified" ? "Football ID Registry" : undefined },
-  ];
-  if (p.memberSince && p.orgId) {
-    const org = getOrganization(p.orgId);
-    events.push({ id: `${p.id}-join`, date: p.memberSince, year: Number(p.memberSince.slice(0, 4)), type: "join", title: `Joined ${org?.name}`, detail: getTeam(p.teamId)?.name ?? "", orgId: p.orgId, verifiedBy: org?.name });
-  }
-  return events;
-};
+export function listPlayerJourney(
+  playerId: string,
+  options: { from?: string | undefined; to?: string | undefined; sourceDomain?: JourneyEvent["provenance"]["sourceDomain"] | undefined } = {},
+): JourneyEvent[] {
+  if (!getPlayer(playerId)) return [];
+  return [...(journeys[playerId] ?? []), ...(journeyUpdates.get(playerId) ?? [])]
+    .filter((event) =>
+      isCalendarDate(event.date) &&
+      event.id.trim().length > 0 &&
+      event.title.trim().length > 0 &&
+      (!event.provenance || event.provenance.sourceRecordId.trim().length > 0),
+    )
+    .filter((event) => !options.from || event.date >= options.from)
+    .filter((event) => !options.to || event.date <= options.to)
+    .filter((event) => !options.sourceDomain || event.provenance?.sourceDomain === options.sourceDomain)
+    .map((event) => ({ ...event, provenance: event.provenance ? { ...event.provenance } : undefined }))
+    .sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
+}
+
+export const getJourney = (playerId: string): JourneyEvent[] => listPlayerJourney(playerId);
 export const getMemberships = (playerId: string) => {
-  const explicit = memberships[playerId];
-  if (explicit) return explicit;
-  const p = getPlayer(playerId);
-  return p?.orgId
-    ? [{ orgId: p.orgId, role: "Player", from: p.memberSince ?? MOCK_TODAY, status: p.membership, teams: [getTeam(p.teamId)?.name ?? ""] }]
-    : [];
+  const affiliations = listPlayerAffiliations(playerId);
+  const teamAffiliations = affiliations.filter((affiliation) => affiliation.kind === "team");
+  return affiliations
+    .filter((affiliation) => affiliation.kind === "organization")
+    .map((organizationAffiliation): Membership => ({
+      orgId: organizationAffiliation.organizationId,
+      role: organizationAffiliation.role,
+      from: organizationAffiliation.effectiveFrom,
+      to: organizationAffiliation.effectiveTo,
+      status: organizationAffiliation.status === "ended" ? "completed" : organizationAffiliation.status,
+      teams: [
+        ...(organizationAffiliation.legacyTeamNames ?? []),
+        ...teamAffiliations
+          .filter((teamAffiliation) => teamAffiliation.organizationAffiliationId === organizationAffiliation.id)
+          .map((teamAffiliation) => getTeam(teamAffiliation.teamId)?.name)
+          .filter((name): name is string => name !== undefined),
+      ],
+    }));
 };
 export const getAchievements = (playerId: string) => achievements[playerId] ?? [];
 export const getDocuments = (playerId: string) => documents[playerId] ?? [];

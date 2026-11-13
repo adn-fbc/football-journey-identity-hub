@@ -1,6 +1,6 @@
 import { BadgeCheck, DoorOpen, Fingerprint, LogIn, Medal, Shield, Trophy, type LucideIcon } from "lucide-react";
 import { Fragment } from "react";
-import type { JourneyEvent } from "@/data/types";
+import type { JourneyEvent, JourneySourceDomain } from "@/data/types";
 import { getOrganization } from "@/data/repository";
 import { fmtDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -18,6 +18,18 @@ const TONE: Record<JourneyEvent["type"], string> = {
   competition: "bg-info/12 text-info",
   achievement: "bg-warning/15 text-warning",
   verification: "bg-info/12 text-info",
+};
+
+const SOURCE_LABELS: Record<JourneySourceDomain, string> = {
+  player_identity: "Player identity",
+  player_affiliation: "Organization affiliation",
+  team_affiliation: "Team affiliation",
+  competition: "Competition",
+  match: "Match",
+  achievement: "Achievement",
+  training_session: "Training session",
+  attendance_record: "Attendance record",
+  development_assessment: "Development assessment",
 };
 
 /** The football passport timeline, grouped by year with a marker at today's date. */
@@ -50,6 +62,7 @@ export function JourneyTimeline({ events, compact }: { events: JourneyEvent[]; c
             {(eventsByYear.get(year) ?? []).map((e, index, yearEvents) => {
               const Icon = ICONS[e.type];
               const org = getOrganization(e.orgId);
+              const sourceOrganization = getOrganization(e.provenance?.sourceOrganizationId);
               const nowIndex = yearEvents.findIndex((event) => event.date > today);
               return (
                 <Fragment key={e.id}>
@@ -64,10 +77,21 @@ export function JourneyTimeline({ events, compact }: { events: JourneyEvent[]; c
                         <time className="text-small text-muted-foreground">{fmtDate(e.date)}</time>
                       </div>
                       <p className="mt-1 text-small text-muted-foreground">{e.detail}</p>
-                      {!compact && (org || e.verifiedBy) && (
+                      {!compact && (
                         <div className="mt-3 flex flex-wrap items-center gap-3 text-small text-muted-foreground">
                           {org && <span className="flex items-center gap-1.5"><Crest label={org.short} hue={org.color} size="xs" />{org.name}</span>}
-                          {e.verifiedBy && <span className="flex items-center gap-1 text-info"><BadgeCheck className="size-3.5" />Recorded by {e.verifiedBy}</span>}
+                          {e.provenance ? (
+                            <span className="flex flex-wrap items-center gap-1.5">
+                              {sourceOrganization && <Crest label={sourceOrganization.short} hue={sourceOrganization.color} size="xs" />}
+                              Source: {SOURCE_LABELS[e.provenance.sourceDomain]} · record {e.provenance.sourceRecordId}
+                            </span>
+                          ) : (
+                            <span>Historical record · source record unavailable</span>
+                          )}
+                          {e.provenance?.recordedBy && <span>Recorded by {e.provenance.recordedBy}</span>}
+                          {e.provenance?.verificationStatus === "verified" && <span className="flex items-center gap-1 text-info"><BadgeCheck className="size-3.5" />Verified source</span>}
+                          {e.provenance?.verificationStatus === "pending" && <span>Source verification pending</span>}
+                          {e.provenance?.verificationStatus === "unverified" && <span>Source unverified</span>}
                         </div>
                       )}
                     </div>

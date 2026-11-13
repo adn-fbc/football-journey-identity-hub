@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { Award, EyeOff, FileText, Lock, Medal, Shield, TrendingUp, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { InfoList, Section } from "@/components/ds/section";
@@ -8,19 +9,26 @@ import { StatCard } from "@/components/ds/stat-card";
 import { StatusBadge } from "@/components/ds/status-badge";
 import { EmptyState } from "@/components/ds/states";
 import { OrgCrest, TeamCrest } from "@/components/ds/team-crest";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   getAchievements,
   getDocuments,
-  getJourney,
-  getMemberships,
   getOrganization,
   getTeam,
   listMatches,
   listSchedule,
 } from "@/data/repository";
-import type { Achievement, Player } from "@/data/types";
+import type { Achievement, Player, PlayerAffiliation } from "@/data/types";
 import { ageCategoryFor, fmtDate, relativeDay } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { usePlayerDevelopmentFoundation } from "./use-player-development-foundation";
 
 const ACH_ICON: Record<Achievement["kind"], typeof Trophy> = {
   trophy: Trophy,
@@ -75,48 +83,179 @@ export function AchievementList({
   );
 }
 
-export function RelationshipSection({ player }: { player: Player }) {
-  const rels = getMemberships(player.id);
-  const current = rels.find((r) => r.status === "active" || r.status === "pending");
-  const org = getOrganization(current?.orgId);
+function affiliationDates(affiliation: PlayerAffiliation) {
+  const from = affiliation.effectiveFrom
+    ? fmtDate(affiliation.effectiveFrom, "MMM yyyy")
+    : "Start date not recorded";
+  const to =
+    affiliation.status === "ended"
+      ? affiliation.effectiveTo
+        ? fmtDate(affiliation.effectiveTo, "MMM yyyy")
+        : "End date not recorded"
+      : affiliation.status === "pending"
+        ? "Pending"
+        : "Present";
+  return `${from} – ${to}`;
+}
+
+export function PrimaryContextSection({ player }: { player: Player }) {
+  const { affiliations, primaryContext, canChangePrimaryContext, updatePrimaryContext } =
+    usePlayerDevelopmentFoundation(player);
+  const [error, setError] = useState<string>();
+  const organizationAffiliations = affiliations.filter(
+    (affiliation) => affiliation.kind === "organization" && affiliation.status === "active",
+  );
+  const selectedOrganizationId = primaryContext?.organizationAffiliationId ?? "unset";
+  const teamAffiliations = primaryContext
+    ? affiliations.filter(
+        (affiliation) =>
+          affiliation.kind === "team" &&
+          affiliation.status === "active" &&
+          affiliation.organizationAffiliationId === primaryContext.organizationAffiliationId,
+      )
+    : [];
+
+  const saveContext = (context: Parameters<typeof updatePrimaryContext>[0]) => {
+    const result = updatePrimaryContext(context);
+    setError(
+      result.ok
+        ? undefined
+        : "This context is no longer available or you are not allowed to change it.",
+    );
+  };
+
   return (
     <Section
-      title="Organization relationship"
-      description="Organizations hold a membership relationship — the player keeps their identity and history."
+      title="Primary organization context"
+      description="A player-selected display preference. It does not change membership or grant access."
     >
-      {current && org ? (
-        <div className="flex items-center gap-3 rounded-xl bg-accent/60 p-4">
-          <OrgCrest orgId={org.id} size="md" />
-          <div className="min-w-0 flex-1">
-            <div className="text-label text-accent-foreground">
-              {current.status === "active" ? "Current member" : "Membership requested"}
-            </div>
-            <div className="text-sm font-semibold">{org.name}</div>
-            <div className="text-small text-muted-foreground">
-              Since {fmtDate(current.from)} · {current.teams.join(", ")}
-            </div>
+      {organizationAffiliations.length ? (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor={`primary-org-${player.id}`}>Primary organization</Label>
+            <Select
+              value={selectedOrganizationId}
+              onValueChange={(value) =>
+                saveContext(value === "unset" ? null : { organizationAffiliationId: value })
+              }
+              disabled={!canChangePrimaryContext}
+            >
+              <SelectTrigger id={`primary-org-${player.id}`} aria-label="Primary organization">
+                <SelectValue placeholder="Choose a context" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="unset">No primary context</SelectItem>
+                {organizationAffiliations.map((affiliation) => (
+                  <SelectItem key={affiliation.id} value={affiliation.id}>
+                    {getOrganization(affiliation.organizationId)?.name ?? "Organization"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          <StatusBadge status={current.status} />
+          <div className="space-y-2">
+            <Label htmlFor={`primary-team-${player.id}`}>Primary team</Label>
+            <Select
+              value={primaryContext?.teamAffiliationId ?? "none"}
+              onValueChange={(value) => {
+                if (!primaryContext) return;
+                saveContext({
+                  organizationAffiliationId: primaryContext.organizationAffiliationId,
+                  teamAffiliationId: value === "none" ? undefined : value,
+                });
+              }}
+              disabled={!canChangePrimaryContext || !primaryContext}
+            >
+              <SelectTrigger id={`primary-team-${player.id}`} aria-label="Primary team">
+                <SelectValue placeholder="No team context" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No primary team</SelectItem>
+                {teamAffiliations.map((affiliation) => (
+                  <SelectItem key={affiliation.id} value={affiliation.id}>
+                    {getTeam(affiliation.teamId)?.name ?? "Team"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       ) : (
-        <p className="text-small text-muted-foreground">No current organization relationship.</p>
+        <p className="text-small text-muted-foreground">
+          No organization affiliations are available in this view. The player identity and journey
+          remain separate.
+        </p>
       )}
-      <div className="mt-5 text-label text-muted-foreground">Membership history</div>
-      <ul className="mt-2 divide-y">
-        {rels.map((r) => (
-          <li key={r.orgId + r.from} className="flex items-center gap-3 py-3">
-            <OrgCrest orgId={r.orgId} size="sm" tone="soft" />
-            <div className="min-w-0 flex-1 text-small">
-              <div className="font-semibold">{getOrganization(r.orgId)?.name}</div>
-              <div className="text-muted-foreground">
-                {fmtDate(r.from, "MMM yyyy")} – {r.to ? fmtDate(r.to, "MMM yyyy") : "present"} ·{" "}
-                {r.role}
-              </div>
-            </div>
-            <StatusBadge status={r.status} label={r.status === "completed" ? "Ended" : undefined} />
-          </li>
-        ))}
-      </ul>
+      {!canChangePrimaryContext && organizationAffiliations.length > 0 && (
+        <p className="mt-3 text-small text-muted-foreground">
+          Only the player or a currently linked guardian can change this preference.
+        </p>
+      )}
+      {error && (
+        <p role="alert" className="mt-3 text-small text-destructive">
+          {error}
+        </p>
+      )}
+    </Section>
+  );
+}
+
+export function RelationshipSection({ player }: { player: Player }) {
+  const { affiliations } = usePlayerDevelopmentFoundation(player);
+  const organizationAffiliations = affiliations.filter(
+    (affiliation) => affiliation.kind === "organization",
+  );
+  return (
+    <Section
+      title="Organization and team affiliations"
+      description="Affiliations can change independently; the player keeps one identity and the dated history."
+    >
+      {organizationAffiliations.length ? (
+        <ul className="divide-y">
+          {organizationAffiliations.map((affiliation) => {
+            const org = getOrganization(affiliation.organizationId);
+            const teams = affiliations.filter(
+              (teamAffiliation) =>
+                teamAffiliation.kind === "team" &&
+                teamAffiliation.organizationAffiliationId === affiliation.id,
+            );
+            const teamLabels = [
+              ...(affiliation.legacyTeamNames ?? []),
+              ...teams
+                .map((teamAffiliation) => getTeam(teamAffiliation.teamId)?.name)
+                .filter((name): name is string => Boolean(name)),
+            ];
+            return (
+              <li key={affiliation.id} className="flex items-start gap-3 py-3">
+                <OrgCrest orgId={affiliation.organizationId} size="sm" tone="soft" />
+                <div className="min-w-0 flex-1 text-small">
+                  <div className="font-semibold">{org?.name ?? "Organization"}</div>
+                  <div className="text-muted-foreground">
+                    {affiliationDates(affiliation)} · {affiliation.role}
+                  </div>
+                  {teamLabels.length > 0 && (
+                    <div className="mt-1 text-muted-foreground">Teams: {teamLabels.join(", ")}</div>
+                  )}
+                </div>
+                <StatusBadge
+                  status={affiliation.status === "ended" ? "completed" : affiliation.status}
+                  label={
+                    affiliation.status === "ended"
+                      ? "Ended"
+                      : affiliation.status === "active"
+                        ? "Active"
+                        : "Pending"
+                  }
+                />
+              </li>
+            );
+          })}
+        </ul>
+      ) : (
+        <p className="text-small text-muted-foreground">
+          No organization affiliations have been recorded.
+        </p>
+      )}
     </Section>
   );
 }
@@ -161,6 +300,7 @@ export function PlayerOverviewTab({ player }: { player: Player }) {
             ]}
           />
         </Section>
+        <PrimaryContextSection player={player} />
         <Section title="Current football activity">
           {team ? (
             <div className="space-y-4">
@@ -220,12 +360,20 @@ export function PlayerOverviewTab({ player }: { player: Player }) {
 }
 
 export function PlayerJourneyTab({ player }: { player: Player }) {
+  const { journey } = usePlayerDevelopmentFoundation(player);
   return (
     <Section
       title="Football journey"
       description="Every club, team, competition and milestone — owned by the player."
     >
-      <JourneyTimeline events={getJourney(player.id)} />
+      {journey.length ? (
+        <JourneyTimeline events={journey} />
+      ) : (
+        <EmptyState
+          title="No journey events recorded"
+          description="Verified identity, affiliation and source events will appear here when available."
+        />
+      )}
     </Section>
   );
 }

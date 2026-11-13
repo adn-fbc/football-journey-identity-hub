@@ -57,6 +57,37 @@ export interface Player {
   guardianIds: string[];
 }
 
+export interface PlayerIdentity {
+  id: Player["id"];
+  footballId: Player["footballId"];
+}
+
+export type PlayerAffiliationKind = "organization" | "team";
+export type PlayerAffiliationStatus = "active" | "pending" | "ended";
+
+export interface PlayerAffiliation {
+  id: string;
+  playerId: string;
+  organizationId: string;
+  kind: PlayerAffiliationKind;
+  teamId?: string | undefined;
+  organizationAffiliationId?: string | undefined;
+  role: string;
+  status: PlayerAffiliationStatus;
+  effectiveFrom?: string | undefined;
+  effectiveTo?: string | undefined;
+  recordedBy?: string | undefined;
+  sourceOrganizationId: string;
+  endReason?: string | undefined;
+  legacyTeamNames?: string[] | undefined;
+}
+
+export interface PrimaryPlayerContext {
+  playerId: string;
+  organizationAffiliationId: string;
+  teamAffiliationId?: string | undefined;
+}
+
 export interface JourneyEvent {
   id: string;
   date: string;
@@ -66,12 +97,32 @@ export interface JourneyEvent {
   detail: string;
   orgId?: string | undefined;
   verifiedBy?: string | undefined;
+  provenance?: JourneyProvenance | undefined;
+}
+
+export type JourneySourceDomain =
+  | "player_identity"
+  | "player_affiliation"
+  | "team_affiliation"
+  | "competition"
+  | "match"
+  | "achievement"
+  | "training_session"
+  | "attendance_record"
+  | "development_assessment";
+
+export interface JourneyProvenance {
+  sourceDomain: JourneySourceDomain;
+  sourceRecordId: string;
+  sourceOrganizationId?: string | undefined;
+  recordedBy?: string | undefined;
+  verificationStatus?: "verified" | "pending" | "unverified" | undefined;
 }
 
 export interface Membership {
   orgId: string;
   role: string;
-  from: string;
+  from?: string | undefined;
   to?: string | undefined;
   status: Status;
   teams: string[];

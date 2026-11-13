@@ -6,7 +6,7 @@ import rizkyPhoto from "@/assets/player-rizky.jpg";
 import aisyahPhoto from "@/assets/player-aisyah.jpg";
 import type {
   Achievement, ChildPayment, ChildRegistration, Competition, Guardian, JourneyEvent, Match, Membership,
-  Notification, Organization, Player, PlayerDocument, ScheduleItem, Team,
+  Notification, Organization, Player, PlayerAffiliation, PlayerDocument, ScheduleItem, Team,
 } from "./types";
 
 export const MOCK_TODAY = "2027-02-14";
@@ -101,29 +101,77 @@ export const childPayments: ChildPayment[] = [
 
 export const journeys: Record<string, JourneyEvent[]> = {
   "p-123": [
-    { id: "j1", date: "2022-03-04", year: 2022, type: "identity", title: "Football ID created", detail: "Registered by guardian Andi Pratama. Identity verified with birth certificate.", verifiedBy: "Football ID Registry" },
-    { id: "j2", date: "2022-07-16", year: 2022, type: "join", title: "Joined SSB Alpha Maros", detail: "First football school · U6 group", orgId: "alpha", verifiedBy: "SSB Alpha Maros" },
+    { id: "j1", date: "2022-03-04", year: 2022, type: "identity", title: "Football ID created", detail: "Registered by guardian Andi Pratama. Identity verified with birth certificate.", verifiedBy: "Football ID Registry", provenance: { sourceDomain: "player_identity", sourceRecordId: "p-123", verificationStatus: "verified" } },
+    { id: "j2", date: "2022-07-16", year: 2022, type: "join", title: "Joined SSB Alpha Maros", detail: "First football school · U6 group", orgId: "alpha", verifiedBy: "SSB Alpha Maros", provenance: { sourceDomain: "player_affiliation", sourceRecordId: "p-123-org-alpha", sourceOrganizationId: "alpha" } },
     { id: "j3", date: "2024-02-10", year: 2024, type: "competition", title: "Festival Sepak Bola Usia Dini", detail: "First competition · Alpha U8 · 4 matches, 3 goals", orgId: "alpha" },
     { id: "j4", date: "2025-03-22", year: 2025, type: "competition", title: "Played in Makassar Youth Cup 2025", detail: "Alpha U10 · Quarter-finalist · 5 matches, 6 goals", orgId: "alpha" },
-    { id: "j5", date: "2025-06-30", year: 2025, type: "leave", title: "Completed membership at SSB Alpha Maros", detail: "Relationship closed by guardian · history preserved", orgId: "alpha" },
-    { id: "j6", date: "2025-07-12", year: 2025, type: "join", title: "Joined SSB Garuda Makassar", detail: "Membership approved by guardian", orgId: "garuda", verifiedBy: "SSB Garuda Makassar" },
-    { id: "j7", date: "2026-01-05", year: 2026, type: "achievement", title: "Top scorer · Liga Anak Makassar 2026", detail: "11 goals in 8 matches", orgId: "garuda" },
-    { id: "j8", date: "2026-07-20", year: 2026, type: "team", title: "Joined Team Garuda U10", detail: "Season 2026/27 · Jersey #9 · Striker", orgId: "garuda" },
-    { id: "j9", date: "2027-01-24", year: 2027, type: "competition", title: "Makassar Youth Cup 2027", detail: "Garuda U10 · Group A · in progress", orgId: "garuda" },
+    { id: "j5", date: "2025-06-30", year: 2025, type: "leave", title: "Completed membership at SSB Alpha Maros", detail: "Relationship closed by guardian · history preserved", orgId: "alpha", provenance: { sourceDomain: "player_affiliation", sourceRecordId: "p-123-org-alpha", sourceOrganizationId: "alpha" } },
+    { id: "j6", date: "2025-07-12", year: 2025, type: "join", title: "Joined SSB Garuda Makassar", detail: "Membership approved by guardian", orgId: "garuda", verifiedBy: "SSB Garuda Makassar", provenance: { sourceDomain: "player_affiliation", sourceRecordId: "p-123-org-garuda", sourceOrganizationId: "garuda" } },
+    { id: "j7", date: "2026-01-05", year: 2026, type: "achievement", title: "Top scorer · Liga Anak Makassar 2026", detail: "11 goals in 8 matches", orgId: "garuda", provenance: { sourceDomain: "achievement", sourceRecordId: "ac1", sourceOrganizationId: "garuda" } },
+    { id: "j8", date: "2026-07-20", year: 2026, type: "team", title: "Joined Team Garuda U10", detail: "Season 2026/27 · Jersey #9 · Striker", orgId: "garuda", provenance: { sourceDomain: "team_affiliation", sourceRecordId: "p-123-team-garuda-u10", sourceOrganizationId: "garuda" } },
+    { id: "j9", date: "2027-01-24", year: 2027, type: "competition", title: "Makassar Youth Cup 2027", detail: "Garuda U10 · Group A · in progress", orgId: "garuda", provenance: { sourceDomain: "competition", sourceRecordId: "myc-2027" } },
   ],
   "p-125": [
-    { id: "a1", date: "2025-11-02", year: 2025, type: "identity", title: "Football ID created", detail: "Registered by guardian Andi Pratama", verifiedBy: "Football ID Registry" },
-    { id: "a2", date: "2026-01-18", year: 2026, type: "join", title: "Joined SSB Garuda Makassar", detail: "Garuda Putri U9", orgId: "garuda", verifiedBy: "SSB Garuda Makassar" },
+    { id: "a1", date: "2025-11-02", year: 2025, type: "identity", title: "Football ID created", detail: "Registered by guardian Andi Pratama", verifiedBy: "Football ID Registry", provenance: { sourceDomain: "player_identity", sourceRecordId: "p-125", verificationStatus: "verified" } },
+    { id: "a2", date: "2026-01-18", year: 2026, type: "join", title: "Joined SSB Garuda Makassar", detail: "Garuda Putri U9", orgId: "garuda", verifiedBy: "SSB Garuda Makassar", provenance: { sourceDomain: "player_affiliation", sourceRecordId: "p-125-org-garuda", sourceOrganizationId: "garuda" } },
     { id: "a3", date: "2026-10-09", year: 2026, type: "competition", title: "Festival Putri Sulsel 2026", detail: "First tournament · 3 matches, 2 goals", orgId: "garuda" },
   ],
 };
 
-export const memberships: Record<string, Membership[]> = {
-  "p-123": [
-    { orgId: "garuda", role: "Player", from: "2025-07-12", status: "active", teams: ["Garuda U10"] },
-    { orgId: "alpha", role: "Player", from: "2022-07-16", to: "2025-06-30", status: "completed", teams: ["Alpha U6", "Alpha U8", "Alpha U10"] },
-  ],
-};
+const affiliationStatus = (status: Player["membership"]): PlayerAffiliation["status"] =>
+  status === "active" ? "active" : status === "pending" ? "pending" : "ended";
+
+const explicitOrganizationAffiliations: PlayerAffiliation[] = [
+  { id: "p-123-org-garuda", playerId: "p-123", organizationId: "garuda", kind: "organization", role: "Player", status: "active", effectiveFrom: "2025-07-12", sourceOrganizationId: "garuda" },
+  { id: "p-123-org-alpha", playerId: "p-123", organizationId: "alpha", kind: "organization", role: "Player", status: "ended", effectiveFrom: "2022-07-16", effectiveTo: "2025-06-30", sourceOrganizationId: "alpha", legacyTeamNames: ["Alpha U6", "Alpha U8", "Alpha U10"] },
+  { id: "p-125-org-garuda", playerId: "p-125", organizationId: "garuda", kind: "organization", role: "Player", status: "active", effectiveFrom: "2026-01-18", sourceOrganizationId: "garuda" },
+];
+
+const organizationAffiliations = players.flatMap((player) => {
+  const explicit = explicitOrganizationAffiliations.filter((affiliation) => affiliation.playerId === player.id);
+  if (explicit.length) return explicit;
+  if (!player.orgId) return [];
+  return [{
+    id: `${player.id}-org-${player.orgId}`,
+    playerId: player.id,
+    organizationId: player.orgId,
+    kind: "organization" as const,
+    role: "Player",
+    status: affiliationStatus(player.membership),
+    effectiveFrom: player.memberSince,
+    sourceOrganizationId: player.orgId,
+  }];
+});
+
+const teamAffiliationStarts: Record<string, string> = { "p-123:garuda-u10": "2026-07-20" };
+
+const teamAffiliations = players.flatMap((player) => {
+  if (!player.teamId || !player.orgId) return [];
+  const organizationAffiliation = organizationAffiliations.find((affiliation) =>
+    affiliation.playerId === player.id && affiliation.organizationId === player.orgId && affiliation.status !== "ended",
+  ) ?? organizationAffiliations.find((affiliation) =>
+    affiliation.playerId === player.id && affiliation.organizationId === player.orgId,
+  );
+  if (!organizationAffiliation) return [];
+  const start = teamAffiliationStarts[`${player.id}:${player.teamId}`];
+  return [{
+    id: `${player.id}-team-${player.teamId}`,
+    playerId: player.id,
+    organizationId: player.orgId,
+    kind: "team" as const,
+    teamId: player.teamId,
+    organizationAffiliationId: organizationAffiliation.id,
+    role: "Player",
+    status: organizationAffiliation.status,
+    effectiveFrom: start,
+    sourceOrganizationId: player.orgId,
+  }];
+});
+
+export const playerAffiliations: PlayerAffiliation[] = [
+  ...organizationAffiliations,
+  ...teamAffiliations,
+];
 
 export const achievements: Record<string, Achievement[]> = {
   "p-123": [

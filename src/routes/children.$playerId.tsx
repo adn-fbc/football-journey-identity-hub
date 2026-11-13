@@ -11,7 +11,7 @@ import { NotificationItem } from "@/components/shell/notification-item";
 import { ChildSelector } from "@/features/children/child-selector";
 import { listChildPayments, listChildRegistrations, listCurrentGuardianChildren, listNotifications, listSchedule } from "@/data/repository";
 import { PlayerHeader } from "@/features/players/player-header";
-import { PlayerJourneyTab, PlayerMatchesTab } from "@/features/players/player-tabs";
+import { PlayerJourneyTab, PlayerMatchesTab, PrimaryContextSection } from "@/features/players/player-tabs";
 import { ConsentPanel } from "@/features/children/consent-panel";
 import { FootballPassport } from "@/components/ds/passport";
 import { ageCategoryFor, fmtDate, fmtDay, relativeDay } from "@/lib/format";
@@ -74,6 +74,7 @@ function ChildProfile() {
         </PageTabsList>
         <PageTabsContent value="summary" className="space-y-6">
           <FootballPassport player={child} />
+          <PrimaryContextSection player={child} />
           <Section title="Football at a glance" description="A summary of this child's current football identity and activity.">
             <InfoList className="sm:grid-cols-3" items={[
               { label: "Age group", value: ageCategoryFor(child.birthYear) },
