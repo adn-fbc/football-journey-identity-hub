@@ -26,7 +26,7 @@ const standardChecklist = (b: (typeof MODULE_BLUEPRINTS)[number]) => {
     `Create the route files that replace the \`${path}\` blueprint page, each with its own \`head()\``,
     b.journeyEvents.length ? "Publish the Football Journey events listed above to the player timeline" : "Confirm the module writes nothing to the Football Journey timeline",
     "Add loading, empty and error states for every new screen",
-    "Turn each acceptance criterion below into at least one test and make them pass (`bunx vitest run`)",
+    "Turn each acceptance criterion above into at least one test and make them pass (`bunx vitest run`)",
     `Set \`status: "live"\` and the new \`path\` for \`${b.id}\` in \`src/config/modules.ts\`, remove its blueprint, and re-generate this document`,
   ];
 };

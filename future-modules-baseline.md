@@ -148,7 +148,7 @@ _None — can start independently._
 - [ ] Create the route files that replace the `/modules/attendance` blueprint page, each with its own `head()`
 - [ ] Publish the Football Journey events listed above to the player timeline
 - [ ] Add loading, empty and error states for every new screen
-- [ ] Turn each acceptance criterion below into at least one test and make them pass (`bunx vitest run`)
+- [ ] Turn each acceptance criterion above into at least one test and make them pass (`bunx vitest run`)
 - [ ] Set `status: "live"` and the new `path` for `attendance` in `src/config/modules.ts`, remove its blueprint, and re-generate this document
 
 ## Training
@@ -239,7 +239,7 @@ Session planning, a shared drill library and team training calendars for coaches
 - [ ] Create the route files that replace the `/modules/training` blueprint page, each with its own `head()`
 - [ ] Publish the Football Journey events listed above to the player timeline
 - [ ] Add loading, empty and error states for every new screen
-- [ ] Turn each acceptance criterion below into at least one test and make them pass (`bunx vitest run`)
+- [ ] Turn each acceptance criterion above into at least one test and make them pass (`bunx vitest run`)
 - [ ] Set `status: "live"` and the new `path` for `training` in `src/config/modules.ts`, remove its blueprint, and re-generate this document
 
 ## Player Development
@@ -335,7 +335,7 @@ Competency-based development tracking: coach observations, periodic assessments,
 - [ ] Create the route files that replace the `/modules/development` blueprint page, each with its own `head()`
 - [ ] Publish the Football Journey events listed above to the player timeline
 - [ ] Add loading, empty and error states for every new screen
-- [ ] Turn each acceptance criterion below into at least one test and make them pass (`bunx vitest run`)
+- [ ] Turn each acceptance criterion above into at least one test and make them pass (`bunx vitest run`)
 - [ ] Set `status: "live"` and the new `path` for `development` in `src/config/modules.ts`, remove its blueprint, and re-generate this document
 
 ### Further documents
@@ -433,7 +433,7 @@ _None — can start independently._
 - [ ] Create the route files that replace the `/modules/finance` blueprint page, each with its own `head()`
 - [ ] Confirm the module writes nothing to the Football Journey timeline
 - [ ] Add loading, empty and error states for every new screen
-- [ ] Turn each acceptance criterion below into at least one test and make them pass (`bunx vitest run`)
+- [ ] Turn each acceptance criterion above into at least one test and make them pass (`bunx vitest run`)
 - [ ] Set `status: "live"` and the new `path` for `finance` in `src/config/modules.ts`, remove its blueprint, and re-generate this document
 
 ---
@@ -524,7 +524,7 @@ A coaching career on the coach's own Football ID: licences, courses and coaching
 - [ ] Create the route files that replace the `/modules/coach` blueprint page, each with its own `head()`
 - [ ] Publish the Football Journey events listed above to the player timeline
 - [ ] Add loading, empty and error states for every new screen
-- [ ] Turn each acceptance criterion below into at least one test and make them pass (`bunx vitest run`)
+- [ ] Turn each acceptance criterion above into at least one test and make them pass (`bunx vitest run`)
 - [ ] Set `status: "live"` and the new `path` for `coach` in `src/config/modules.ts`, remove its blueprint, and re-generate this document
 
 ## Referee Platform
@@ -611,7 +611,7 @@ _None — can start independently._
 - [ ] Create the route files that replace the `/modules/referee` blueprint page, each with its own `head()`
 - [ ] Publish the Football Journey events listed above to the player timeline
 - [ ] Add loading, empty and error states for every new screen
-- [ ] Turn each acceptance criterion below into at least one test and make them pass (`bunx vitest run`)
+- [ ] Turn each acceptance criterion above into at least one test and make them pass (`bunx vitest run`)
 - [ ] Set `status: "live"` and the new `path` for `referee` in `src/config/modules.ts`, remove its blueprint, and re-generate this document
 
 ## Opportunities
@@ -699,7 +699,7 @@ _None — can start independently._
 - [ ] Create the route files that replace the `/modules/opportunities` blueprint page, each with its own `head()`
 - [ ] Publish the Football Journey events listed above to the player timeline
 - [ ] Add loading, empty and error states for every new screen
-- [ ] Turn each acceptance criterion below into at least one test and make them pass (`bunx vitest run`)
+- [ ] Turn each acceptance criterion above into at least one test and make them pass (`bunx vitest run`)
 - [ ] Set `status: "live"` and the new `path` for `opportunities` in `src/config/modules.ts`, remove its blueprint, and re-generate this document
 
 ## Scouting
@@ -790,7 +790,7 @@ _Publishes no journey events._
 - [ ] Create the route files that replace the `/modules/scouting` blueprint page, each with its own `head()`
 - [ ] Confirm the module writes nothing to the Football Journey timeline
 - [ ] Add loading, empty and error states for every new screen
-- [ ] Turn each acceptance criterion below into at least one test and make them pass (`bunx vitest run`)
+- [ ] Turn each acceptance criterion above into at least one test and make them pass (`bunx vitest run`)
 - [ ] Set `status: "live"` and the new `path` for `scouting` in `src/config/modules.ts`, remove its blueprint, and re-generate this document
 
 ---
@@ -880,7 +880,7 @@ _Publishes no journey events._
 - [ ] Create the route files that replace the `/modules/analytics` blueprint page, each with its own `head()`
 - [ ] Confirm the module writes nothing to the Football Journey timeline
 - [ ] Add loading, empty and error states for every new screen
-- [ ] Turn each acceptance criterion below into at least one test and make them pass (`bunx vitest run`)
+- [ ] Turn each acceptance criterion above into at least one test and make them pass (`bunx vitest run`)
 - [ ] Set `status: "live"` and the new `path` for `analytics` in `src/config/modules.ts`, remove its blueprint, and re-generate this document
 
 ## Association
@@ -967,7 +967,7 @@ Regional governance for city and provincial associations: club registry, sanctio
 - [ ] Create the route files that replace the `/modules/association` blueprint page, each with its own `head()`
 - [ ] Publish the Football Journey events listed above to the player timeline
 - [ ] Add loading, empty and error states for every new screen
-- [ ] Turn each acceptance criterion below into at least one test and make them pass (`bunx vitest run`)
+- [ ] Turn each acceptance criterion above into at least one test and make them pass (`bunx vitest run`)
 - [ ] Set `status: "live"` and the new `path` for `association` in `src/config/modules.ts`, remove its blueprint, and re-generate this document
 
 ## Federation
@@ -1052,7 +1052,7 @@ A national player registry with transfers, eligibility checks and federation-wid
 - [ ] Create the route files that replace the `/modules/federation` blueprint page, each with its own `head()`
 - [ ] Publish the Football Journey events listed above to the player timeline
 - [ ] Add loading, empty and error states for every new screen
-- [ ] Turn each acceptance criterion below into at least one test and make them pass (`bunx vitest run`)
+- [ ] Turn each acceptance criterion above into at least one test and make them pass (`bunx vitest run`)
 - [ ] Set `status: "live"` and the new `path` for `federation` in `src/config/modules.ts`, remove its blueprint, and re-generate this document
 
 ## AI Assistant
@@ -1136,6 +1136,6 @@ _Publishes no journey events._
 - [ ] Create the route files that replace the `/modules/ai` blueprint page, each with its own `head()`
 - [ ] Confirm the module writes nothing to the Football Journey timeline
 - [ ] Add loading, empty and error states for every new screen
-- [ ] Turn each acceptance criterion below into at least one test and make them pass (`bunx vitest run`)
+- [ ] Turn each acceptance criterion above into at least one test and make them pass (`bunx vitest run`)
 - [ ] Set `status: "live"` and the new `path` for `ai` in `src/config/modules.ts`, remove its blueprint, and re-generate this document
 
