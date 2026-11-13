@@ -39,3 +39,15 @@ describe("blueprint delivery criteria", () => {
     for (const bp of MODULE_BLUEPRINTS) expect(bp.checklist.length, bp.id).toBeGreaterThanOrEqual(4);
   });
 });
+
+describe("preview modules", () => {
+  const preview = MODULES.filter((m) => m.status === "preview");
+
+  it("open a real prototype route instead of the blueprint page", () => {
+    for (const m of preview) expect(m.path.startsWith("/modules/"), m.id).toBe(false);
+  });
+
+  it("keep their blueprint while in preview", () => {
+    for (const m of preview) expect(getBlueprint(m.id), m.id).toBeDefined();
+  });
+});
