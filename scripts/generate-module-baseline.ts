@@ -137,7 +137,7 @@ for (const w of waves) {
     const m = getModule(b.id);
     out.push(`## ${title(b.id)}
 
-**${m?.description ?? ""}** · Route: \`${m?.path ?? "-"}\` · Wave ${b.wave}
+**${m?.description ?? ""}** · Status: ${m?.status === "preview" ? "prototype available (mock data)" : "coming soon"} · Route: \`${m?.path ?? "-"}\` · Wave ${b.wave}
 
 ${b.summary}
 
