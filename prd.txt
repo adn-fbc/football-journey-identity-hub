@@ -1,0 +1,1629 @@
+BLUEPRINT — YOUTH FOOTBALL ECOSYSTEM PLATFORM
+Versi 0.1 — Indonesia
+1. Visi
+Visi besar
+
+Membangun infrastruktur digital yang menghubungkan seluruh perjalanan sepak bola anak sejak mulai bermain sampai berkembang menjadi pemain profesional.
+
+Bukan hanya:
+
+“Aplikasi untuk SSB.”
+
+Tetapi:
+
+Player → Parent → SSB → Coach → Referee → Competition → Scout → Club → Academy → Association → Federation
+
+semuanya terhubung oleh satu Football Identity & Data Layer.
+
+2. Positioning
+
+Saya menyarankan positioning awal:
+
+The Digital Infrastructure for Grassroots Football
+
+Untuk pasar Indonesia:
+
+Satu ekosistem digital untuk membangun, mengelola, mengembangkan, dan menghubungkan sepak bola usia dini.
+
+Dan untuk pemain:
+
+Every Player Has a Football Journey.
+
+Ini penting karena platform kita bukan hanya mencatat siapa pemainnya, tetapi mencatat:
+
+siapa → bermain di mana → dilatih siapa → bermain kapan → berkembang bagaimana → berprestasi apa → kemudian ke mana.
+
+3. Masalah yang ingin kita pecahkan
+
+Saat ini ekosistem grassroots cenderung terfragmentasi.
+
+Misalnya seorang anak:
+
+Andi
+
+berlatih di SSB A.
+
+Data Andi berada di:
+
+WhatsApp orang tua
+Excel SSB
+catatan pelatih
+formulir turnamen
+sertifikat
+video HP orang tua
+data panitia pertandingan
+
+Ketika pindah SSB:
+
+history-nya sering ikut hilang.
+
+Ketika ikut turnamen:
+
+harus daftar ulang.
+
+Ketika ikut seleksi:
+
+harus membawa data baru.
+
+Ketika scout melihat:
+
+informasi pemain terbatas.
+
+4. Solusi inti
+
+Kita membangun Football Identity Layer.
+
+Setiap manusia dan organisasi mempunyai identitas digital.
+
+Person
+Player ID
+Parent ID
+Coach ID
+Referee ID
+Scout ID
+Medical/official ID
+Organization
+SSB ID
+Club ID
+Academy ID
+Tournament Organizer ID
+Association ID
+Federation ID
+Activity
+Training
+Match
+Tournament
+League
+Trial
+Selection
+Certification
+
+Semuanya terhubung.
+
+5. Football ID
+
+Ini menurut saya adalah jantung perusahaan.
+
+Contoh:
+
+Player
+
+NFID-XXXXXXXX
+
+atau nama produk yang lebih sederhana:
+
+Football ID: 000123456
+
+Football ID bukan sekadar nomor akun.
+
+Ia menjadi identitas sepak bola sepanjang perjalanan anak.
+
+Contoh Football Passport
+PLAYER
+
+Rizky Pratama
+
+Football ID
+NFID-XXXXXXXX
+
+Contoh di atas hanya placeholder opaque dan bukan format final. Format National Football ID tetap PENDING (D-24); ID tetap stabil, player-owned, dan tidak berubah atau digunakan ulang karena transfer.
+
+Birth Year
+2016
+
+Position
+CM / AM
+
+Preferred Foot
+Right
+
+Current Organization
+SSB ABC
+
+Football Journey
+
+2024
+
+SSB ABC
+U8
+
+↓
+
+2025
+
+SSB ABC
+U9
+
+↓
+
+2026
+
+Tournament X
+U10
+
+↓
+
+2026
+
+Selection
+Regional
+
+↓
+
+2027
+
+Academy XYZ
+U11
+
+Semua menjadi historical record.
+
+6. Prinsip penting Football ID
+
+Saya menyarankan:
+
+ID tidak boleh dimiliki SSB.
+
+SSB hanya memiliki relationship dengan pemain.
+
+Jadi:
+
+Pemain tidak “milik” SSB.
+
+SSB hanya mempunyai:
+
+Player–Organization Relationship
+
+misalnya:
+
+PLAYER
+Rizky
+
+     │
+     │ member
+     ▼
+
+SSB ABC
+2025–2027
+
+Ketika Rizky pindah:
+
+SSB ABC
+2025–2027
+
+SSB XYZ
+2027–2029
+
+history tetap utuh.
+
+Ini akan sangat penting jika platform berkembang secara nasional.
+
+7. Stakeholder Ecosystem
+
+Saya membagi ekosistem menjadi 8 kelompok.
+
+A. Footballers
+Player
+Youth player
+Amateur player
+B. Family
+Parent
+Guardian
+C. Football Organizations
+SSB
+Club
+Academy
+School football program
+D. Football Professionals
+Coach
+Assistant coach
+Goalkeeper coach
+Fitness coach
+Scout
+Referee
+Match official
+E. Competition
+Tournament organizer
+League organizer
+Venue
+Match commissioner
+F. Associations
+APSSI
+regional associations
+local football organizations
+G. Federation
+PSSI
+Asprov
+Askab
+Askot
+H. Commercial Ecosystem
+Sponsor
+Brand
+Sports store
+Insurance
+Football equipment
+Training provider
+8. Ekosistem dalam satu diagram
+                         ┌──────────────────┐
+                         │     FEDERATION    │
+                         │      PSSI         │
+                         └────────┬─────────┘
+                                  │
+                         ┌────────▼─────────┐
+                         │   ASSOCIATIONS    │
+                         │ APSSI / ASPROV /  │
+                         │ ASKAB / ASKOT     │
+                         └────────┬─────────┘
+                                  │
+             ┌────────────────────┼────────────────────┐
+             │                    │                    │
+             ▼                    ▼                    ▼
+          CLUB/SSB             COACH               REFEREE
+             │                    │                    │
+             └────────────────────┼────────────────────┘
+                                  │
+                           ┌──────▼───────┐
+                           │   PLATFORM   │
+                           │              │
+                           │ FOOTBALL ID  │
+                           │ DATA LAYER   │
+                           └──────┬───────┘
+                                  │
+                     ┌────────────┼────────────┐
+                     ▼            ▼            ▼
+                  PLAYER        PARENT       SCOUT
+                     │
+                     ▼
+                COMPETITION
+                     │
+                     ▼
+                  MATCH
+                     │
+                     ▼
+               PERFORMANCE
+                     │
+                     ▼
+                 DEVELOPMENT
+                     │
+                     ▼
+              OPPORTUNITY
+9. Role & fitur
+
+Sekarang kita masuk ke product architecture.
+
+PLAYER APP
+Core
+Football ID
+Profile
+Team
+Schedule
+Match
+Statistics
+Achievement
+Development
+Video
+Certificates
+Football history
+Future
+Trial opportunities
+Academy opportunities
+Scholarship
+Scouting
+Player marketplace
+10. PARENT APP
+
+Orang tua sebenarnya adalah economic engine platform.
+
+Mereka yang biasanya:
+
+membayar SSB
+mendaftarkan anak
+mengantar latihan
+membeli equipment
+membayar turnamen
+
+Dashboard:
+
+My Children
+
+Rizky — U10
+
+Training today
+Match Saturday
+Attendance 94%
+Development score
+Payment status
+Financial
+SSB fee
+Tournament
+Equipment
+Invoice
+Payment history
+Communication
+Coach
+SSB
+Team
+Tournament
+11. SSB / CLUB / ACADEMY
+
+Ini menjadi salah satu B2B core product.
+
+Organization Dashboard
+
+Players
+
+registration
+roster
+transfer
+documents
+
+Teams
+
+U7
+U8
+U9
+U10
+U11
+dst.
+
+Training
+
+schedule
+attendance
+training plan
+
+Competition
+
+registration
+roster
+match
+
+Finance
+
+membership
+invoices
+payment
+
+Development
+
+player assessment
+report
+
+Staff
+
+coaches
+admins
+officials
+12. COACH PLATFORM
+
+Coach mempunyai:
+
+Coach Profile
+Football ID
+license
+certification
+experience
+organization
+
+PSSI sendiri saat ini memiliki sistem eLearning untuk kursus kepelatihan dan berbagai level lisensi, sehingga secara arsitektur nantinya data license/certification sebaiknya dapat diintegrasikan atau diverifikasi, bukan diduplikasi secara sembarangan.
+
+Coach Dashboard
+Teams
+Training
+Attendance
+Player assessment
+Match report
+Development report
+13. REFEREE PLATFORM
+Referee Profile
+Referee ID
+License
+Level
+Region
+Experience
+Assignment
+Tournament X
+
+Match:
+SSB A vs SSB B
+
+Referee:
+Ahmad
+
+Assistant:
+Budi
+
+Venue:
+Stadium X
+
+Kemudian:
+
+Match Report
+
+score
+cards
+incidents
+substitutions
+match status
+14. TOURNAMENT PLATFORM
+
+Ini bisa menjadi produk monetisasi pertama yang sangat kuat.
+
+Organizer membuat:
+
+Tournament
+
+Makassar Youth Cup 2027
+
+Categories:
+
+U8
+U10
+U12
+U14
+
+Organizer kemudian mengatur:
+
+registration
+payment
+team roster
+group
+draw
+schedule
+venue
+referee
+match
+result
+standings
+statistics
+certificates
+
+Dan karena pemain sudah mempunyai Football ID:
+
+tidak perlu mengisi data pemain berkali-kali.
+
+15. MATCH DATA
+
+Setiap pertandingan menjadi sebuah object.
+
+MATCH
+│
+├── Competition
+├── Venue
+├── Date
+├── Referee
+│
+├── Team A
+│    └── Players
+│
+├── Team B
+│    └── Players
+│
+├── Score
+├── Events
+├── Statistics
+└── Match Report
+
+Dari sinilah data mulai menjadi sangat berharga.
+
+16. Player Development Engine
+
+Kita jangan membuat sistem yang terlalu fokus pada:
+
+GOAL + ASSIST.
+
+Untuk usia dini, development lebih penting.
+
+Contoh assessment:
+
+Technical
+Ball control
+Passing
+Receiving
+Dribbling
+Shooting
+Tactical
+Positioning
+Decision making
+Awareness
+Physical
+Speed
+Agility
+Coordination
+Psychological / Behaviour
+Discipline
+Teamwork
+Confidence
+Coachability
+Social
+Respect
+Fair play
+Communication
+
+Coach melakukan assessment secara periodik.
+
+17. Development Timeline
+
+Misalnya:
+
+2026 Q1
+Passing      6.2
+Dribbling    6.8
+Speed        7.1
+
+       ↓
+
+2026 Q3
+
+Passing      7.1
+Dribbling    7.5
+Speed        7.4
+
+       ↓
+
+2027 Q1
+
+Passing      7.8
+Dribbling    8.0
+Speed        7.9
+
+Orang tua tidak hanya melihat:
+
+“Anak saya mencetak 3 gol.”
+
+Tetapi:
+
+“Anak saya berkembang.”
+
+Ini value proposition yang jauh lebih kuat.
+
+18. Scouting Engine
+
+Tahap selanjutnya:
+
+Ini hanya konsep future-stage, bukan fitur untuk diimplementasikan pada tahap development/testing awal. Tidak boleh ada real-child scouting, searching, atau profile sharing pada tahap tersebut (DECISION-002).
+
+Scout bisa melakukan search:
+
+Age: U12
+Region: Sulawesi Selatan
+Position: CB
+Foot: Right
+Experience: ≥ 20 matches
+
+Platform menampilkan pemain yang memenuhi kriteria.
+
+Tetapi penting:
+
+Scout tidak otomatis melihat semua data pribadi.
+
+Kita harus mempunyai:
+
+Privacy & consent layer.
+
+Orang tua dapat menentukan:
+
+Allow scouting: ON
+
+atau
+
+OFF
+
+Toggle `Allow scouting` hanya preferensi/indikasi awal; toggle bukan bukti consent, guardian relationship, atau guardian authority dan tidak dengan sendirinya mengizinkan pencarian maupun sharing. Sebelum implementasi future-stage, guardian verification, authority validation, purpose limitation, recipient scope, revocation, auditability, dan release approval wajib dirancang serta diuji. Keputusan terkait tetap PENDING.
+
+19. Parent Consent
+
+Karena pemain adalah anak di bawah umur, ini harus menjadi foundational architecture, bukan fitur tambahan.
+
+Data sensitif harus memiliki:
+
+consent
+guardian relationship
+access control
+audit trail
+revocation
+data minimization
+
+Jadi:
+
+PLAYER
+   │
+   ▼
+GUARDIAN
+   │
+   ├── Consent
+   │
+   ├── Privacy
+   │
+   └── Sharing Permission
+20. Struktur database
+
+Saya menyarankan database relational sebagai system of record.
+
+Contoh inti:
+
+users
+persons
+players
+parents
+guardians
+organizations
+organization_members
+teams
+team_members
+coaches
+referees
+scouts
+venues
+
+competitions
+competition_categories
+competition_teams
+matches
+match_players
+match_events
+
+training_sessions
+training_attendance
+
+player_assessments
+player_development
+
+registrations
+payments
+invoices
+
+licenses
+certifications
+
+documents
+consents
+notifications
+
+football_ids
+audit_logs
+21. Relational model
+
+Bagian paling penting:
+
+PERSON
+  │
+  ├──── PLAYER
+  │
+  ├──── COACH
+  │
+  ├──── REFEREE
+  │
+  └──── SCOUT
+
+Satu orang bisa mempunyai lebih dari satu role.
+
+Misalnya:
+
+Budi
+
+adalah:
+
+Parent
+Coach
+Scout
+
+Jangan membuat tiga akun terpisah.
+
+Gunakan:
+
+ONE PERSON → MULTIPLE ROLES
+22. Organization model
+ORGANIZATION
+     │
+     ├── SSB
+     ├── CLUB
+     ├── ACADEMY
+     ├── TOURNAMENT ORGANIZER
+     ├── ASSOCIATION
+     └── FEDERATION
+
+Kemudian:
+
+PERSON
+   │
+   └── ORGANIZATION MEMBERSHIP
+          │
+          ├── Owner
+          ├── Admin
+          ├── Coach
+          ├── Staff
+          └── Official
+
+Ini membuat sistem sangat fleksibel.
+
+23. Product architecture
+
+Saya membaginya menjadi:
+
+Layer 1 — Identity
+
+Football ID
+
+↓
+
+Layer 2 — Organization
+
+SSB / Club / Academy
+
+↓
+
+Layer 3 — People
+
+Player / Parent / Coach / Referee
+
+↓
+
+Layer 4 — Operations
+
+Training / Registration / Payment
+
+↓
+
+Layer 5 — Competition
+
+Tournament / League / Match
+
+↓
+
+Layer 6 — Development
+
+Assessment / Performance
+
+↓
+
+Layer 7 — Opportunity
+
+Scouting / Trial / Academy
+
+↓
+
+Layer 8 — Governance
+
+Association / Federation
+
+↓
+
+Layer 9 — Intelligence
+
+Analytics / AI / National Football Insights
+
+24. Technical architecture
+
+Saya tidak menyarankan langsung membuat microservices yang terlalu kompleks.
+
+Untuk fase awal:
+
+Frontend
+
+Mobile
+
+Flutter / React Native
+
+Web
+
+Next.js / React
+Backend
+REST API
+PostgreSQL
+Redis
+Object Storage
+Authentication
+Phone/email
+OTP
+OAuth
+Role-based access
+Infrastructure
+Mobile App
+     │
+Web App
+     │
+     ▼
+ API Gateway
+     │
+     ▼
+ Application Backend
+     │
+ ┌───┼───────────┐
+ ▼   ▼           ▼
+DB  Cache     Storage
+ │
+ ▼
+Analytics
+25. API-first
+
+Ini sangat penting jika kita suatu hari ingin bekerja dengan:
+
+PSSI
+Asprov
+Askab
+Askot
+APSSI
+club
+tournament
+government
+
+Mereka mungkin memiliki sistem masing-masing.
+
+Maka platform kita harus punya:
+
+API
+POST /players
+GET /players/{football_id}
+
+GET /organizations/{id}
+
+POST /competitions
+
+POST /matches
+
+GET /players/{id}/development
+
+Dengan demikian platform bukan closed application.
+
+Tetapi:
+
+Football Data Infrastructure.
+
+26. MVP
+
+Saya tidak menyarankan membangun 20 role sekaligus.
+
+MVP 1
+
+Fokus:
+
+Player + Parent + SSB + Competition
+
+Fitur:
+
+Player
+Football ID
+profile
+team
+schedule
+match history
+Parent
+child profile
+registration
+payment
+schedule
+notifications
+SSB
+organization
+player management
+team
+attendance
+training
+payment
+Competition
+tournament
+registration
+roster
+schedule
+match result
+standings
+27. MVP Success Metric
+
+Jangan menggunakan:
+
+jumlah download aplikasi.
+
+Lebih bagus menggunakan:
+
+North Star Metric
+
+Verified Active Players
+
+Misalnya:
+
+1 player = 1 Football ID + verified guardian + active football activity.
+
+Target:
+
+Year 1:
+
+10.000 verified players
+
+Year 2:
+
+100.000
+
+Year 3:
+
+500.000+
+
+Angka tersebut adalah target perencanaan, bukan prediksi pasar.
+
+28. Business model
+
+Saya melihat minimal 6 revenue streams.
+
+1. SSB SaaS
+
+SSB membayar bulanan.
+
+Contoh:
+
+Starter
+Rp199k/bulan
+
+Growth
+Rp499k/bulan
+
+Pro
+Rp999k/bulan
+
+Harga ini nantinya perlu divalidasi dengan wawancara pasar.
+
+2. Tournament SaaS
+
+Organizer membayar:
+
+subscription
+per tournament
+transaction fee
+3. Payment
+
+Misalnya:
+
+SSB fee
+Tournament fee
+Academy fee
+
+Platform mengambil:
+
+transaction fee
+
+4. Premium Parent
+
+Basic:
+
+Free
+
+Premium:
+
+development report
+advanced statistics
+video storage
+digital football passport
+advanced history
+5. Scouting
+
+Academy / club / scout:
+
+subscription
+
+untuk advanced player discovery.
+
+6. Enterprise / Federation
+
+Untuk:
+
+federation
+association
+government
+large academy network
+
+Model:
+
+annual enterprise contract
+
+29. Marketplace
+
+Ini fase selanjutnya.
+
+Parent dapat membeli:
+
+football shoes
+jersey
+training equipment
+camps
+clinics
+insurance
+
+Tetapi marketplace bukan prioritas MVP.
+
+30. Flywheel bisnis
+
+Ini yang saya suka dari model ini.
+
+More SSB
+   ↓
+More Players
+   ↓
+More Matches
+   ↓
+More Data
+   ↓
+Better Player Profiles
+   ↓
+More Scouts / Academies
+   ↓
+More Opportunities
+   ↓
+More Players
+   ↓
+More SSB
+
+Ini menciptakan network effect.
+
+31. Moat / competitive advantage
+
+Aplikasi bisa ditiru.
+
+Data network jauh lebih sulit ditiru.
+
+Setelah 5 tahun kita memiliki:
+
+player history
+development history
+competition history
+organization history
+coach history
+referee history
+
+Maka platform mempunyai:
+
+Football Graph
+
+Contohnya:
+
+PLAYER
+ │
+ ├── trained by → COACH
+ │
+ ├── belongs to → SSB
+ │
+ ├── played for → TEAM
+ │
+ ├── participated in → TOURNAMENT
+ │
+ ├── officiated by → REFEREE
+ │
+ ├── observed by → SCOUT
+ │
+ └── transferred to → ACADEMY
+
+Itulah moat utama.
+
+32. Roadmap 3 tahun
+YEAR 1 — BUILD THE NETWORK
+Q1
+
+Discovery
+
+30–50 SSB interviews
+20 parent interviews
+20 coaches
+10 tournament organizers
+10 referees
+association/federation discussions
+
+Kemudian:
+
+Product Design
+
+↓
+
+Q2
+
+Build MVP
+
+Football ID
+Parent
+SSB
+Team
+Training
+Competition
+
+↓
+
+Q3
+
+Pilot
+
+Target:
+
+10–20 SSB
+
+dan:
+
+2–5 competitions
+
+↓
+
+Q4
+
+Scale
+
+Target perencanaan:
+
+100+ SSB
+
+10.000+ verified players
+
+YEAR 2 — BUILD THE DATA NETWORK
+
+Tambah:
+
+Coach platform
+Referee
+Scout
+Player development
+advanced statistics
+tournament network
+academy network
+
+Mulai:
+
+Football Passport
+
+dan:
+
+Scouting Engine
+
+Target:
+
+100.000+ players
+
+YEAR 3 — BUILD THE INFRASTRUCTURE
+
+Masuk ke:
+
+Association dashboard
+federation integration
+regional ecosystem
+national analytics
+certification
+licensing
+talent ecosystem
+API ecosystem
+
+Target:
+
+500.000+ players
+
+dan platform mulai menjadi:
+
+Indonesia's grassroots football infrastructure.
+
+33. Governance
+
+Ini harus kita desain sejak awal.
+
+Platform tidak boleh mempunyai satu admin yang bisa melihat semuanya.
+
+Kita perlu:
+
+RBAC
+
+Role Based Access Control
+
+dan:
+
+ABAC
+
+Attribute Based Access Control
+
+Contoh:
+
+Parent:
+
+dapat melihat anak sendiri.
+
+Coach:
+
+dapat melihat pemain dalam timnya.
+
+SSB admin:
+
+dapat melihat pemain dalam organisasi.
+
+Scout:
+
+hanya dapat melihat pemain yang memberikan consent.
+
+Association:
+
+dapat melihat data dalam wilayah kewenangannya.
+
+Federation:
+
+dapat melihat aggregate/national data sesuai otorisasi.
+
+34. Data architecture
+
+Saya akan membagi data menjadi:
+
+Level 1 — Identity
+
+Nama, DOB, ID.
+
+Level 2 — Football
+
+Position, team, organization.
+
+Level 3 — Performance
+
+Match, training, assessment.
+
+Level 4 — Sensitive
+
+Documents, medical-related information, guardian data.
+
+Level 5 — Analytics
+
+Aggregate/anonymous data.
+
+Semakin sensitif:
+
+semakin ketat aksesnya.
+
+35. AI
+
+AI jangan menjadi gimmick di awal.
+
+AI baru menjadi powerful setelah data cukup.
+
+Contoh:
+
+Player Development AI
+
+“Area perkembangan Rizky yang paling membutuhkan perhatian dalam 3 bulan terakhir adalah receiving under pressure.”
+
+Coach Assistant
+
+“Buatkan training session U10 selama 60 menit untuk meningkatkan first touch.”
+
+Scout Assistant
+
+“Cari pemain U12 posisi CB di Sulawesi Selatan dengan pengalaman minimal 15 pertandingan dan development trend positif.”
+
+Parent Assistant
+
+“Bagaimana perkembangan anak saya 6 bulan terakhir?”
+
+36. Dashboard nasional
+
+Ini menjadi salah satu produk paling powerful.
+
+Misalnya federation/association melihat:
+
+GRASSROOTS FOOTBALL DASHBOARD
+
+Registered Players       128,450
+Active SSB                  1,420
+Active Coaches              4,830
+Active Referees             1,120
+Competitions                  286
+Matches                     18,421
+
+Kemudian bisa drill-down:
+
+Indonesia → Provinsi → Kabupaten/Kota → SSB → Team → Player
+
+37. Strategi masuk pasar
+
+Saya tidak akan memulai dengan:
+
+“Mari kita bangun platform nasional.”
+
+Terlalu besar.
+
+Mulai dari satu geographical beachhead.
+
+Misalnya:
+
+Sulawesi Selatan
+
+Kemudian:
+
+Makassar
+
+↓
+
+Gowa
+
+↓
+
+Maros
+
+↓
+
+regional
+
+Setelah product-market fit:
+
+Sulawesi Selatan → Indonesia Timur → nasional
+
+Keuntungan:
+
+lebih mudah mendapatkan SSB
+lebih mudah melakukan support
+lebih mudah mendapatkan feedback
+competition ecosystem lebih terkontrol
+38. Go-to-market
+
+Urutannya:
+
+Step 1
+
+Cari:
+
+10 SSB founding partners
+
+Jangan jual dulu.
+
+Berikan mereka:
+
+Founding SSB Program
+
+Step 2
+
+Masukkan:
+
+500–1.000 pemain
+
+Step 3
+
+Ajak:
+
+3–5 tournament organizers
+
+Step 4
+
+Semua tournament menggunakan:
+
+Football ID
+
+Step 5
+
+Data mulai terakumulasi.
+
+Step 6
+
+Undang:
+
+coach + referee + scout
+
+Baru kemudian:
+
+association/federation.
+
+39. The strategic wedge
+
+Saya justru melihat Tournament sebagai wedge yang sangat bagus.
+
+Kenapa?
+
+SSB biasanya mau ikut turnamen.
+
+Tournament membutuhkan:
+
+team
+player
+roster
+schedule
+referee
+venue
+result
+
+Jadi tournament secara otomatis menghubungkan banyak node.
+
+TOURNAMENT
+    │
+    ├── 20 SSB
+    ├── 400 Players
+    ├── 40 Coaches
+    ├── 20 Referees
+    └── 10 Venues
+
+Satu event bisa menghasilkan network density tinggi.
+
+40. Jadi saya akan mengubah prioritas MVP
+
+Bukan:
+
+SSB Management App
+
+melainkan:
+
+Football Identity + Competition + SSB
+
+Karena ketiganya menciptakan network.
+
+41. Product hierarchy
+
+Saya akan membangun perusahaan ini dengan 4 produk utama:
+
+PRODUCT A
+Football ID
+
+Identity & football passport.
+
+PRODUCT B
+Football OS
+
+SSB / Club / Academy management.
+
+PRODUCT C
+Football Competition
+
+Tournament & league infrastructure.
+
+PRODUCT D
+Football Network
+
+Scouting, development, opportunities.
+
+Kemudian:
+
+PRODUCT E
+Football Intelligence
+
+Analytics & AI.
+
+42. Struktur perusahaan
+
+Jangan berpikir:
+
+“kita membuat aplikasi.”
+
+Berpikir:
+
+“kita membangun Football Data Company.”
+
+Core asset:
+
+Identity
+
+↓
+
+Network
+
+↓
+
+Data
+
+↓
+
+Infrastructure
+
+↓
+
+Intelligence
+
+43. Naming
+
+Saya belum ingin mengunci satu nama sebelum melakukan brand validation, tetapi arah naming sebaiknya:
+
+Kategori 1 — Football Identity
+Football ID
+FootID
+MyFootball
+Football Passport
+Kategori 2 — Ecosystem
+FootballHub
+FootConnect
+Football Network
+Grassroots Football Network
+Kategori 3 — Indonesian identity
+BolaID
+Ekosistem Bola
+BolaHub
+BolaConnect
+Football Indonesia Network
+
+Tetapi saya lebih menyukai brand yang tidak terlalu sempit pada “SSB”, karena visi kita jauh lebih besar.
+
+44. Saya punya rekomendasi positioning sementara
+Brand
+
+[Nama]
+
+Tagline
+
+One Identity. One Journey. One Football Ecosystem.
+
+Category
+
+Youth Football Ecosystem Platform
+
+Positioning
+
+A digital infrastructure connecting players, families, football organizations, competitions and football professionals into one trusted ecosystem.
+
+45. North Star Architecture
+
+Pada akhirnya kita ingin mencapai:
+
+                     FOOTBALL ID
+                          │
+        ┌─────────────────┼─────────────────┐
+        │                 │                 │
+      PEOPLE        ORGANIZATIONS       ACTIVITIES
+        │                 │                 │
+   ┌────┼────┐       ┌────┼────┐      ┌────┼─────┐
+   │    │    │       │    │    │      │    │     │
+Player Coach Ref   SSB Club Academy Training Match
+   │
+   ▼
+PARENT
+   │
+   ▼
+CONSENT
+   │
+   ▼
+FOOTBALL DATA
+   │
+   ├── Development
+   ├── Competition
+   ├── Statistics
+   ├── Certification
+   └── History
+          │
+          ▼
+       SCOUTING
+          │
+          ▼
+      OPPORTUNITY
+          │
+          ▼
+       NEXT LEVEL
+46. Dan ada satu prinsip yang menurut saya harus menjadi “DNA” platform
+The player owns the journey.
+
+Bukan SSB.
+
+Bukan tournament organizer.
+
+Bukan coach.
+
+Bukan platform.
+
+Platform hanya menjadi trusted infrastructure yang menjaga identity, permission, history, dan connectivity.
+
+Ini akan membuat positioning kita berbeda dari software manajemen SSB biasa.
+
+47. Blueprint kita selanjutnya
+
+Saya menyarankan kita tidak langsung lompat ke coding.
+
+Kita bedah proyek ini dalam 10 workstream:
+
+#	Workstream	Output
+01	Vision & Positioning	Brand thesis
+02	Ecosystem	Stakeholder map
+03	Football ID	Identity architecture
+04	User Roles	Role & permission matrix
+05	Product	Feature architecture
+06	Data	ERD/database
+07	UX	User journey & wireframe
+08	Business	Revenue & unit economics
+09	Technology	System architecture
+10	Growth	3-year roadmap

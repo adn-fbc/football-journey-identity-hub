@@ -1,0 +1,61 @@
+# Phase 0.7 — Domain Glossary
+
+**Status:** Proposed shared vocabulary for product, architecture and data discussions. Definitions preserve approved Phase 0 decisions; where behavior or cardinality is unsettled, the entry explicitly remains pending. No schema is specified.
+
+| Term | Definition | Ownership / invariant | Decision status |
+|---|---|---|---|
+| Auth subject | Provider-issued identifier/claims associated with an authenticated login identity. | Proves authentication only; not a person, player, role grant, or Football ID. | Provider is owner-reported as Supabase; integration details and trust flow remain unverified/PENDING. |
+| Login identity | Credential/recovery identity accepted by the selected authentication provider. | Provider manages credentials; the application must not treat a client-supplied subject as verified without server validation. | Account linking/recovery is P-05/P-11 `PENDING`. |
+| Account | Application principal used for access to the platform, linked to one or more verified auth subjects according to policy. | Separate from Person and Player; never shared between people. | Exact cardinality and linking policy P-05 `PENDING`. |
+| Person | Durable identity for a human participant in the football ecosystem. | A person may have multiple roles and may exist without a login account. A person does not automatically become a player, and person-player resolution remains unresolved. | Multiple-role principle is in PRD; account linkage/merge policy P-05/P-06 and identity resolution D-33 `PENDING`. |
+| Person role | General classification such as player, guardian, coach, referee or scout. | Describes capacity, but alone grants no access. | Separation from scoped role assignments P-06 `PENDING`. |
+| Scoped assignment | A role/capability attached to a specific organization, team, event, association or delegated scope. | Authorization requires current assignment plus resource/action context; UI role selection is never authority. | Scope matrix and role lifecycle P-06/P-07 `PENDING`. |
+| Player | Football participation profile associated with a person. | Player identity is not owned by SSB, club, academy, school, tournament or governing body. A person can be identified and linked to a player profile only under an explicit resolution policy. | Approved principle DECISION-001; person-player resolution D-33 `PENDING`. |
+| National Football ID | Stable, player-owned identifier connecting the player's football identity across the ecosystem. | It is an identifier, not a login credential, authentication credential, access token, or password. It does not change on affiliation, roster, competition registration or transfer. | Approved DECISION-001. ID format, issuance/collision/merge correction process is not finalized and D-24 remains `PENDING`. |
+| Guardian | Person who claims a guardian relationship to a player and may have authorized child-specific access. | A “parent” label or relationship claim is not legal verification or an access grant. | Verification method and authority P-12/P-13 `PENDING`. |
+| Guardian relationship | Relationship claim/link between Guardian and Player with a verification lifecycle. | Separate from consent; independently verified relationship alone grants no record access. A verified relationship does not create unlimited authority. | ADR-11 retained; verification and conflict handling P-12/P-13 `PENDING`. |
+| Relationship verification | Approved process and decision about a claimed guardian-player relationship. | Evidence must be minimized and restricted; no verification method or legal sufficiency is presumed here. | `OWNER_DECISION_REQUIRED`, P-12. |
+| Consent grant | A time-bounded, purpose- and recipient-scoped permission from an authorized grantor for defined player data/actions. | Independent per guardian/player; can be revoked/suspended; does not override prohibited data classifications. Grantor authority is scoped and policy-dependent. | ADR-11 principles retained; exact categories/actions/recipient/expiry P-14/P-15 `PENDING`. |
+| Grantor authority | The authority held by a person or organization to approve a data or access grant for a specific subject and purpose. | Authority is not global and is not conferred merely by organization membership, admin role, or guardian status. | Requires policy and explicit scope; owner/admin privilege is not equivalent to player access authority. |
+| Consent event | Auditable record of grant request, issuance, change, revocation, expiry or suspension. | Preserves decision provenance; does not contain unnecessary child evidence. | Event schema and retention P-14/P-18 `PENDING`. |
+| Organization | Football entity such as SSB, club, academy, school program, tournament organizer, association or federation. | It may steward its records and relationships; it does not own player identity/history. | Organization hierarchy and delegation P-07 `PENDING`. |
+| Organization hierarchy | A declared parent/governance/affiliation relation among organizations. | Parent-child relation must not implicitly inherit data access. | Cardinality, relation types and delegated authority P-07 `PENDING`. |
+| Organization membership | Dated/status-bearing association of a Person with an Organization, with organization-scoped roles. | Not a player affiliation; does not grant global or cross-organization access. | Role/lifecycle/verification semantics P-06/P-07/P-21 `PENDING`. |
+| Organization owner | Person with explicitly delegated governance authority over one organization. | Not a platform administrator; authority is tenant-scoped and should be independently verified. Organization Owner is not equivalent to global player access or platform admin authority. | Owner definition, transfer and delegated permissions P-06/P-07 `PENDING`. |
+| Team | Season/category squad operated in an Organization context. | Team records do not own player identities. | Team-season lifecycle and org relation need domain policy. |
+| Team staff assignment | Dated relationship authorizing a Person to a staff function for a Team. | Current exact-scope assignment is required for coach/team operations; ending it removes prospective access. | Assignment semantics and role taxonomy P-06/P-07 `PENDING`. |
+| Player affiliation | Dated relationship between a Player and an Organization, preserving status and provenance. | Multiple concurrent active affiliations are allowed when valid; ending one never creates a new identity or erases history. | Core semantic invariant from ADR-10. Physical model conflict P-08/P-09 `PENDING`. |
+| Team membership / roster placement | Dated participation of a Player in a Team/season. | Semantically distinct from organization identity; team roster operations do not create or replace Football ID. | Whether represented as separate `team_members` or team-kind `player_affiliations` is P-08/P-09 `PENDING`. |
+| Transfer | Business process ending/starting one or more organization/team relationships while retaining the same Player identity. | Does not imply access to prior records or copy authoritative records to the receiving organization. | Initiation, approval, disputes and effective dates P-10 `PENDING`. |
+| Primary context | Optional Player-selected organization/team lens for navigation and summaries. | No ownership, membership proof, or permission effect; clear when ended, no silent promotion. | Confirmed by ADR-10. |
+| Event | A single scheduleable football occurrence, fixture, gathering, workshop, or qualifying round. | Distinct from a competition or tournament in scope and ownership. The conceptual boundary is unresolved until D-34. | Event, competition and tournament distinction remains D-34 `PENDING`. |
+| Competition | Organized contest framework that may contain categories, rounds, teams, registrations and standings. | It is conceptually distinct from an event and a tournament, but the exact boundary, lifecycle ownership, schedule and registration responsibilities remain conceptual while D-34 is `PENDING`. | Competition lifecycle and organizer authority are not fully specified. |
+| Tournament | A competition or event set organized as a bracketed or phased championship structure. | A tournament may be implemented as a conceptual competition form or as a special class of event; the boundary is conceptual, not fixed by schema. | D-34 remains `PENDING`. |
+| Season | A repeatable validity window for team operations, competition participation, roster and scheduling rules. | Season is a domain concept and not merely an organization label. It influences eligibility, roster validity and schedule transitions. | Ownership and lifecycle remain D-35 `PENDING`. |
+| Registration | Request/record linking a team or player to a competition/category. | References existing Player/Team identities; must not mint a new Football ID or imply broader consent. | Eligibility, roster, consent and state lifecycle need owner/domain decisions; D-36 remains `PENDING`. |
+| Eligibility rule | The conditions that determine whether a player or team may participate in a competition or event. | Eligibility is separate from roster membership, registration status and actual match participation. | D-36 remains `PENDING`. |
+| Match | Scheduled/played football event within a competition or other approved context. | Match domain is authoritative for official match state, result and events. | Result confirmation, correction and official authority remain to be defined. |
+| Match participation | Evidence that a player participated for a team in a match, with applicable role/stat references. | References player and match; does not rewrite either identity or official match truth. | Required participation data/verification/visibility require decisions. |
+| Source record | Authoritative record owned by a bounded domain, such as an affiliation, registration, match or assessment. | Consumers must reference source/version/provenance rather than silently duplicate or mutate it. | Invariant in source-of-truth docs and ADR-12. |
+| Provenance | Attribution to source domain/record, author/recorder, organization, verification state and relevant timestamps where known. | Missing provenance stays unknown; never fabricate verification or author. | Confirmed by Phase 1 spec and ADR-09/12. |
+| Player Journey | Player-facing chronological projection/references of permitted football history. | Not a source of truth; keeps source attribution and respects authorization and classification. | Confirmed by architecture/source-of-truth docs and ADR-12. |
+| Derived projection | Read-optimized view or summary assembled from source records. | Non-authoritative, must be labeled/traceable, cannot change source facts or confer access. | Confirmed source-of-truth principle. |
+| Real child data | Personal or football information about an actual child. | Prohibited in initial development/testing; do not share, scout, or expose until release gates pass. | Approved DECISION-002. No legal threshold inferred. |
+| Synthetic player data | Fictional/dummy player profiles and football records. | Allowed for development/testing; must be clearly synthetic and isolated from production. | Approved DECISION-002. |
+
+## Terms intentionally not conflated
+
+- **Account ≠ Person ≠ Player ≠ National Football ID.**
+- **Person role ≠ scoped permission.**
+- **Person ≠ automatic Player; identity resolution remains unresolved (D-33).**
+- **Guardian relationship ≠ consent grant.**
+- **Organization membership ≠ player affiliation.**
+- **Player affiliation ≠ team roster placement**, as a semantic distinction; physical modeling remains pending.
+- **Event ≠ Competition ≠ Tournament**, while a shared underlying representation may still exist conceptually; the boundary remains a conceptual design pending D-34.
+- **Season ≠ team label or competition label; ownership/lifecycle remains unresolved (D-35).**
+- **Eligibility ≠ roster ≠ registration ≠ match participation**; they are separate domain facts (D-36).
+- **Competition registration ≠ player identity or general data-sharing consent.**
+- **Match participation ≠ development assessment.**
+- **Journey entry ≠ authoritative source record.**
+- **Provider capability exists ≠ application integration exists.**
+- **Owner-confirmed dashboard state ≠ independently inspected remote evidence.**
