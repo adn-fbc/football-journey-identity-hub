@@ -30,8 +30,12 @@ const childProfileSearch = z.object({
   view: z.enum(["summary", "journey", "schedule", "matches", "registrations", "payments", "notifications", "consent"]).optional(),
 });
 
+export function loadChildProfileRouteData(playerId: string) {
+  return { playerId };
+}
+
 export const Route = createFileRoute("/children/$playerId")({
-  loader: ({ params }) => ({ playerId: params.playerId }),
+  loader: ({ params }) => loadChildProfileRouteData(params.playerId),
   validateSearch: childProfileSearch,
   head: () => ({ meta: [{ title: "Child profile · Football ID" }, { name: "robots", content: "noindex" }] }),
   notFoundComponent: () => <EmptyState title="Child not found" action={<Button asChild variant="outline"><Link to="/children">Back to My Children</Link></Button>} />,

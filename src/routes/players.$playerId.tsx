@@ -11,7 +11,12 @@ import {
 } from "@/components/ds/page-tabs";
 import { ConfirmDialog } from "@/components/ds/confirm-dialog";
 import { EmptyState, PermissionState } from "@/components/ds/states";
-import { getPlayerAccessForActor, getWorkspaceActor } from "@/data/repository";
+import {
+  getPlayerAccessForActor,
+  getWorkspaceActor,
+  type PlayerAccessResult,
+  type WorkspaceActor,
+} from "@/data/repository";
 import { PlayerHeader } from "@/features/players/player-header";
 import {
   AchievementList,
@@ -31,8 +36,21 @@ const profileSearch = z.object({
     .optional(),
 });
 
+export function loadPlayerProfileRouteData(playerId: string) {
+  return { playerId };
+}
+
+export function resolvePlayerProfileAccess(
+  playerId: string,
+  actor: WorkspaceActor,
+  ready: boolean,
+): PlayerAccessResult | { ok: false; reason: "actor_not_ready" } {
+  if (!ready) return { ok: false, reason: "actor_not_ready" };
+  return getPlayerAccessForActor(playerId, actor);
+}
+
 export const Route = createFileRoute("/players/$playerId")({
-  loader: ({ params }) => ({ playerId: params.playerId }),
+  loader: ({ params }) => loadPlayerProfileRouteData(params.playerId),
   validateSearch: profileSearch,
   head: () => ({ meta: [{ title: "Player profile · Football ID" }, { name: "robots", content: "noindex" }] }),
   notFoundComponent: () => (
@@ -53,15 +71,14 @@ function PlayerProfile() {
   const { playerId } = Route.useLoaderData();
   const { role, ready } = useRole();
   const { view } = Route.useSearch();
-  if (!ready) {
-    return <PermissionState title="Player access unavailable" description="The active workspace scope has not been resolved." />;
-  }
-  const decision = getPlayerAccessForActor(playerId, getWorkspaceActor(role));
+  const decision = resolvePlayerProfileAccess(playerId, getWorkspaceActor(role), ready);
   if (!decision.ok) {
     return (
       <PermissionState
-        title="Player access restricted"
-        description="This player is not available in the active workspace scope."
+        title={decision.reason === "actor_not_ready" ? "Player access unavailable" : "Player access restricted"}
+        description={decision.reason === "actor_not_ready"
+          ? "The active workspace scope has not been resolved."
+          : "This player is not available in the active workspace scope."}
         action={
           role === "coach" ? <Button asChild variant="outline"><Link to="/teams">Back to My Teams</Link></Button> : undefined
         }
@@ -188,7 +205,7 @@ function PlayerProfile() {
         )}
         {permissions.canViewDocuments && (
           <PageTabsContent value="documents">
-            <PlayerDocumentsTab player={player} />
+            <PlayerDocumentsTab player={player} actor={getWorkspaceActor(role)} />
           </PageTabsContent>
         )}
       </PageTabs>

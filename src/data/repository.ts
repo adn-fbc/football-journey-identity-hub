@@ -9,7 +9,7 @@ import {
 } from "./mock";
 import type {
   GuardianConsentGrant, GuardianDataCategory, JourneyEvent, Match, Membership, Player, PlayerAffiliation,
-  JourneySourceDomain, PlayerIdentity, PrimaryPlayerContext,
+  JourneySourceDomain, PlayerDocument, PlayerIdentity, PrimaryPlayerContext,
 } from "./types";
 import type { RoleId } from "@/config/roles";
 import { ageCategoryFor } from "@/lib/format";
@@ -26,12 +26,14 @@ export interface WorkspaceActor {
   subjectId: string;
   role: RoleId;
   organizationId?: string | undefined;
+  teamId?: string | undefined;
 }
 
-export const getWorkspaceActor = (role: RoleId): WorkspaceActor => ({
+export const getWorkspaceActor = (role: RoleId, teamId?: string): WorkspaceActor => ({
   subjectId: CURRENT_USER.footballId,
   role,
   organizationId: role === "org_admin" ? "garuda" : undefined,
+  teamId: role === "org_admin" ? teamId : undefined,
 });
 
 export const getOrganization = (id?: string) => organizations.find((o) => o.id === id);
@@ -206,7 +208,7 @@ function affiliationTargetMatches(a: PlayerAffiliation, b: NewPlayerAffiliation)
   return a.kind === b.kind && a.organizationId === b.organizationId && a.teamId === b.teamId;
 }
 
-export function addPlayerAffiliation(input: NewPlayerAffiliation): AffiliationMutationResult {
+function addPlayerAffiliation(input: NewPlayerAffiliation): AffiliationMutationResult {
   if (!getPlayer(input.playerId)) return { ok: false, reason: "player_not_found" };
   if (!getOrganization(input.organizationId)) return { ok: false, reason: "organization_not_found" };
   if (!isCalendarDate(input.effectiveFrom)) return { ok: false, reason: "invalid_effective_date" };
@@ -257,7 +259,7 @@ export function addPlayerAffiliation(input: NewPlayerAffiliation): AffiliationMu
   return { ok: true, affiliation: { ...affiliation } };
 }
 
-export function endPlayerAffiliation(
+function endPlayerAffiliation(
   playerId: string,
   affiliationId: string,
   effectiveTo: string,
@@ -382,7 +384,7 @@ export const assignPlayerToTeam = (playerId: string, teamId: string, actor: Work
   const team = getTeam(teamId);
   if (
     !actor || actor.subjectId !== CURRENT_USER.footballId || actor.role !== "org_admin" ||
-    actor.organizationId !== "garuda" || !team || team.orgId !== actor.organizationId
+    actor.organizationId !== "garuda" || actor.teamId !== teamId || !team || team.orgId !== actor.organizationId
   ) return false;
   if (!player || !team || player.orgId !== team.orgId || player.membership !== "active" || ageCategoryFor(player.birthYear) !== team.ageCategory) return false;
   if (player.teamId === teamId) return false;
@@ -427,7 +429,7 @@ export const removePlayerFromTeam = (playerId: string, teamId: string, actor: Wo
   const team = getTeam(teamId);
   if (
     !actor || actor.subjectId !== CURRENT_USER.footballId || actor.role !== "org_admin" ||
-    actor.organizationId !== "garuda" || !team || team.orgId !== actor.organizationId ||
+    actor.organizationId !== "garuda" || actor.teamId !== teamId || !team || team.orgId !== actor.organizationId ||
     !player || player.orgId !== actor.organizationId || player.teamId !== teamId
   ) return false;
   const affiliation = allPlayerAffiliations(playerId).find((item) =>
@@ -550,9 +552,8 @@ function guardianJourneyCategory(event: JourneyEvent): GuardianDataCategory | un
 }
 
 export function getPlayerAccessForActor(playerId: string, actor: WorkspaceActor): PlayerAccessResult {
-  const recordExists = players.some((player) => player.id === playerId);
-  if (!recordExists) return { ok: false, reason: "player_not_found" };
-  if (actor.subjectId !== CURRENT_USER.footballId) return { ok: false, reason: "forbidden" };
+  if (!actor || actor.subjectId !== CURRENT_USER.footballId) return { ok: false, reason: "forbidden" };
+  if (!players.some((player) => player.id === playerId)) return { ok: false, reason: "player_not_found" };
 
   let scope: PlayerAccessProjection["scope"];
   let affiliations: PlayerAffiliation[];
@@ -594,11 +595,10 @@ export function getPlayerAccessForActor(playerId: string, actor: WorkspaceActor)
       canViewDocuments: false,
     };
   } else if (actor.role === "coach") {
-    const player = getPlayer(playerId);
     const assignedTeamIds = assignedTeamIdsForCurrentCoach();
     const activeTeamAffiliation = allPlayerAffiliations(playerId).find((affiliation) =>
       affiliation.kind === "team" && affiliation.status === "active" &&
-      Boolean(player?.teamId && affiliation.teamId === player.teamId && assignedTeamIds.has(player.teamId)),
+      Boolean(affiliation.teamId && assignedTeamIds.has(affiliation.teamId)),
     );
     if (!activeTeamAffiliation?.teamId) return { ok: false, reason: "forbidden" };
     scope = { kind: "team", teamId: activeTeamAffiliation.teamId };
@@ -632,7 +632,7 @@ export function getPlayerAccessForActor(playerId: string, actor: WorkspaceActor)
       canViewPlayerStats: false,
       canViewSchedule: false,
       canViewAchievements: false,
-      canViewDocuments: false,
+      canViewDocuments: true,
     };
   } else {
     return { ok: false, reason: "forbidden" };
@@ -665,7 +665,12 @@ export const getMemberships = (playerId: string) => {
     }));
 };
 export const getAchievements = (playerId: string) => achievements[playerId] ?? [];
-export const getDocuments = (playerId: string) => documents[playerId] ?? [];
+export function getDocuments(playerId: string, actor: WorkspaceActor): PlayerDocument[] | undefined {
+  if (!actor || actor.subjectId !== CURRENT_USER.footballId) return undefined;
+  const access = getPlayerAccessForActor(playerId, actor);
+  if (!access.ok || !access.access.permissions.canViewDocuments) return undefined;
+  return documents[playerId] ?? [];
+}
 export const listChildRegistrations = (childId?: string) =>
   childRegistrations
     .filter((registration) => !childId || registration.childId === childId)

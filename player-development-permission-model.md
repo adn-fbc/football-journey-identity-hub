@@ -123,6 +123,8 @@ Phase 1 repository checks, fixed mock actor identity, organization/team scope ch
 
 Before production data access, a backend must independently authenticate the actor and derive current role, active organization, exact team assignments, verified guardian relationship, valid per-category grant, revocation/expiry state, and permission for each request. It must not trust role, organization, player, or guardian identifiers supplied by the browser.
 
+Backend authorization must protect every read and mutation, not only route visibility. Affiliation changes and their journey provenance must be persisted atomically so a denied or failed operation cannot leave the affiliation, primary context, player projection, or journey history partially updated.
+
 ## Future contract template
 
 Every newly activated module should define:

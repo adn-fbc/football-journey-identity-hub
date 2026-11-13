@@ -5,13 +5,13 @@ import {
   getGuardianAccessDecision,
   getPlayerIdentity,
   getPlayerIdentityByFootballId,
-  addPlayerAffiliation,
   assignPlayerToTeam,
-  endPlayerAffiliation,
+  getDocuments,
   getPrimaryPlayerContext,
   getMemberships,
   getPlayer,
   getWorkspaceActor,
+  type WorkspaceActor,
   getJourney,
   listPlayerJourney,
   listPlayerAffiliations,
@@ -20,7 +20,8 @@ import {
   removePlayerFromTeam,
   setPrimaryPlayerContext,
 } from "@/data/repository";
-import { players, teams } from "@/data/mock";
+import * as repository from "@/data/repository";
+import { documents, guardianConsentGrants, playerAffiliations, players, teams } from "@/data/mock";
 
 describe("global player identity repository", () => {
   it("resolves the same stable identity by player ID and Football ID", () => {
@@ -87,6 +88,21 @@ describe("guardian child repository", () => {
     }
   });
 
+  it("fails closed when an otherwise applicable grant has invalid dates", () => {
+    const grant = guardianConsentGrants.find((item) => item.id === "mock-grant-p123-profile-journey");
+    if (!grant) throw new Error("Expected the p-123 consent grant fixture");
+    const originalEffectiveFrom = grant.effectiveFrom;
+    try {
+      grant.effectiveFrom = "not-a-date";
+      expect(getGuardianAccessDecision("g-1", "p-123", "journey")).toEqual({
+        allowed: false,
+        reason: "invalid_grant",
+      });
+    } finally {
+      grant.effectiveFrom = originalEffectiveFrom;
+    }
+  });
+
   it("keeps player and guardian projections distinct and denies unrelated direct profiles", () => {
     const playerView = getPlayerAccessForActor("p-123", getWorkspaceActor("player"));
     const guardianView = getPlayerAccessForActor("p-123", getWorkspaceActor("parent"));
@@ -141,63 +157,14 @@ describe("player affiliation repository", () => {
     ]));
   });
 
-  it("allows distinct active organization affiliations while rejecting a duplicate active target", () => {
-    const input = {
-      playerId: "p-148",
-      organizationId: "phinisi",
-      kind: "organization" as const,
-      role: "Player",
-      effectiveFrom: "2027-01-01",
-    };
-    const added = addPlayerAffiliation(input);
-
-    expect(added.ok).toBe(true);
-    expect(listPlayerAffiliations("p-148", { status: "active" })
-      .filter((affiliation) => affiliation.kind === "organization"))
-      .toHaveLength(2);
-    expect(listPlayerJourney("p-148").at(-1)?.provenance).toEqual({
-      sourceDomain: "player_affiliation",
-      sourceRecordId: added.ok ? added.affiliation.id : "",
-      sourceOrganizationId: "phinisi",
-    });
-    expect(addPlayerAffiliation(input)).toEqual({ ok: false, reason: "affiliation_overlap" });
-
-    if (!added.ok) throw new Error("Expected the Phinisi affiliation to be added");
-    expect(setPrimaryPlayerContext("p-148", {
-      organizationAffiliationId: added.affiliation.id,
-    }, getWorkspaceActor("player"))).toEqual({ ok: false, reason: "forbidden" });
-    expect(endPlayerAffiliation("p-148", added.affiliation.id, "2027-02-14").ok).toBe(true);
-    expect(getPrimaryPlayerContext("p-148")).toBeUndefined();
-    expect(getPlayerIdentity("p-148")).toEqual({ id: "p-148", footballId: "IDN-FB-2016-000148" });
-    expect(listPlayerAffiliations("p-148")).toEqual(expect.arrayContaining([
-      expect.objectContaining({ id: added.affiliation.id, status: "ended", effectiveTo: "2027-02-14" }),
-    ]));
+  it("does not export low-level affiliation mutation helpers", () => {
+    expect(repository).not.toHaveProperty("addPlayerAffiliation");
+    expect(repository).not.toHaveProperty("endPlayerAffiliation");
   });
 
-  it("rejects invalid team scope and invalid effective dates", () => {
-    expect(addPlayerAffiliation({
-      playerId: "p-148",
-      organizationId: "garuda",
-      kind: "team",
-      teamId: "phinisi-u10",
-      organizationAffiliationId: "p-148-org-garuda",
-      role: "Player",
-      effectiveFrom: "2027-01-01",
-    })).toEqual({ ok: false, reason: "team_organization_mismatch" });
-
-    expect(addPlayerAffiliation({
-      playerId: "p-148",
-      organizationId: "phinisi",
-      kind: "organization",
-      role: "Player",
-      effectiveFrom: "2027-02-30",
-    })).toEqual({ ok: false, reason: "invalid_effective_date" });
-  });
-
-  it("ends an affiliation without deleting it or ending a separate organization relationship", () => {
-    const ended = endPlayerAffiliation("p-123", "p-123-team-garuda-u10", "2027-02-14", "Team change");
-
-    expect(ended.ok).toBe(true);
+  it("ends a team affiliation through an authorized roster operation and preserves history", () => {
+    const ended = removePlayerFromTeam("p-123", "garuda-u10", getWorkspaceActor("org_admin", "garuda-u10"));
+    expect(ended).toBe(true);
     expect(listPlayerAffiliations("p-123", { includeHistorical: false }))
       .not.toEqual(expect.arrayContaining([expect.objectContaining({ id: "p-123-team-garuda-u10" })]));
     expect(listPlayerAffiliations("p-123")).toEqual(expect.arrayContaining([
@@ -208,12 +175,13 @@ describe("player affiliation repository", () => {
   });
 
   it("keeps history when existing roster operations assign and remove a team", () => {
-    expect(assignPlayerToTeam("p-148", "garuda-u10", getWorkspaceActor("org_admin"))).toBe(true);
+    const actor = getWorkspaceActor("org_admin", "garuda-u10");
+    expect(assignPlayerToTeam("p-148", "garuda-u10", actor)).toBe(true);
     const assigned = listPlayerAffiliations("p-148").find(
       (affiliation) => affiliation.kind === "team" && affiliation.teamId === "garuda-u10",
     );
     expect(assigned).toEqual(expect.objectContaining({ status: "active", organizationAffiliationId: "p-148-org-garuda" }));
-    expect(removePlayerFromTeam("p-148", "garuda-u10", getWorkspaceActor("org_admin"))).toBe(true);
+    expect(removePlayerFromTeam("p-148", "garuda-u10", actor)).toBe(true);
 
     expect(listPlayerAffiliations("p-148")).toEqual(expect.arrayContaining([
       expect.objectContaining({ id: assigned?.id, status: "ended", effectiveTo: "2027-02-14" }),
@@ -223,10 +191,24 @@ describe("player affiliation repository", () => {
     expect(getJourney("p-148").filter((event) => event.provenance?.sourceRecordId === assigned?.id))
       .toHaveLength(2);
   });
+
+  it("authorizes direct document selector reads only for the player actor", () => {
+    expect(getDocuments("p-123", getWorkspaceActor("player"))).toEqual(documents["p-123"]);
+    expect(getDocuments("p-123", getWorkspaceActor("org_admin"))).toEqual(documents["p-123"]);
+    expect(getDocuments("p-123", {
+      ...getWorkspaceActor("org_admin"),
+      organizationId: "phinisi",
+    })).toBeUndefined();
+    for (const role of ["parent", "coach", "scout", "association"] as const) {
+      expect(getDocuments("p-123", getWorkspaceActor(role))).toBeUndefined();
+    }
+    expect(getDocuments("p-148", getWorkspaceActor("player"))).toBeUndefined();
+  });
 });
 
 describe("primary player context repository", () => {
   it("sets and clears a player-selected context without changing affiliation state", () => {
+    const affiliationsBefore = listPlayerAffiliations("p-123");
     const selected = setPrimaryPlayerContext("p-123", {
       organizationAffiliationId: "p-123-org-garuda",
     }, getWorkspaceActor("player"));
@@ -236,7 +218,7 @@ describe("primary player context repository", () => {
       organizationAffiliationId: "p-123-org-garuda",
     } });
     expect(getPrimaryPlayerContext("p-123")).toEqual(selected.ok ? selected.context : undefined);
-    expect(listPlayerAffiliations("p-123").filter((affiliation) => affiliation.status === "active")).toHaveLength(1);
+    expect(listPlayerAffiliations("p-123")).toEqual(affiliationsBefore);
 
     expect(setPrimaryPlayerContext("p-123", null, getWorkspaceActor("player")))
       .toEqual({ ok: true, context: undefined });
@@ -312,42 +294,106 @@ describe("player journey repository", () => {
 });
 
 describe("roster mutation authorization", () => {
-  it("denies unsupported actors and wrong organization or team scope without changing history", () => {
-    const beforeAffiliations = listPlayerAffiliations("p-148");
-    const beforeJourney = getJourney("p-148");
+  it("denies unsupported actors and wrong organization or team scope without changing any state", () => {
+    const playerActor = getWorkspaceActor("player");
+    setPrimaryPlayerContext("p-123", { organizationAffiliationId: "p-123-org-garuda" }, playerActor);
+    const beforeP123 = {
+      player: getPlayer("p-123"),
+      affiliations: listPlayerAffiliations("p-123"),
+      primaryContext: getPrimaryPlayerContext("p-123"),
+      journey: getJourney("p-123"),
+    };
+    const beforeP124 = {
+      player: getPlayer("p-124"),
+      affiliations: listPlayerAffiliations("p-124"),
+      primaryContext: getPrimaryPlayerContext("p-124"),
+      journey: getJourney("p-124"),
+    };
+    const beforeP148 = {
+      player: getPlayer("p-148"),
+      affiliations: listPlayerAffiliations("p-148"),
+      primaryContext: getPrimaryPlayerContext("p-148"),
+      journey: getJourney("p-148"),
+    };
     const unauthorizedRoles = ["parent", "player", "scout", "coach", "association", "competition_organizer"] as const;
 
-    for (const role of unauthorizedRoles) {
-      expect(assignPlayerToTeam("p-148", "garuda-u10", getWorkspaceActor(role))).toBe(false);
-      expect(removePlayerFromTeam("p-123", "garuda-u10", getWorkspaceActor(role))).toBe(false);
-    }
-    expect(assignPlayerToTeam("p-148", "phinisi-u10", getWorkspaceActor("org_admin"))).toBe(false);
-    expect(assignPlayerToTeam("p-148", "garuda-u10", {
-      ...getWorkspaceActor("org_admin"),
-      organizationId: "phinisi",
-    })).toBe(false);
-    expect(removePlayerFromTeam("p-123", "garuda-u10", {
-      ...getWorkspaceActor("org_admin"),
-      organizationId: "phinisi",
-    })).toBe(false);
+    try {
+      for (const role of unauthorizedRoles) {
+        expect(assignPlayerToTeam("p-148", "garuda-u10", getWorkspaceActor(role, "garuda-u10"))).toBe(false);
+        expect(removePlayerFromTeam("p-124", "garuda-u10", getWorkspaceActor(role, "garuda-u10"))).toBe(false);
+      }
+      expect(assignPlayerToTeam("p-148", "phinisi-u10", getWorkspaceActor("org_admin", "phinisi-u10"))).toBe(false);
+      expect(assignPlayerToTeam("p-148", "garuda-u10", getWorkspaceActor("org_admin", "garuda-u8"))).toBe(false);
+      expect(removePlayerFromTeam("p-124", "garuda-u10", getWorkspaceActor("org_admin", "garuda-u8"))).toBe(false);
+      expect(assignPlayerToTeam("p-148", "garuda-u10", {
+        ...getWorkspaceActor("org_admin", "garuda-u10"),
+        organizationId: "phinisi",
+      })).toBe(false);
+      expect(removePlayerFromTeam("p-124", "garuda-u10", {
+        ...getWorkspaceActor("org_admin", "garuda-u10"),
+        organizationId: "phinisi",
+      })).toBe(false);
+      expect(assignPlayerToTeam("p-148", "garuda-u10", undefined as unknown as WorkspaceActor)).toBe(false);
+      expect(removePlayerFromTeam("p-124", "garuda-u10", undefined as unknown as WorkspaceActor)).toBe(false);
+      expect(assignPlayerToTeam("p-148", "garuda-u10", {
+        subjectId: "unrecognized-client-identity",
+        role: "org_admin",
+        organizationId: "garuda",
+        teamId: "garuda-u10",
+      })).toBe(false);
 
-    expect(listPlayerAffiliations("p-148")).toEqual(beforeAffiliations);
-    expect(getJourney("p-148")).toEqual(beforeJourney);
+      expect(getPlayer("p-123")).toEqual(beforeP123.player);
+      expect(listPlayerAffiliations("p-123")).toEqual(beforeP123.affiliations);
+      expect(getPrimaryPlayerContext("p-123")).toEqual(beforeP123.primaryContext);
+      expect(getJourney("p-123")).toEqual(beforeP123.journey);
+      expect(getPlayer("p-124")).toEqual(beforeP124.player);
+      expect(listPlayerAffiliations("p-124")).toEqual(beforeP124.affiliations);
+      expect(getPrimaryPlayerContext("p-124")).toEqual(beforeP124.primaryContext);
+      expect(getJourney("p-124")).toEqual(beforeP124.journey);
+      expect(getPlayer("p-148")).toEqual(beforeP148.player);
+      expect(listPlayerAffiliations("p-148")).toEqual(beforeP148.affiliations);
+      expect(getPrimaryPlayerContext("p-148")).toEqual(beforeP148.primaryContext);
+      expect(getJourney("p-148")).toEqual(beforeP148.journey);
+    } finally {
+      setPrimaryPlayerContext("p-123", null, playerActor);
+    }
   });
 
-  it("denies organization admins access to a player scoped only to another organization", () => {
-    expect(endPlayerAffiliation("p-148", "p-148-org-garuda", "2027-02-14").ok).toBe(true);
-    const added = addPlayerAffiliation({
-      playerId: "p-148",
+  it("does not fall back from viewer organization scope to the target organization", () => {
+    expect(getPlayerAccessForActor("p-123", {
+      ...getWorkspaceActor("org_admin"),
       organizationId: "phinisi",
-      kind: "organization",
-      role: "Player",
-      effectiveFrom: "2027-02-15",
-    });
-    expect(added.ok).toBe(true);
-    expect(getPlayerAccessForActor("p-148", getWorkspaceActor("org_admin"))).toEqual({
+    })).toEqual({
       ok: false,
-      reason: "forbidden",
+      reason: "scope_unavailable",
     });
+
+    const organizationAffiliation = playerAffiliations.find((item) => item.id === "p-148-org-garuda");
+    if (!organizationAffiliation) throw new Error("Expected the p-148 Garuda affiliation fixture");
+    const originalStatus = organizationAffiliation.status;
+    const originalEffectiveTo = organizationAffiliation.effectiveTo;
+    try {
+      organizationAffiliation.status = "ended";
+      organizationAffiliation.effectiveTo = "2027-02-13";
+      playerAffiliations.push({
+        id: "test-p148-org-phinisi",
+        playerId: "p-148",
+        organizationId: "phinisi",
+        kind: "organization",
+        role: "Player",
+        status: "active",
+        effectiveFrom: "2027-02-14",
+        sourceOrganizationId: "phinisi",
+      });
+      expect(getPlayerAccessForActor("p-148", getWorkspaceActor("org_admin"))).toEqual({
+        ok: false,
+        reason: "forbidden",
+      });
+    } finally {
+      organizationAffiliation.status = originalStatus;
+      organizationAffiliation.effectiveTo = originalEffectiveTo;
+      const fixtureIndex = playerAffiliations.findIndex((item) => item.id === "test-p148-org-phinisi");
+      if (fixtureIndex >= 0) playerAffiliations.splice(fixtureIndex, 1);
+    }
   });
 });

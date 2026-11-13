@@ -7,7 +7,7 @@ import { JourneyTimeline } from "@/components/ds/journey-timeline";
 import { MatchRow } from "@/components/ds/match-card";
 import { StatCard } from "@/components/ds/stat-card";
 import { StatusBadge } from "@/components/ds/status-badge";
-import { EmptyState } from "@/components/ds/states";
+import { EmptyState, PermissionState } from "@/components/ds/states";
 import { OrgCrest, TeamCrest } from "@/components/ds/team-crest";
 import { Label } from "@/components/ui/label";
 import {
@@ -24,6 +24,7 @@ import {
   getTeam,
   listMatches,
   listSchedule,
+  type WorkspaceActor,
 } from "@/data/repository";
 import type { Achievement, Player, PlayerAffiliation } from "@/data/types";
 import { ageCategoryFor, fmtDate, relativeDay } from "@/lib/format";
@@ -498,8 +499,11 @@ export function PlayerMatchesTab({ player }: { player: Player }) {
   );
 }
 
-export function PlayerDocumentsTab({ player }: { player: Player }) {
-  const docs = getDocuments(player.id);
+export function PlayerDocumentsTab({ player, actor }: { player: Player; actor: WorkspaceActor }) {
+  const docs = getDocuments(player.id, actor);
+  if (!docs) {
+    return <PermissionState title="Documents unavailable" description="Documents are not authorized for this workspace scope." />;
+  }
   return (
     <div className="space-y-4">
       <div className="flex items-start gap-3 rounded-xl border bg-muted/40 p-4 text-small">

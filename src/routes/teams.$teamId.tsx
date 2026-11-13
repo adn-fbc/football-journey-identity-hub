@@ -126,7 +126,7 @@ function TeamPage() {
     );
   }
 
-  return <TeamManagementPage team={team} actor={getWorkspaceActor(role)} />;
+  return <TeamManagementPage team={team} actor={getWorkspaceActor(role, team.id)} />;
 }
 
 function TeamManagementPage({ team, actor }: { team: Team; actor: ReturnType<typeof getWorkspaceActor> }) {
