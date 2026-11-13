@@ -31,6 +31,63 @@ const standardChecklist = (b: (typeof MODULE_BLUEPRINTS)[number]) => {
   ];
 };
 
+/** A self-contained GitHub Copilot Chat prompt for building one module, derived from its blueprint. */
+const copilotPrompt = (b: (typeof MODULE_BLUEPRINTS)[number]) => {
+  const m = getModule(b.id);
+  const name = title(b.id);
+  const deps = b.dependsOn.length
+    ? b.dependsOn.map((d) => `- ${title(d)} (\`${d}\`): must already be live. If its status in src/config/modules.ts is still "soon", stop and tell me instead of building it.`).join("\n")
+    : "- None. This module can be built on the current live platform.";
+  return `You are working in the Youth Football Ecosystem Platform (TanStack Start, React 19, Tailwind CSS v4, TypeScript).
+Build the first release of the "${name}" module (id \`${b.id}\`, currently a blueprint page at \`${m?.path ?? "/modules/" + b.id}\`).
+
+## Context
+${b.summary}
+Problem: ${b.problem}
+Core principle: the player owns the Football ID and journey; organizations only hold relationships with players.
+
+## Hard constraints: preserve the existing design system and application shell
+- Do NOT change src/styles.css design tokens, fonts, colors, spacing or radius. Use only existing semantic tokens; never hardcode colors (no text-white, bg-black, bg-[#...]).
+- Do NOT modify the application shell in src/components/shell/ (sidebar, top bar, role switcher, global search, notification center, mobile nav). The module appears in navigation only through src/config/modules.ts.
+- Build every screen from src/components/ds/ (PageHeader, PageTabs, Section, StatCard, DataTable, FilterBar, StatusBadge, states, ConfirmDialog, cards, JourneyTimeline) and src/components/ui/. Read src/components/ds/README.md first. Add a new shared component only when none fits, and put it in src/components/ds/.
+- Use the existing status system (StatusBadge) for every status.
+- Use mock data only: add types to src/data/types.ts, fictional Indonesian data to src/data/mock.ts, and read it only through src/data/repository.ts. No backend, external APIs or real payments.
+- Routes go in src/routes/ (TanStack file routes, each with its own head()). Never edit src/routeTree.gen.ts.
+- Do not touch unrelated pages or other modules.
+
+## Dependencies
+${deps}
+
+## Who uses it
+${b.roleJobs.map((r) => `- ${getRole(r.role).label}: ${r.job}`).join("\n")}
+
+## First-release scope (build only this)
+${b.scope.mvp.map((i) => `- ${i}`).join("\n")}
+Not now: ${[...b.scope.next, ...b.scope.later].join("; ")}.
+Out of scope: ${b.outOfScope.join("; ")}.
+
+## Data
+Owns: ${b.entities.map((e) => `${e.name} (${e.description})`).join("; ")}
+Reads only, never owns: ${b.consumes.join("; ")}
+Football Journey events: ${b.journeyEvents.length ? b.journeyEvents.join("; ") : "none; do not write to the timeline"}
+
+## Privacy & consent rules (enforce in src/lib/${b.id}-access.ts and test them)
+${b.privacy.map((i) => `- ${i}`).join("\n")}
+
+## Acceptance criteria (each must become at least one test)
+${b.acceptance.map((a, i) => `${i + 1}. Given ${a.given}, when ${a.when}, then ${a.then}.`).join("\n")}
+
+## Implementation checklist (work in this order)
+${[...standardChecklist(b).slice(0, 4), ...b.checklist, ...standardChecklist(b).slice(4)].map((i) => `- [ ] ${i}`).join("\n")}${b.docs?.length ? `\n\nRead these documents first; they are the detailed source of truth: ${b.docs.join(", ")}.` : ""}
+
+## How to work
+1. Briefly restate the plan and list the files you will create or change. Wait for my confirmation.
+2. Write the tests for the acceptance criteria and access rules first (Vitest, next to the code).
+3. Implement step by step, following the patterns in src/features/check-in and src/lib/coach-access.ts.
+4. Run \`bunx vitest run\` and \`bunx tsc --noEmit\` and fix all failures.
+5. Finish by listing changed files, which acceptance criteria are covered by which tests, and any checklist item left open.`;
+};
+
 const out: string[] = [];
 out.push(`# Future Modules Baseline
 
@@ -63,7 +120,7 @@ ${MODULE_BLUEPRINTS.map((b) => `| ${title(b.id)} | ${b.wave} | ${b.dependsOn.len
 - Each module below ends with **Acceptance criteria** (Given / When / Then) and an **Implementation checklist**.
 - Work one module at a time in wave order, and only after its dependencies are live.
 - Tick checklist items in your own copy or turn them into GitHub issues; the source list lives in the blueprint config.
-- Paste a module's acceptance criteria into GitHub Copilot Chat as the requirement, and ask for tests first.
+- Each module also has a ready-to-use **GitHub Copilot prompt**. It includes the module's dependencies, acceptance criteria, checklist and the rules that keep the design system and app shell unchanged. Paste it into Copilot Chat (agent mode) as is.
 - A module is done when every acceptance criterion has a passing test and every checklist item is ticked.
 
 ## How to ship a module
@@ -134,6 +191,13 @@ ${checks(b.checklist)}
 
 **Standard steps**
 ${checks(standardChecklist(b))}
+
+### GitHub Copilot prompt
+Paste into Copilot Chat (agent mode) from the repository root.
+
+\`\`\`text
+${copilotPrompt(b)}
+\`\`\`
 ${b.docs?.length ? `\n### Further documents\n${list(b.docs.map((d) => `[${d}](./${d})`))}\n` : ""}`);
   }
 }
