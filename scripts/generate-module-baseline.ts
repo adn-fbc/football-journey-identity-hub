@@ -12,6 +12,24 @@ const title = (id: string) => getModule(id)?.title ?? id;
 const anchor = (id: string) => `#${title(id).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`;
 const list = (items: string[], empty = "_None_") => (items.length ? items.map((i) => `- ${i}`).join("\n") : empty);
 const waves = [1, 2, 3] as RolloutWave[];
+const checks = (items: string[]) => items.map((i) => `- [ ] ${i}`).join("\n");
+
+/** Steps every module needs before it can go live, in build order. */
+const standardChecklist = (b: (typeof MODULE_BLUEPRINTS)[number]) => {
+  const path = getModule(b.id)?.path ?? `/${b.id}`;
+  return [
+    `Confirm every module in "Depends on" is live${b.dependsOn.length ? ` (${b.dependsOn.map(title).join(", ")})` : " (none for this module)"}`,
+    `Add types for ${b.entities.map((e) => `\`${e.name}\``).join(", ")} to \`src/data/types.ts\``,
+    "Add realistic fictional mock data to `src/data/mock.ts` and expose it only through `src/data/repository.ts`",
+    `Write access rules in \`src/lib/${b.id}-access.ts\` with tests, covering every Privacy & consent rule`,
+    `Build the UI in \`src/features/${b.id}/\` from \`src/components/ds\` and the existing status system; mobile-first for players and guardians`,
+    `Create the route files that replace the \`${path}\` blueprint page, each with its own \`head()\``,
+    b.journeyEvents.length ? "Publish the Football Journey events listed above to the player timeline" : "Confirm the module writes nothing to the Football Journey timeline",
+    "Add loading, empty and error states for every new screen",
+    "Turn each acceptance criterion below into at least one test and make them pass (`bunx vitest run`)",
+    `Set \`status: "live"\` and the new \`path\` for \`${b.id}\` in \`src/config/modules.ts\`, remove its blueprint, and re-generate this document`,
+  ];
+};
 
 const out: string[] = [];
 out.push(`# Future Modules Baseline
@@ -39,6 +57,14 @@ ${waves.map((w) => `| ${WAVES[w].label} | ${WAVES[w].title} | ${WAVES[w].goal} |
 | Module | Wave | Depends on | Primary roles |
 | --- | --- | --- | --- |
 ${MODULE_BLUEPRINTS.map((b) => `| ${title(b.id)} | ${b.wave} | ${b.dependsOn.length ? b.dependsOn.map(title).join(", ") : "—"} | ${[...new Set(b.roleJobs.map((r) => getRole(r.role).label))].join(", ")} |`).join("\n")}
+
+## Using this document in VS Code
+
+- Each module below ends with **Acceptance criteria** (Given / When / Then) and an **Implementation checklist**.
+- Work one module at a time in wave order, and only after its dependencies are live.
+- Tick checklist items in your own copy or turn them into GitHub issues; the source list lives in the blueprint config.
+- Paste a module's acceptance criteria into GitHub Copilot Chat as the requirement, and ask for tests first.
+- A module is done when every acceptance criterion has a passing test and every checklist item is ticked.
 
 ## How to ship a module
 
@@ -98,6 +124,16 @@ ${list(b.metrics)}
 
 ### Out of scope
 ${list(b.outOfScope)}
+
+### Acceptance criteria (first release)
+${b.acceptance.map((a, i) => `${i + 1}. **Given** ${a.given}, **when** ${a.when}, **then** ${a.then}.`).join("\n")}
+
+### Implementation checklist
+**Module-specific**
+${checks(b.checklist)}
+
+**Standard steps**
+${checks(standardChecklist(b))}
 ${b.docs?.length ? `\n### Further documents\n${list(b.docs.map((d) => `[${d}](./${d})`))}\n` : ""}`);
   }
 }
