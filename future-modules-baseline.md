@@ -1321,7 +1321,7 @@ _Publishes no journey events._
 **Module-specific**
 - [ ] Build scout verification before any discovery feature
 - [ ] Connect discoverability to the existing Privacy & Consent controls in My Children (default off for minors)
-- [ ] Build discovery search over opted-in players only, filtered on the server side
+- [ ] Build discovery search over opted-in players only, filtered in the data layer (src/data/repository.ts), never in the UI
 - [ ] Build the contact request flow with guardian and club approvals
 - [ ] Add a profile view log visible to guardians
 - [ ] Add access tests that prove hidden players never leak into results
@@ -1399,7 +1399,7 @@ Football Journey events: none; do not write to the timeline
 - [ ] Write access rules in `src/lib/scouting-access.ts` with tests, covering every Privacy & consent rule
 - [ ] Build scout verification before any discovery feature
 - [ ] Connect discoverability to the existing Privacy & Consent controls in My Children (default off for minors)
-- [ ] Build discovery search over opted-in players only, filtered on the server side
+- [ ] Build discovery search over opted-in players only, filtered in the data layer (src/data/repository.ts), never in the UI
 - [ ] Build the contact request flow with guardian and club approvals
 - [ ] Add a profile view log visible to guardians
 - [ ] Add access tests that prove hidden players never leak into results
