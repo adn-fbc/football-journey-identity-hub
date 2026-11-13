@@ -28,6 +28,10 @@ export interface ModuleBlueprint {
   foundations: string[];
   metrics: string[];
   outOfScope: string[];
+  /** First-release acceptance criteria in Given / When / Then form; each one should become a test. */
+  acceptance: { given: string; when: string; then: string }[];
+  /** Module-specific implementation tasks. Standard steps every module needs are added by the baseline generator. */
+  checklist: string[];
   /** Deeper project documents, relative to the repository root. */
   docs?: string[] | undefined;
 }
@@ -92,6 +96,20 @@ export const MODULE_BLUEPRINTS: ModuleBlueprint[] = [
     foundations: ["Check-in page for players and guardians", "Attendance column in the organization workspace", "Schedule module"],
     metrics: ["Share of sessions with attendance recorded", "Median time to complete a roster check-in", "Guardian absence notices submitted before the session"],
     outOfScope: ["GPS or location tracking of minors", "Paying or penalizing based on attendance"],
+    acceptance: [
+      { given: "a coach assigned to Garuda U10 opens today's training session", when: "they mark each rostered player present, late, excused or absent and save", then: "one AttendanceRecord per player is stored with the coach as recorder and a timestamp" },
+      { given: "a guardian with a linked child and an open check-in window", when: "they check the child in", then: "the child's record shows present, recorded by the guardian, and a check-in outside the window is rejected with a clear message" },
+      { given: "a guardian reports an absence with a reason before the session starts", when: "the coach opens the roster", then: "the child is pre-marked excused and the reason is visible to the coach only" },
+      { given: "a player with 20 recorded sessions this season", when: "an admin opens the team attendance view", then: "the 30-day and season rates match the records, and excused sessions are not counted as absences" },
+      { given: "a coach who is not assigned to a team", when: "they try to open that team's attendance", then: "access is denied and no records are shown" },
+    ],
+    checklist: [
+      "Extend the existing check-in model (src/features/check-in) instead of creating a second check-in flow",
+      "Derive AttendanceSummary from records in a pure function with unit tests; never store hand-edited rates",
+      "Add an attendance tab to the team page and a summary to the guardian child card",
+      "Add access rules (coach: assigned teams; guardian: linked children) with tests",
+      "Publish milestone journey events (e.g. 50 sessions) from the summary, not on every check-in",
+    ],
   },
   {
     id: "training",
@@ -125,6 +143,20 @@ export const MODULE_BLUEPRINTS: ModuleBlueprint[] = [
     foundations: ["Training schedule view in the organization workspace", "Schedule rows and calendar"],
     metrics: ["Sessions planned before they happen", "Plans reused at least once", "Active coaches planning weekly"],
     outOfScope: ["Physical load monitoring with wearables", "Paid drill marketplace"],
+    acceptance: [
+      { given: "a coach with access to the club drill library", when: "they create a session plan with an objective, duration and at least one drill", then: "the plan is saved and the total duration equals the sum of its blocks" },
+      { given: "a saved session plan", when: "the coach assigns it to Garuda U10 on a date", then: "a training item appears in the team schedule and on guardians' schedules for that team" },
+      { given: "a plan used last week", when: "the coach duplicates it for next week", then: "a new independent plan is created and editing it does not change the original" },
+      { given: "an assistant coach of the same team", when: "they open a shared plan", then: "they can view it, and can edit only if the head coach granted edit rights" },
+      { given: "a guardian or player", when: "they open a team's training session", then: "they see the time, place and objective but not internal coach notes" },
+    ],
+    checklist: [
+      "Link TrainingSession to an existing schedule item instead of duplicating date and venue fields",
+      "Build the drill library with filters for age category and focus tags",
+      "Build the session planner with drag-to-reorder blocks and a running duration total",
+      "Add plan sharing rights (view or edit) for assistant coaches",
+      "Make sure no player-level data is stored in plans or drills",
+    ],
   },
   {
     id: "development",
@@ -164,6 +196,21 @@ export const MODULE_BLUEPRINTS: ModuleBlueprint[] = [
     foundations: ["Player profile tabs", "Football Journey timeline (development_assessment and coach_observation sources)"],
     metrics: ["Players with a review each term", "Guardians who open published reviews", "Goals with progress updates"],
     outOfScope: ["Automated talent scores", "Sharing development data with scouts without consent"],
+    acceptance: [
+      { given: "a coach assigned to a player's team", when: "they record an observation linked to a session or match", then: "the observation is saved against that activity and is not visible to the player or guardians" },
+      { given: "an assessment period is open", when: "the coach rates a player against every competency in the framework and submits", then: "the assessment is stored as a draft until the coach publishes it" },
+      { given: "a player who sets a goal with a target date", when: "the goal's status changes", then: "the change is shown on the player's profile and to linked guardians" },
+      { given: "a coach publishes a season review", when: "a linked guardian opens the child's profile", then: "the review is readable in plain language and appears on the Football Journey timeline" },
+      { given: "a user from another organization or a scout", when: "they open the player's development tab", then: "no assessments, observations or reviews are shown" },
+    ],
+    checklist: [
+      "Follow the deeper player-development documents listed below; they are the source of truth for this module",
+      "Load the competency framework from configuration, not hard-coded UI",
+      "Build the observation quick-entry flow from the session and match pages",
+      "Build the assessment form with draft and publish states",
+      "Build goals and season review on the existing player profile tabs",
+      "Add access rules for player, guardian, assessing organization and coach with tests",
+    ],
     docs: [
       "player-development-product-blueprint.md",
       "player-development-competency-framework.md",
@@ -207,6 +254,21 @@ export const MODULE_BLUEPRINTS: ModuleBlueprint[] = [
     foundations: ["Child payments shown in the guardian view (mock)"],
     metrics: ["Invoices paid by the due date", "Time admins spend on fee follow-up", "Guardians paying digitally"],
     outOfScope: ["Holding funds on the platform", "Loans or credit"],
+    acceptance: [
+      { given: "an admin creates a monthly fee plan for Garuda U10", when: "invoices are generated for the month", then: "each active member of the team gets exactly one invoice with the plan's amount and due date" },
+      { given: "a guardian with two linked children", when: "they open payments", then: "they see each child's invoices separately with the amount in Rupiah and the status" },
+      { given: "an admin records a manual payment with proof", when: "the payment covers the invoice amount", then: "the invoice becomes paid and the outstanding balance drops by that amount" },
+      { given: "a child with an overdue invoice", when: "anyone views the child's Football ID, journey or match pages", then: "no payment status is shown and the child can still be checked in and selected" },
+      { given: "a coach", when: "they open the team or a player", then: "no fee or payment data is visible" },
+    ],
+    checklist: [
+      "Store amounts as integer Rupiah; format with the existing format helpers",
+      "Build fee plan setup, invoice list and outstanding balance overview for admins",
+      "Build the guardian payments view per child with receipt download",
+      "Add manual payment recording with proof upload",
+      "Keep payment data out of every player, team and journey view (add a test that guards this)",
+      "Do not start digital payments until a licensed provider is chosen",
+    ],
   },
 
   // ---------------- Wave 2 — Professional networks ----------------
@@ -233,6 +295,19 @@ export const MODULE_BLUEPRINTS: ModuleBlueprint[] = [
     foundations: ["Coach role and assigned-team access rules", "Coach overview"],
     metrics: ["Coaches with at least one verified licence", "Clubs viewing coach history when hiring"],
     outOfScope: ["Coach employment contracts", "Salary handling"],
+    acceptance: [
+      { given: "a coach adds a licence with level, issuer and expiry", when: "the issuing body verifies it", then: "the licence shows as verified on the coach's own Football ID" },
+      { given: "a coach assigned to teams over several seasons", when: "they open their coaching history", then: "every assignment is listed with organization, team and dates, derived from Teams" },
+      { given: "a licence that expired", when: "a club views the coach's profile", then: "the licence is marked expired and is no longer counted as valid" },
+      { given: "a coach hides a licence from the public profile", when: "another organization views the profile", then: "that licence is not shown" },
+    ],
+    checklist: [
+      "Add coach licences and history to the coach's existing Football ID page",
+      "Derive CoachingAssignment from team coach assignments; never let users edit it directly",
+      "Add licence verification states (pending, verified, expired, rejected) using the status system",
+      "Add per-item public or private visibility controls for the coach",
+      "Keep safeguarding checks visible only to authorized administrators",
+    ],
   },
   {
     id: "referee",
@@ -260,6 +335,20 @@ export const MODULE_BLUEPRINTS: ModuleBlueprint[] = [
     foundations: ["Referee role", "Match detail with event timeline"],
     metrics: ["Matches with a digital report", "Time from final whistle to confirmed result"],
     outOfScope: ["Referee payments", "Live video review"],
+    acceptance: [
+      { given: "an organizer with a referee pool for a competition", when: "they appoint a main referee and two assistants to a match", then: "each referee receives an appointment they can accept or decline" },
+      { given: "a referee declines an appointment", when: "the organizer opens the fixture", then: "the slot shows as open again" },
+      { given: "the appointed main referee after the final whistle", when: "they submit the match report with score, cards and incidents", then: "the report is stored as submitted and the match shows 'result pending confirmation'" },
+      { given: "a submitted report", when: "the organizer confirms it", then: "the match result and events update, and standings recalculate" },
+      { given: "a parent or a team not involved in the match", when: "they open the match", then: "disciplinary details from the report are not shown" },
+    ],
+    checklist: [
+      "Add referee pool management to competition pages for organizers",
+      "Build appointment accept and decline for the referee role",
+      "Build the mobile-first match report form, starting from the existing match event timeline",
+      "Route confirmed reports into results and the existing standings calculation",
+      "Add access rules for disciplinary details with tests",
+    ],
   },
   {
     id: "opportunities",
@@ -290,6 +379,20 @@ export const MODULE_BLUEPRINTS: ModuleBlueprint[] = [
     foundations: ["Guardian consent grants", "Football ID passport"],
     metrics: ["Applications per opportunity", "Applicants from outside the host organization", "Guardian approval time"],
     outOfScope: ["Paid placement fees", "Agent representation"],
+    acceptance: [
+      { given: "an organization publishes a U12 trial for players born 2014-2015 in South Sulawesi", when: "a player outside that range browses", then: "the trial is shown as not eligible with the reason" },
+      { given: "an eligible minor applies with their Football ID", when: "the application is submitted", then: "it stays 'awaiting guardian approval' and the host organization cannot see it yet" },
+      { given: "a guardian approves the application", when: "the host organization opens applicants", then: "they see only the profile sections the family chose to share" },
+      { given: "an application is rejected", when: "another organization views the player", then: "the rejection is not visible anywhere" },
+      { given: "an opportunity reaches its capacity", when: "another player tries to apply", then: "applying is closed and the listing shows it is full" },
+    ],
+    checklist: [
+      "Build opportunity listing and detail pages with eligibility checks as a tested pure function",
+      "Build the apply flow with share-section selection",
+      "Add guardian approval through the existing consent and notification patterns",
+      "Build application status tracking for families and an applicant list for the host",
+      "Publish a selection as an achievement journey event",
+    ],
   },
   {
     id: "scouting",
@@ -322,6 +425,21 @@ export const MODULE_BLUEPRINTS: ModuleBlueprint[] = [
     foundations: ["Scout role", "Privacy & Consent controls in My Children"],
     metrics: ["Contact requests approved", "Guardian complaints (target zero)"],
     outOfScope: ["Transfer negotiation", "Public talent rankings"],
+    acceptance: [
+      { given: "a player under 18 with no guardian opt-in", when: "a verified scout searches", then: "the player never appears in results" },
+      { given: "an unverified scout account", when: "it tries to search or view profiles", then: "access is denied until verification is complete" },
+      { given: "a guardian turns on discoverability for selected profile sections", when: "a verified scout views the child", then: "only those sections are shown and no contact details are visible" },
+      { given: "a scout sends a contact request", when: "the guardian and club review it", then: "contact is only opened after both approve, and either can decline" },
+      { given: "a scout views a child's profile", when: "the guardian opens consent settings", then: "the view is listed with the scout's name, affiliation and date" },
+    ],
+    checklist: [
+      "Build scout verification before any discovery feature",
+      "Connect discoverability to the existing Privacy & Consent controls in My Children (default off for minors)",
+      "Build discovery search over opted-in players only, filtered on the server side",
+      "Build the contact request flow with guardian and club approvals",
+      "Add a profile view log visible to guardians",
+      "Add access tests that prove hidden players never leak into results",
+    ],
   },
 
   // ---------------- Wave 3 — Governance & intelligence ----------------
@@ -354,6 +472,19 @@ export const MODULE_BLUEPRINTS: ModuleBlueprint[] = [
     foundations: ["Organization and competition dashboards with stat cards", "Standings calculation"],
     metrics: ["Admins opening analytics monthly", "Reports exported"],
     outOfScope: ["Selling data to third parties", "Individual player rankings"],
+    acceptance: [
+      { given: "an organization admin", when: "they open analytics for the last season", then: "member count, retention and attendance rate match the source records" },
+      { given: "a competition organizer", when: "they open competition analytics", then: "participation by category and results match the competition's matches" },
+      { given: "a filter that leaves fewer than 5 players in a group", when: "the dashboard renders", then: "that group is hidden or merged and no individual values are shown" },
+      { given: "an admin exports a report", when: "the export completes", then: "the file contains the same numbers as the screen and no player contact details" },
+    ],
+    checklist: [
+      "Compute metrics in pure, tested functions from repository data; never write back to source records",
+      "Build organization and competition dashboards with the existing stat card and data table components",
+      "Apply the small-group (fewer than 5) rule in one shared helper with tests",
+      "Add CSV export in the Next release",
+      "Make sure each role only sees metrics for organizations or competitions it manages",
+    ],
   },
   {
     id: "association",
@@ -381,6 +512,19 @@ export const MODULE_BLUEPRINTS: ModuleBlueprint[] = [
     foundations: ["Association role workspace", "Member directory, membership review and Digital KTA", "Competition oversight"],
     metrics: ["Organizations registered", "Median time to sanction a competition"],
     outOfScope: ["Replacing national federation systems", "Legal entity registration"],
+    acceptance: [
+      { given: "an organization admin submits a registration with the provincial association", when: "the association approves it", then: "the organization page shows 'Registered' with the validity end date" },
+      { given: "a registration whose validity has ended", when: "anyone views the organization", then: "the status shows as expired and the admin sees a renewal prompt" },
+      { given: "an organizer requests sanctioning for Makassar Youth Cup 2027", when: "the association approves it", then: "the competition shows 'Sanctioned' and the approval records who approved and when" },
+      { given: "an association official", when: "they review an organization", then: "they see organization-level data and only the player data needed for registration" },
+    ],
+    checklist: [
+      "Build on the existing association workspace, member directory, membership review and Digital KTA",
+      "Build organization registration and renewal with validity dates",
+      "Build competition sanctioning requests and the approval queue",
+      "Show registration and sanction status on organization and competition pages using the status system",
+      "Record every approval with approver and timestamp (audit trail)",
+    ],
   },
   {
     id: "federation",
@@ -405,6 +549,19 @@ export const MODULE_BLUEPRINTS: ModuleBlueprint[] = [
     foundations: ["Football ID verification status", "Affiliation history on the journey"],
     metrics: ["Eligibility disputes per competition", "Duplicate identities detected"],
     outOfScope: ["Professional contract registration", "International transfers"],
+    acceptance: [
+      { given: "a player with a verified Football ID", when: "the registry sync runs", then: "exactly one registry entry exists for that player" },
+      { given: "an organizer checks a team sheet before a U10 match", when: "a player is too old, unregistered or suspended", then: "the player is flagged with the reason and the check is logged" },
+      { given: "a transfer request between two organizations", when: "the player (or guardian) has not confirmed", then: "the transfer cannot be approved" },
+      { given: "an approved transfer", when: "anyone views the player's journey", then: "it shows a leave event for the old organization and a join event for the new one with the same date" },
+    ],
+    checklist: [
+      "Build the registry entry for verified Football IDs only",
+      "Build the eligibility check as a tested pure function (age category, registration, suspension)",
+      "Add eligibility flags to team sheets in competition pages",
+      "Build the transfer flow with player or guardian confirmation and both organizations' approvals",
+      "Keep identity documents visible only to verifying officials",
+    ],
   },
   {
     id: "ai",
@@ -436,6 +593,19 @@ export const MODULE_BLUEPRINTS: ModuleBlueprint[] = [
     foundations: ["Role-based access rules for coaches, guardians and associations"],
     metrics: ["Answers rated helpful", "Answers with correct sources"],
     outOfScope: ["Automated selection or talent decisions", "Medical advice"],
+    acceptance: [
+      { given: "a coach asks 'who missed training this month?'", when: "the assistant answers", then: "the answer lists only players from teams the coach is assigned to and links to the source records" },
+      { given: "a guardian asks for a summary of a child's month", when: "the assistant answers", then: "it covers only that guardian's linked children and is written in plain language" },
+      { given: "a user asks about data they cannot see", when: "the assistant answers", then: "it says it cannot access that information and reveals nothing" },
+      { given: "the assistant suggests a lineup or session", when: "the user does nothing", then: "no official record is changed" },
+    ],
+    checklist: [
+      "Route every assistant data read through the same access rules the pages use",
+      "Run model calls on the server only, through the Lovable AI gateway",
+      "Show sources under every answer",
+      "Store conversations privately per user",
+      "Add tests that prove cross-role leaks are impossible before launch",
+    ],
   },
 ];
 

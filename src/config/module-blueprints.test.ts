@@ -24,3 +24,18 @@ describe("future module blueprints", () => {
     }
   });
 });
+
+describe("blueprint delivery criteria", () => {
+  it("gives every module at least 4 complete acceptance criteria", () => {
+    for (const bp of MODULE_BLUEPRINTS) {
+      expect(bp.acceptance.length, bp.id).toBeGreaterThanOrEqual(4);
+      for (const a of bp.acceptance) {
+        expect(a.given.trim() && a.when.trim() && a.then.trim(), bp.id).toBeTruthy();
+      }
+    }
+  });
+
+  it("gives every module at least 4 module-specific checklist items", () => {
+    for (const bp of MODULE_BLUEPRINTS) expect(bp.checklist.length, bp.id).toBeGreaterThanOrEqual(4);
+  });
+});

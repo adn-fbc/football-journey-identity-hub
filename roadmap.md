@@ -16,3 +16,4 @@
 - [x] Blueprint for all 12 upcoming modules (scope, roles, data, privacy, dependencies, waves)
 - [x] In-app roadmap at /modules and per-module pages (verified in browser)
 - [x] Project baseline document future-modules-baseline.md, generated from the blueprint config
+- [x] Acceptance criteria and implementation checklist for every module in the baseline document
