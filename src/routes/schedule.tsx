@@ -7,9 +7,16 @@ import { PageHeader } from "@/components/ds/page-header";
 import { FilterChips } from "@/components/ds/filter-bar";
 import { Section } from "@/components/ds/section";
 import { ScheduleRow } from "@/components/ds/schedule-row";
-import { EmptyState } from "@/components/ds/states";
+import { EmptyState, PermissionState } from "@/components/ds/states";
 import { ChildSelector } from "@/features/children/child-selector";
-import { getTeam, listCurrentGuardianChildren, getPlayer, listSchedule } from "@/data/repository";
+import {
+  getCurrentGuardianId,
+  getGuardianAccessDecision,
+  getTeam,
+  listCurrentGuardianChildren,
+  getPlayer,
+  listSchedule,
+} from "@/data/repository";
 import type { ScheduleItem } from "@/data/types";
 import { fmtDay, relativeDay } from "@/lib/format";
 import { useRole } from "@/lib/role-context";
@@ -24,10 +31,17 @@ export const Route = createFileRoute("/schedule")({
 type T = "all" | ScheduleItem["type"];
 
 function SchedulePage() {
-  const { role } = useRole();
+  const { role, ready } = useRole();
   const [type, setType] = useState<T>("all");
   const [selectedChildId, setSelectedChildId] = useState("");
-  const children = role === "parent" ? listCurrentGuardianChildren() : [];
+  if (!ready) {
+    return <PermissionState title="Schedule access unavailable" description="The active workspace scope has not been resolved." />;
+  }
+  const guardianId = role === "parent" ? getCurrentGuardianId() : undefined;
+  const linkedChildren = role === "parent" ? listCurrentGuardianChildren() : [];
+  const children = guardianId
+    ? linkedChildren.filter((child) => getGuardianAccessDecision(guardianId, child.id, "schedule").allowed)
+    : [];
   const selectedChild = children.find((child) => child.id === selectedChildId) ?? children[0];
   const coachTeamIds =
     role === "coach" ? getCoachAssignedTeams().map((team) => team.id) : undefined;
@@ -46,6 +60,8 @@ function SchedulePage() {
       const matchesScope =
         role === "coach"
           ? item.teamId !== undefined && coachTeamIds?.includes(item.teamId)
+          : role === "parent"
+            ? item.teamId !== undefined && teamIds?.includes(item.teamId)
           : !teamIds || !item.teamId || teamIds.includes(item.teamId);
       return matchesScope && (type === "all" || item.type === type);
     },
@@ -56,6 +72,15 @@ function SchedulePage() {
       {},
     ),
   );
+
+  if (role === "parent" && linkedChildren.length > 0 && children.length === 0) {
+    return (
+      <PermissionState
+        title="Schedule access unavailable"
+        description="A current schedule-category grant is required before child activities can be shown."
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">

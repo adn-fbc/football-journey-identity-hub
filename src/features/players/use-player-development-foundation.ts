@@ -2,64 +2,22 @@ import { useState } from "react";
 import { useRole } from "@/lib/role-context";
 import {
   getCurrentGuardianId,
+  getGuardianAccessDecision,
+  getPlayerAccessForActor,
+  getWorkspaceActor,
   getPrimaryPlayerContext,
-  getTeam,
-  listCurrentGuardianChildren,
-  listPlayerAffiliations,
-  listPlayerJourney,
   setPrimaryPlayerContext,
   type PrimaryContextActor,
 } from "@/data/repository";
 import type { Player } from "@/data/types";
-import { coachCanAccessPlayer } from "@/lib/coach-access";
 
 export function usePlayerDevelopmentFoundation(player: Player) {
   const { role } = useRole();
   const [, refresh] = useState(0);
-  const allAffiliations = listPlayerAffiliations(player.id);
-  const allJourney = listPlayerJourney(player.id);
+  const access = getPlayerAccessForActor(player.id, getWorkspaceActor(role));
+  const affiliations = access.ok ? access.access.affiliations : [];
+  const journey = access.ok ? access.access.journey : [];
   const guardianId = role === "parent" ? getCurrentGuardianId() : undefined;
-  const guardianLinked =
-    role === "parent" && listCurrentGuardianChildren().some((child) => child.id === player.id);
-  const coachAssigned = role === "coach" && coachCanAccessPlayer(player.id);
-  const currentOrganizationId = player.orgId;
-  const currentTeamOrganizationId = player.teamId ? getTeam(player.teamId)?.orgId : undefined;
-  const canSeeFullHistory = role === "player" || guardianLinked;
-  const affiliations = canSeeFullHistory
-    ? allAffiliations
-    : role === "coach" && coachAssigned
-      ? allAffiliations.filter((affiliation) =>
-          affiliation.kind === "team"
-            ? affiliation.status === "active" && affiliation.teamId === player.teamId
-            : affiliation.status === "active" &&
-              affiliation.organizationId === currentTeamOrganizationId,
-        )
-      : role === "org_admin"
-        ? allAffiliations.filter(
-            (affiliation) =>
-              affiliation.organizationId === currentOrganizationId &&
-              affiliation.status !== "ended",
-          )
-        : [];
-  const journey = canSeeFullHistory
-    ? allJourney
-    : role === "coach" && coachAssigned
-      ? allJourney.filter((event) => {
-          const eventOrganizationId = event.provenance?.sourceOrganizationId ?? event.orgId;
-          return (
-            eventOrganizationId === currentTeamOrganizationId ||
-            (!eventOrganizationId && event.type === "identity")
-          );
-        })
-      : role === "org_admin"
-        ? allJourney.filter((event) => {
-            const eventOrganizationId = event.provenance?.sourceOrganizationId ?? event.orgId;
-            return (
-              eventOrganizationId === currentOrganizationId ||
-              (!eventOrganizationId && event.type === "identity")
-            );
-          })
-        : [];
   const selectedContext = getPrimaryPlayerContext(player.id);
   const primaryContext = affiliations.some(
     (affiliation) => affiliation.id === selectedContext?.organizationAffiliationId,
@@ -67,12 +25,15 @@ export function usePlayerDevelopmentFoundation(player: Player) {
     ? selectedContext
     : undefined;
   const actor: PrimaryContextActor | undefined =
-    role === "player"
-      ? { role: "player", playerId: player.id }
-      : role === "parent" && guardianId
-        ? { role: "parent", guardianId }
-        : undefined;
-  const canChangePrimaryContext = role === "player" || guardianLinked;
+    role === "player" || (role === "parent" && guardianId)
+      ? getWorkspaceActor(role)
+      : undefined;
+  const guardianLinked = access.ok && access.access.scope.kind === "guardian";
+  const canChangePrimaryContext = access.ok && (
+    (role === "player" && access.access.scope.kind === "player") ||
+    (role === "parent" && guardianLinked && Boolean(guardianId &&
+      getGuardianAccessDecision(guardianId, player.id, "primary_context").allowed))
+  );
 
   const updatePrimaryContext = (context: Parameters<typeof setPrimaryPlayerContext>[1]) => {
     if (!actor) return { ok: false as const, reason: "forbidden" as const };
@@ -81,5 +42,5 @@ export function usePlayerDevelopmentFoundation(player: Player) {
     return result;
   };
 
-  return { affiliations, journey, primaryContext, canChangePrimaryContext, updatePrimaryContext };
+  return { access, affiliations, journey, primaryContext, canChangePrimaryContext, updatePrimaryContext };
 }

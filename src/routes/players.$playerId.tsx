@@ -1,4 +1,4 @@
-import { createFileRoute, notFound, Link } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { MessageSquare, UserMinus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -11,8 +11,7 @@ import {
 } from "@/components/ds/page-tabs";
 import { ConfirmDialog } from "@/components/ds/confirm-dialog";
 import { EmptyState, PermissionState } from "@/components/ds/states";
-import { getPlayer } from "@/data/repository";
-import { pageHead } from "@/lib/seo";
+import { getPlayerAccessForActor, getWorkspaceActor } from "@/data/repository";
 import { PlayerHeader } from "@/features/players/player-header";
 import {
   AchievementList,
@@ -24,7 +23,6 @@ import {
   PlayerTeamsTab,
 } from "@/features/players/player-tabs";
 import { useRole } from "@/lib/role-context";
-import { coachCanAccessPlayer } from "@/lib/coach-access";
 import { z } from "zod";
 
 const profileSearch = z.object({
@@ -34,24 +32,9 @@ const profileSearch = z.object({
 });
 
 export const Route = createFileRoute("/players/$playerId")({
-  loader: ({ params }) => {
-    const player = getPlayer(params.playerId);
-    if (!player) throw notFound();
-    return { player };
-  },
+  loader: ({ params }) => ({ playerId: params.playerId }),
   validateSearch: profileSearch,
-  head: ({ loaderData }) =>
-    loaderData
-      ? pageHead(
-          loaderData.player.name,
-          `${loaderData.player.positionLabel} · Football ID ${loaderData.player.footballId}`,
-        )
-      : {
-          meta: [
-            { title: "Player unavailable · Football ID" },
-            { name: "robots", content: "noindex" },
-          ],
-        },
+  head: () => ({ meta: [{ title: "Player profile · Football ID" }, { name: "robots", content: "noindex" }] }),
   notFoundComponent: () => (
     <EmptyState
       title="Player not found"
@@ -67,36 +50,27 @@ export const Route = createFileRoute("/players/$playerId")({
 });
 
 function PlayerProfile() {
-  const { player } = Route.useLoaderData();
-  const { role } = useRole();
+  const { playerId } = Route.useLoaderData();
+  const { role, ready } = useRole();
   const { view } = Route.useSearch();
-  if (role === "coach" && !coachCanAccessPlayer(player)) {
+  if (!ready) {
+    return <PermissionState title="Player access unavailable" description="The active workspace scope has not been resolved." />;
+  }
+  const decision = getPlayerAccessForActor(playerId, getWorkspaceActor(role));
+  if (!decision.ok) {
     return (
       <PermissionState
         title="Player access restricted"
-        description="Coach access is limited to players in your assigned teams."
+        description="This player is not available in the active workspace scope."
         action={
-          <Button asChild variant="outline">
-            <Link to="/teams">Back to My Teams</Link>
-          </Button>
+          role === "coach" ? <Button asChild variant="outline"><Link to="/teams">Back to My Teams</Link></Button> : undefined
         }
       />
     );
   }
-  if (role === "player" && player.id !== "p-123") {
-    return (
-      <PermissionState
-        title="Player profile unavailable"
-        description="You can only view the profile connected to your Football ID."
-      />
-    );
-  }
+  const { player, permissions } = decision.access;
   const playerWorkspace = role === "player";
   const coachWorkspace = role === "coach";
-  const selectedView =
-    playerWorkspace && (view === "achievements" || view === "documents")
-      ? "overview"
-      : (view ?? "overview");
   const tabs = playerWorkspace
     ? [
         { value: "overview", label: "My Profile" },
@@ -111,16 +85,24 @@ function PlayerProfile() {
           { value: "journey", label: "Journey" },
           { value: "teams", label: "Teams" },
           { value: "matches", label: "Matches" },
-          { value: "development", label: "Development" },
+          ...(permissions.canViewDevelopment ? [{ value: "development", label: "Development" }] : []),
         ]
-    : [
-        { value: "overview", label: "Overview" },
-        { value: "journey", label: "Journey" },
-        { value: "teams", label: "Teams" },
-        { value: "matches", label: "Matches" },
-        { value: "achievements", label: "Achievements" },
-        { value: "documents", label: "Documents" },
-      ];
+    : role === "parent"
+      ? [
+          { value: "overview", label: "Overview" },
+          { value: "journey", label: "Journey" },
+          { value: "teams", label: "Teams" },
+          ...(permissions.canViewMatches ? [{ value: "matches", label: "Matches" }] : []),
+        ]
+      : [
+          { value: "overview", label: "Overview" },
+          { value: "journey", label: "Journey" },
+          { value: "teams", label: "Teams" },
+          ...(permissions.canViewMatches ? [{ value: "matches", label: "Matches" }] : []),
+          ...(permissions.canViewAchievements ? [{ value: "achievements", label: "Achievements" }] : []),
+          ...(permissions.canViewDocuments ? [{ value: "documents", label: "Documents" }] : []),
+        ];
+  const selectedView = tabs.some((tab) => tab.value === view) ? view! : "overview";
   return (
     <div className="space-y-6">
       <Breadcrumbs
@@ -175,7 +157,13 @@ function PlayerProfile() {
           ))}
         </PageTabsList>
         <PageTabsContent value="overview">
-          <PlayerOverviewTab player={player} />
+             <PlayerOverviewTab
+               player={player}
+               showStats={permissions.canViewPlayerStats}
+               showMatches={permissions.canViewMatches}
+               showSchedule={permissions.canViewSchedule}
+               showAchievements={permissions.canViewAchievements}
+             />
         </PageTabsContent>
         <PageTabsContent value="journey">
           <PlayerJourneyTab player={player} />
@@ -183,20 +171,22 @@ function PlayerProfile() {
         <PageTabsContent value="teams">
           <PlayerTeamsTab player={player} />
         </PageTabsContent>
-        <PageTabsContent value="matches">
-          <PlayerMatchesTab player={player} />
-        </PageTabsContent>
-        {(playerWorkspace || coachWorkspace) && (
+        {permissions.canViewMatches && (
+          <PageTabsContent value="matches">
+            <PlayerMatchesTab player={player} />
+          </PageTabsContent>
+        )}
+        {permissions.canViewDevelopment && (
           <PageTabsContent value="development">
             <PlayerDevelopmentTab player={player} />
           </PageTabsContent>
         )}
-        {!playerWorkspace && (
+        {permissions.canViewAchievements && (
           <PageTabsContent value="achievements">
             <AchievementList playerId={player.id} />
           </PageTabsContent>
         )}
-        {!playerWorkspace && !coachWorkspace && (
+        {permissions.canViewDocuments && (
           <PageTabsContent value="documents">
             <PlayerDocumentsTab player={player} />
           </PageTabsContent>

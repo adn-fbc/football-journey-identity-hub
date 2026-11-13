@@ -5,7 +5,7 @@
 import rizkyPhoto from "@/assets/player-rizky.jpg";
 import aisyahPhoto from "@/assets/player-aisyah.jpg";
 import type {
-  Achievement, ChildPayment, ChildRegistration, Competition, Guardian, JourneyEvent, Match, Membership,
+  Achievement, ChildPayment, ChildRegistration, Competition, Guardian, GuardianConsentGrant, GuardianRelationship, JourneyEvent, Match, Membership,
   Notification, Organization, Player, PlayerAffiliation, PlayerDocument, ScheduleItem, Team,
 } from "./types";
 
@@ -62,7 +62,7 @@ const p = (
 });
 
 export const players: Player[] = [
-  p(123, "Muhammad Rizky Pratama", 2016, "FW", "Striker", "Right", "garuda-u10", 9, "active", "verified", "2025-07-12", { matches: 24, goals: 17, assists: 6, minutes: 980 }, 94, { nickname: "Rizky", photo: rizkyPhoto, guardianIds: ["g-1"] }),
+  p(123, "Muhammad Rizky Pratama", 2016, "FW", "Striker", "Right", "garuda-u10", 9, "active", "verified", "2025-07-12", { matches: 24, goals: 17, assists: 6, minutes: 980 }, 94, { nickname: "Rizky", photo: rizkyPhoto, guardianIds: ["g-1"], guardianAccessStatus: "minor_confirmed" }),
   p(124, "Andi Fadhil Ramadhan", 2016, "MF", "Central midfielder", "Right", "garuda-u10", 8, "active", "verified", "2024-08-03", { matches: 26, goals: 5, assists: 11, minutes: 1120 }, 91),
   p(131, "Ahmad Dzaky Al-Fatih", 2016, "GK", "Goalkeeper", "Right", "garuda-u10", 1, "active", "verified", "2023-07-20", { matches: 25, goals: 0, assists: 0, minutes: 1250 }, 97),
   p(132, "Rafael Kurniawan", 2016, "DF", "Centre-back", "Left", "garuda-u10", 4, "active", "verified", "2024-01-15", { matches: 22, goals: 1, assists: 2, minutes: 1010 }, 88),
@@ -78,7 +78,7 @@ export const players: Player[] = [
   p(142, "Yusuf Hamzah", 2018, "MF", "Midfielder", "Right", "garuda-u8", 7, "active", "verified", "2025-07-12", { matches: 14, goals: 3, assists: 2, minutes: 420 }, 95),
   p(143, "Reza Firmansyah", 2018, "FW", "Forward", "Left", "garuda-u8", 9, "pending", "pending", undefined, { matches: 0, goals: 0, assists: 0, minutes: 0 }, 0),
   p(144, "Dimas Prasetyo", 2013, "DF", "Centre-back", "Right", "garuda-u14", 4, "archived", "verified", "2020-07-11", { matches: 52, goals: 3, assists: 2, minutes: 2900 }, 0),
-  p(125, "Aisyah Putri Pratama", 2018, "MF", "Midfielder", "Right", "garuda-putri-u9", 7, "active", "verified", "2026-01-18", { matches: 8, goals: 2, assists: 3, minutes: 260 }, 98, { gender: "F", nickname: "Aisyah", photo: aisyahPhoto, guardianIds: ["g-1"] }),
+  p(125, "Aisyah Putri Pratama", 2018, "MF", "Midfielder", "Right", "garuda-putri-u9", 7, "active", "verified", "2026-01-18", { matches: 8, goals: 2, assists: 3, minutes: 260 }, 98, { gender: "F", nickname: "Aisyah", photo: aisyahPhoto, guardianIds: ["g-1"], guardianAccessStatus: "minor_confirmed" }),
   p(145, "Naila Ramadhani", 2018, "DF", "Defender", "Right", "garuda-putri-u9", 4, "active", "verified", "2026-01-18", { matches: 8, goals: 0, assists: 1, minutes: 300 }, 92, { gender: "F" }),
   p(146, "Bagas Setiawan", 2016, "MF", "Midfielder", "Right", "garuda-u10", 14, "pending", "pending", undefined, { matches: 0, goals: 0, assists: 0, minutes: 0 }, 0),
   p(147, "Fikri Anugrah", 2014, "GK", "Goalkeeper", "Right", "garuda-u12", 1, "active", "verified", "2022-07-02", { matches: 29, goals: 0, assists: 0, minutes: 1700 }, 96),
@@ -87,6 +87,59 @@ export const players: Player[] = [
 
 export const guardians: Guardian[] = [
   { id: "g-1", name: "Andi Pratama", footballId: CURRENT_USER.footballId, relation: "Father", childIds: ["p-123", "p-125"] },
+];
+
+export const guardianRelationships: GuardianRelationship[] = [
+  { guardianId: "g-1", playerId: "p-123", verificationStatus: "verified" },
+  { guardianId: "g-1", playerId: "p-125", verificationStatus: "verified" },
+];
+
+export const guardianConsentGrants: GuardianConsentGrant[] = [
+  {
+    id: "mock-grant-p123-profile-journey",
+    guardianId: "g-1",
+    subjectPlayerId: "p-123",
+    categories: ["profile", "journey", "affiliations", "primary_context", "matches"],
+    purpose: "Prototype child workspace",
+    effectiveFrom: "2025-07-12",
+    effectiveTo: "2028-07-11",
+    status: "active",
+    grantedBy: "mock-fixture",
+  },
+  {
+    id: "mock-grant-p125-profile-affiliations",
+    guardianId: "g-1",
+    subjectPlayerId: "p-125",
+    categories: ["profile", "affiliations"],
+    purpose: "Prototype profile and affiliation grant",
+    effectiveFrom: "2025-11-02",
+    effectiveTo: "2028-01-01",
+    status: "active",
+    grantedBy: "mock-fixture",
+  },
+  {
+    id: "mock-grant-p125-expired-journey",
+    guardianId: "g-1",
+    subjectPlayerId: "p-125",
+    categories: ["journey"],
+    purpose: "Expired prototype journey grant fixture",
+    effectiveFrom: "2025-11-02",
+    effectiveTo: "2027-01-01",
+    status: "active",
+    grantedBy: "mock-fixture",
+  },
+  {
+    id: "mock-grant-p125-revoked",
+    guardianId: "g-1",
+    subjectPlayerId: "p-125",
+    categories: ["matches"],
+    purpose: "Revoked prototype grant fixture",
+    effectiveFrom: "2025-11-02",
+    effectiveTo: "2028-01-01",
+    status: "revoked",
+    revokedAt: "2027-01-10",
+    grantedBy: "mock-fixture",
+  },
 ];
 
 export const childRegistrations: ChildRegistration[] = [
@@ -108,13 +161,17 @@ export const journeys: Record<string, JourneyEvent[]> = {
     { id: "j5", date: "2025-06-30", year: 2025, type: "leave", title: "Completed membership at SSB Alpha Maros", detail: "Relationship closed by guardian · history preserved", orgId: "alpha", provenance: { sourceDomain: "player_affiliation", sourceRecordId: "p-123-org-alpha", sourceOrganizationId: "alpha" } },
     { id: "j6", date: "2025-07-12", year: 2025, type: "join", title: "Joined SSB Garuda Makassar", detail: "Membership approved by guardian", orgId: "garuda", verifiedBy: "SSB Garuda Makassar", provenance: { sourceDomain: "player_affiliation", sourceRecordId: "p-123-org-garuda", sourceOrganizationId: "garuda" } },
     { id: "j7", date: "2026-01-05", year: 2026, type: "achievement", title: "Top scorer · Liga Anak Makassar 2026", detail: "11 goals in 8 matches", orgId: "garuda", provenance: { sourceDomain: "achievement", sourceRecordId: "ac1", sourceOrganizationId: "garuda" } },
-    { id: "j8", date: "2026-07-20", year: 2026, type: "team", title: "Joined Team Garuda U10", detail: "Season 2026/27 · Jersey #9 · Striker", orgId: "garuda", provenance: { sourceDomain: "team_affiliation", sourceRecordId: "p-123-team-garuda-u10", sourceOrganizationId: "garuda" } },
+    { id: "j8", date: "2026-07-20", year: 2026, type: "team", title: "Joined Team Garuda U10", detail: "Season 2026/27 · Jersey #9 · Striker", orgId: "garuda", provenance: { sourceDomain: "team_affiliation", sourceRecordId: "p-123-team-garuda-u10", sourceOrganizationId: "garuda", sourceTeamId: "garuda-u10" } },
     { id: "j9", date: "2027-01-24", year: 2027, type: "competition", title: "Makassar Youth Cup 2027", detail: "Garuda U10 · Group A · in progress", orgId: "garuda", provenance: { sourceDomain: "competition", sourceRecordId: "myc-2027" } },
   ],
   "p-125": [
     { id: "a1", date: "2025-11-02", year: 2025, type: "identity", title: "Football ID created", detail: "Registered by guardian Andi Pratama", verifiedBy: "Football ID Registry", provenance: { sourceDomain: "player_identity", sourceRecordId: "p-125", verificationStatus: "verified" } },
     { id: "a2", date: "2026-01-18", year: 2026, type: "join", title: "Joined SSB Garuda Makassar", detail: "Garuda Putri U9", orgId: "garuda", verifiedBy: "SSB Garuda Makassar", provenance: { sourceDomain: "player_affiliation", sourceRecordId: "p-125-org-garuda", sourceOrganizationId: "garuda" } },
     { id: "a3", date: "2026-10-09", year: 2026, type: "competition", title: "Festival Putri Sulsel 2026", detail: "First tournament · 3 matches, 2 goals", orgId: "garuda" },
+  ],
+  "p-142": [
+    { id: "p142-other-team-competition", date: "2026-10-09", year: 2026, type: "competition", title: "Other Garuda team event", detail: "Source team differs from the coach's assignment.", orgId: "garuda", provenance: { sourceDomain: "competition", sourceRecordId: "competition-other-team", sourceOrganizationId: "garuda", sourceTeamId: "garuda-u10" } },
+    { id: "p142-unscoped-competition", date: "2026-10-10", year: 2026, type: "competition", title: "Garuda competition record", detail: "Organization provenance exists; team scope is not recorded.", orgId: "garuda", provenance: { sourceDomain: "competition", sourceRecordId: "competition-without-team", sourceOrganizationId: "garuda" } },
   ],
 };
 

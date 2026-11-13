@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { PermissionState } from "@/components/ds/states";
 import { useRole } from "@/lib/role-context";
 import { OrgAdminOverview } from "@/features/overview/org-admin-overview";
 import { ParentOverview } from "@/features/overview/parent-overview";
@@ -22,7 +23,10 @@ export const Route = createFileRoute("/")({
 });
 
 function Overview() {
-  const { role } = useRole();
+  const { role, ready } = useRole();
+  if (!ready) {
+    return <PermissionState title="Overview unavailable" description="The active workspace scope has not been resolved." />;
+  }
   switch (role) {
     case "parent": return <ParentOverview />;
     case "player": return <PlayerOverview />;

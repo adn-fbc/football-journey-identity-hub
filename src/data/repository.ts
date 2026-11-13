@@ -4,9 +4,14 @@
  */
 import {
   achievements, childPayments, childRegistrations, competitions, documents, journeys, matches, playerAffiliations,
-  notifications, organizations, players, schedule, teams, guardians, CURRENT_USER, MOCK_TODAY,
+  notifications, organizations, players, schedule, teams, guardians, guardianRelationships, guardianConsentGrants,
+  CURRENT_USER, MOCK_TODAY,
 } from "./mock";
-import type { JourneyEvent, Match, Membership, Player, PlayerAffiliation, PlayerIdentity, PrimaryPlayerContext } from "./types";
+import type {
+  GuardianConsentGrant, GuardianDataCategory, JourneyEvent, Match, Membership, Player, PlayerAffiliation,
+  PlayerIdentity, PrimaryPlayerContext,
+} from "./types";
+import type { RoleId } from "@/config/roles";
 import { ageCategoryFor } from "@/lib/format";
 
 const playerUpdates = new Map<string, Partial<Player>>();
@@ -17,6 +22,18 @@ let nextAffiliationId = 1;
 
 export const getCurrentUser = () => CURRENT_USER;
 export const getCurrentGuardianId = () => guardians.find((guardian) => guardian.footballId === CURRENT_USER.footballId)?.id;
+export interface WorkspaceActor {
+  subjectId: string;
+  role: RoleId;
+  organizationId?: string | undefined;
+}
+
+export const getWorkspaceActor = (role: RoleId): WorkspaceActor => ({
+  subjectId: CURRENT_USER.footballId,
+  role,
+  organizationId: role === "org_admin" ? "garuda" : undefined,
+});
+
 export const getOrganization = (id?: string) => organizations.find((o) => o.id === id);
 export const getTeam = (id?: string) => teams.find((t) => t.id === id);
 export const getPlayer = (id?: string) => {
@@ -81,6 +98,7 @@ function appendAffiliationJourneyEvent(affiliation: PlayerAffiliation, action: "
       sourceDomain: affiliation.kind === "team" ? "team_affiliation" : "player_affiliation",
       sourceRecordId: affiliation.id,
       sourceOrganizationId: affiliation.sourceOrganizationId,
+      sourceTeamId: affiliation.teamId,
       recordedBy: affiliation.recordedBy,
     },
   };
@@ -103,9 +121,7 @@ export type AffiliationMutationResult =
   | { ok: true; affiliation: PlayerAffiliation }
   | { ok: false; reason: "player_not_found" | "organization_not_found" | "team_not_found" | "team_organization_mismatch" | "organization_affiliation_required" | "invalid_scope" | "invalid_effective_date" | "affiliation_overlap" | "affiliation_not_found" | "already_ended" | "active_team_affiliations" };
 
-export type PrimaryContextActor =
-  | { role: "player"; playerId: string }
-  | { role: "parent"; guardianId: string };
+export type PrimaryContextActor = WorkspaceActor;
 
 export type PrimaryContextResult =
   | { ok: true; context: PrimaryPlayerContext | undefined }
@@ -138,9 +154,11 @@ export function setPrimaryPlayerContext(
   actor: PrimaryContextActor,
 ): PrimaryContextResult {
   if (!getPlayer(playerId)) return { ok: false, reason: "player_not_found" };
+  if (!actor || actor.subjectId !== CURRENT_USER.footballId) return { ok: false, reason: "forbidden" };
   const authorized = actor.role === "player"
-    ? actor.playerId === playerId
-    : listGuardianChildren(actor.guardianId).some((child) => child.id === playerId);
+    ? playerId === "p-123"
+    : actor.role === "parent" && getCurrentGuardianId() !== undefined &&
+      getGuardianAccessDecision(getCurrentGuardianId()!, playerId, "primary_context").allowed;
   if (!authorized) return { ok: false, reason: "forbidden" };
   if (context === null) {
     primaryContextPreferences.delete(playerId);
@@ -276,11 +294,82 @@ export function endPlayerAffiliation(
   return { ok: true, affiliation: { ...ended } };
 }
 
+export type GuardianAccessDecision =
+  | { allowed: true; grant: GuardianConsentGrant }
+  | {
+      allowed: false;
+      reason:
+        | "relationship_unverified"
+        | "no_grant"
+        | "grant_expired"
+        | "grant_revoked"
+        | "grant_suspended"
+        | "invalid_grant"
+        | "transition_status_unavailable"
+        | "adult_access_suspended"
+        | "sensitive_records_excluded";
+    };
+
+export function getGuardianAccessDecision(
+  guardianId: string,
+  playerId: string,
+  category: GuardianDataCategory,
+): GuardianAccessDecision {
+  if (category === "sensitive_records") return { allowed: false, reason: "sensitive_records_excluded" };
+  const guardian = guardians.find((item) => item.id === guardianId);
+  const player = players.find((item) => item.id === playerId);
+  const relationship = guardianRelationships.find((item) =>
+    item.guardianId === guardianId && item.playerId === playerId && item.verificationStatus === "verified",
+  );
+  if (!guardian || !player || !relationship || !guardian.childIds.includes(playerId) || !player.guardianIds.includes(guardianId)) {
+    return { allowed: false, reason: "relationship_unverified" };
+  }
+
+  const grants = guardianConsentGrants.filter((grant) =>
+    grant.guardianId === guardianId && grant.subjectPlayerId === playerId && grant.categories.includes(category),
+  );
+  if (!grants.length) return { allowed: false, reason: "no_grant" };
+  const validGrants = grants.filter((grant) =>
+    grant.status === "active" && isCalendarDate(grant.effectiveFrom) &&
+    (!grant.effectiveTo || isCalendarDate(grant.effectiveTo)) && grant.effectiveFrom <= MOCK_TODAY &&
+    (!grant.effectiveTo || MOCK_TODAY <= grant.effectiveTo) &&
+    grant.purpose.trim().length > 0 && grant.grantedBy.trim().length > 0,
+  );
+  if (!validGrants.length) {
+    if (grants.some((grant) => grant.status === "revoked" || grant.revokedAt)) {
+      return { allowed: false, reason: "grant_revoked" };
+    }
+    if (grants.some((grant) => grant.status === "suspended")) {
+      return { allowed: false, reason: "grant_suspended" };
+    }
+    if (grants.some((grant) => grant.effectiveTo && isCalendarDate(grant.effectiveTo) && MOCK_TODAY > grant.effectiveTo)) {
+      return { allowed: false, reason: "grant_expired" };
+    }
+    return { allowed: false, reason: "invalid_grant" };
+  }
+  if (player.guardianAccessStatus === "adult") return { allowed: false, reason: "adult_access_suspended" };
+  if (player.guardianAccessStatus !== "minor_confirmed") {
+    return { allowed: false, reason: "transition_status_unavailable" };
+  }
+  return { allowed: true, grant: validGrants[0]! };
+}
+
 export const listGuardianChildren = (guardianId: string) => {
   const guardian = guardians.find((item) => item.id === guardianId);
   if (!guardian) return [];
-  const childIds = new Set(guardian.childIds);
-  return listPlayers().filter((player) => childIds.has(player.id) && player.guardianIds.includes(guardian.id));
+  return guardian.childIds
+    .filter((playerId) =>
+      getGuardianAccessDecision(guardian.id, playerId, "profile").allowed &&
+      getGuardianAccessDecision(guardian.id, playerId, "affiliations").allowed,
+    )
+    .map((playerId) => getPlayer(playerId))
+    .filter((player): player is Player => player !== undefined)
+    .map((player) => ({
+      ...player,
+      stats: { matches: 0, goals: 0, assists: 0, minutes: 0 },
+      attendance: 0,
+      guardianIds: [],
+    }));
 };
 
 export const listCurrentGuardianChildren = () => {
@@ -288,9 +377,13 @@ export const listCurrentGuardianChildren = () => {
   return guardian ? listGuardianChildren(guardian.id) : [];
 };
 
-export const assignPlayerToTeam = (playerId: string, teamId: string) => {
+export const assignPlayerToTeam = (playerId: string, teamId: string, actor: WorkspaceActor) => {
   const player = getPlayer(playerId);
   const team = getTeam(teamId);
+  if (
+    !actor || actor.subjectId !== CURRENT_USER.footballId || actor.role !== "org_admin" ||
+    actor.organizationId !== "garuda" || !team || team.orgId !== actor.organizationId
+  ) return false;
   if (!player || !team || player.orgId !== team.orgId || player.membership !== "active" || ageCategoryFor(player.birthYear) !== team.ageCategory) return false;
   if (player.teamId === teamId) return false;
   const organizationAffiliation = allPlayerAffiliations(playerId).find((affiliation) =>
@@ -329,9 +422,14 @@ export const assignPlayerToTeam = (playerId: string, teamId: string) => {
   return true;
 };
 
-export const removePlayerFromTeam = (playerId: string, teamId: string) => {
+export const removePlayerFromTeam = (playerId: string, teamId: string, actor: WorkspaceActor) => {
   const player = getPlayer(playerId);
-  if (!player || player.teamId !== teamId) return false;
+  const team = getTeam(teamId);
+  if (
+    !actor || actor.subjectId !== CURRENT_USER.footballId || actor.role !== "org_admin" ||
+    actor.organizationId !== "garuda" || !team || team.orgId !== actor.organizationId ||
+    !player || player.orgId !== actor.organizationId || player.teamId !== teamId
+  ) return false;
   const affiliation = allPlayerAffiliations(playerId).find((item) =>
     item.kind === "team" && item.teamId === teamId && item.status !== "ended",
   );
@@ -378,6 +476,171 @@ export function listPlayerJourney(
     .filter((event) => !options.sourceDomain || event.provenance?.sourceDomain === options.sourceDomain)
     .map((event) => ({ ...event, provenance: event.provenance ? { ...event.provenance } : undefined }))
     .sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
+}
+
+export interface PlayerAccessProjection {
+  player: Player;
+  scope: { kind: "player" } | { kind: "guardian"; guardianId: string } |
+    { kind: "organization"; organizationId: string } | { kind: "team"; teamId: string };
+  affiliations: PlayerAffiliation[];
+  journey: JourneyEvent[];
+  permissions: {
+    canViewDevelopment: boolean;
+    canViewMatches: boolean;
+    canViewPlayerStats: boolean;
+    canViewSchedule: boolean;
+    canViewAchievements: boolean;
+    canViewDocuments: boolean;
+  };
+}
+
+export type PlayerAccessResult =
+  | { ok: true; access: PlayerAccessProjection }
+  | { ok: false; reason: "player_not_found" | "forbidden" | "scope_unavailable" | GuardianAccessDecision["reason"] };
+
+function normalizedActorName(name: string) {
+  return name.trim().replace(/^coach\s+/i, "").toLowerCase();
+}
+
+function assignedTeamIdsForCurrentCoach() {
+  const coachName = normalizedActorName(CURRENT_USER.name);
+  return new Set(teams.filter((team) =>
+    [team.coach, team.assistant].some((name) => name && normalizedActorName(name) === coachName),
+  ).map((team) => team.id));
+}
+
+function journeyForCoach(playerId: string, teamId: string) {
+  const affiliations = allPlayerAffiliations(playerId);
+  return listPlayerJourney(playerId).filter((event) => {
+    const provenance = event.provenance;
+    if (!provenance) return false;
+    const sourceTeamId = provenance.sourceTeamId ?? affiliations.find((affiliation) =>
+      affiliation.id === provenance.sourceRecordId && affiliation.kind === "team",
+    )?.teamId;
+    return sourceTeamId === teamId;
+  });
+}
+
+function journeyForOrganization(playerId: string, organizationId: string) {
+  return listPlayerJourney(playerId).filter((event) =>
+    event.provenance?.sourceOrganizationId === organizationId ||
+    (!event.provenance?.sourceOrganizationId && event.provenance?.sourceDomain === "player_identity"),
+  );
+}
+
+function guardianJourneyCategory(event: JourneyEvent): GuardianDataCategory | undefined {
+  switch (event.provenance?.sourceDomain) {
+    case "player_identity": return "profile";
+    case "player_affiliation":
+    case "team_affiliation": return "affiliations";
+    case "match": return "matches";
+    case "competition": return "competitions";
+    case "achievement": return "achievements";
+    case "training_session": return "schedule";
+    case "attendance_record": return "attendance";
+    case "development_assessment": return "development_assessments";
+    case "coach_observation": return "coach_observations";
+    default:
+      if (event.type === "identity" || event.type === "verification") return "profile";
+      if (event.type === "join" || event.type === "leave" || event.type === "team") return "affiliations";
+      if (event.type === "competition") return "competitions";
+      if (event.type === "achievement") return "achievements";
+      return undefined;
+  }
+}
+
+export function getPlayerAccessForActor(playerId: string, actor: WorkspaceActor): PlayerAccessResult {
+  const recordExists = players.some((player) => player.id === playerId);
+  if (!recordExists) return { ok: false, reason: "player_not_found" };
+  if (actor.subjectId !== CURRENT_USER.footballId) return { ok: false, reason: "forbidden" };
+
+  let scope: PlayerAccessProjection["scope"];
+  let affiliations: PlayerAffiliation[];
+  let journey: JourneyEvent[];
+  let permissions: PlayerAccessProjection["permissions"];
+
+  if (actor.role === "player") {
+    if (playerId !== "p-123") return { ok: false, reason: "forbidden" };
+    scope = { kind: "player" };
+    affiliations = listPlayerAffiliations(playerId);
+    journey = listPlayerJourney(playerId);
+    permissions = {
+      canViewDevelopment: true,
+      canViewMatches: true,
+      canViewPlayerStats: true,
+      canViewSchedule: true,
+      canViewAchievements: true,
+      canViewDocuments: true,
+    };
+  } else if (actor.role === "parent") {
+    const guardianId = getCurrentGuardianId();
+    if (!guardianId) return { ok: false, reason: "forbidden" };
+    for (const category of ["profile", "journey", "affiliations"] as const) {
+      const decision = getGuardianAccessDecision(guardianId, playerId, category);
+      if (!decision.allowed) return { ok: false, reason: decision.reason };
+    }
+    scope = { kind: "guardian", guardianId };
+    affiliations = listPlayerAffiliations(playerId).filter((affiliation) => affiliation.status === "active");
+    journey = listPlayerJourney(playerId).filter((event) => {
+      const category = guardianJourneyCategory(event);
+      return category !== undefined && getGuardianAccessDecision(guardianId, playerId, category).allowed;
+    });
+    permissions = {
+      canViewDevelopment: false,
+      canViewMatches: getGuardianAccessDecision(guardianId, playerId, "matches").allowed,
+      canViewPlayerStats: false,
+      canViewSchedule: getGuardianAccessDecision(guardianId, playerId, "schedule").allowed,
+      canViewAchievements: false,
+      canViewDocuments: false,
+    };
+  } else if (actor.role === "coach") {
+    const player = getPlayer(playerId);
+    const assignedTeamIds = assignedTeamIdsForCurrentCoach();
+    const activeTeamAffiliation = allPlayerAffiliations(playerId).find((affiliation) =>
+      affiliation.kind === "team" && affiliation.status === "active" &&
+      affiliation.teamId === player?.teamId && Boolean(player.teamId && assignedTeamIds.has(player.teamId)),
+    );
+    if (!activeTeamAffiliation?.teamId) return { ok: false, reason: "forbidden" };
+    scope = { kind: "team", teamId: activeTeamAffiliation.teamId };
+    affiliations = listPlayerAffiliations(playerId).filter((affiliation) =>
+      affiliation.kind === "team" && affiliation.status === "active" && affiliation.teamId === activeTeamAffiliation.teamId,
+    );
+    journey = journeyForCoach(playerId, activeTeamAffiliation.teamId);
+    permissions = {
+      canViewDevelopment: true,
+      canViewMatches: true,
+      canViewPlayerStats: true,
+      canViewSchedule: true,
+      canViewAchievements: false,
+      canViewDocuments: false,
+    };
+  } else if (actor.role === "org_admin") {
+    const organizationId = actor.organizationId;
+    if (organizationId !== "garuda") return { ok: false, reason: "scope_unavailable" };
+    const activeOrganizationAffiliation = allPlayerAffiliations(playerId).find((affiliation) =>
+      affiliation.kind === "organization" && affiliation.organizationId === organizationId && affiliation.status !== "ended",
+    );
+    if (!activeOrganizationAffiliation) return { ok: false, reason: "forbidden" };
+    scope = { kind: "organization", organizationId };
+    affiliations = listPlayerAffiliations(playerId).filter((affiliation) =>
+      affiliation.organizationId === organizationId && affiliation.status !== "ended",
+    );
+    journey = journeyForOrganization(playerId, organizationId);
+    permissions = {
+      canViewDevelopment: false,
+      canViewMatches: false,
+      canViewPlayerStats: false,
+      canViewSchedule: false,
+      canViewAchievements: false,
+      canViewDocuments: false,
+    };
+  } else {
+    return { ok: false, reason: "forbidden" };
+  }
+
+  const player = getPlayer(playerId);
+  if (!player) return { ok: false, reason: "scope_unavailable" };
+  return { ok: true, access: { player, scope, affiliations, journey, permissions } };
 }
 
 export const getJourney = (playerId: string): JourneyEvent[] => listPlayerJourney(playerId);

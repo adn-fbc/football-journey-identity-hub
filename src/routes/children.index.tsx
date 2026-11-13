@@ -3,25 +3,30 @@ import { UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ds/page-header";
-import { EmptyState } from "@/components/ds/states";
+import { EmptyState, PermissionState } from "@/components/ds/states";
 import { listCurrentGuardianChildren } from "@/data/repository";
 import { ChildCard } from "@/features/children/child-card";
+import { useRole } from "@/lib/role-context";
 import { pageHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/children/")({
-  loader: () => ({ children: listCurrentGuardianChildren() }),
-  head: () => pageHead("My Children", "See your children's teams, schedules, attendance and football journey — and control their consent."),
+  loader: () => null,
+  head: () => pageHead("My Children", "Review child identity and consent-scoped information."),
   component: ChildrenPage,
 });
 
 function ChildrenPage() {
-  const { children } = Route.useLoaderData();
+  const { role, ready } = useRole();
+  if (!ready || role !== "parent") {
+    return <PermissionState title="Parent workspace only" description="Resolve the Parent / Guardian workspace before requesting child data." />;
+  }
+  const children = listCurrentGuardianChildren();
   return (
     <div className="space-y-6">
       <PageHeader
         eyebrow="Guardian"
         title="My Children"
-        description="You manage each child's Football ID until they turn 18. Nothing is shared without your consent."
+        description="Child information is limited by separate relationship and category grants."
         actions={<Button variant="outline" onClick={() => toast("Add child — start a new Football ID (prototype)")}><UserPlus /> Add child</Button>}
       />
       {children.length ? (

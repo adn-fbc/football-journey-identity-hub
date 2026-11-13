@@ -44,7 +44,7 @@ describe("PrimaryContextSection", () => {
     expect(screen.getByRole("combobox", { name: "Primary organization" })).toBeDisabled();
     expect(
       screen.getByText(
-        "Only the player or a currently linked guardian can change this preference.",
+        "Only the player or a guardian with current primary-context authorization can change this preference.",
       ),
     ).toBeTruthy();
   });
@@ -104,11 +104,11 @@ describe("PrimaryContextSection", () => {
     expect(screen.getByText("No journey events recorded")).toBeTruthy();
   });
 
-  it("allows a linked guardian but not an unrelated guardian to edit context", async () => {
+  it("requires explicit primary-context authorization for guardians", async () => {
     window.localStorage.setItem("fid.activeRole", "parent");
     const linked = render(
       <RoleProvider>
-        <PrimaryContextSection player={getPlayer("p-125")!} />
+        <PrimaryContextSection player={getPlayer("p-123")!} />
       </RoleProvider>,
     );
     await waitFor(() =>
@@ -116,6 +116,15 @@ describe("PrimaryContextSection", () => {
     );
 
     linked.unmount();
+    const noGrant = render(
+      <RoleProvider>
+        <PrimaryContextSection player={getPlayer("p-125")!} />
+      </RoleProvider>,
+    );
+    expect(screen.queryByRole("combobox", { name: "Primary organization" })).toBeNull();
+    expect(screen.getByText(/No organization affiliations are available in this view/)).toBeTruthy();
+
+    noGrant.unmount();
     render(
       <RoleProvider>
         <PrimaryContextSection player={getPlayer("p-148")!} />

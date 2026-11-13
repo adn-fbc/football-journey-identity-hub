@@ -9,8 +9,8 @@ import { FilterBar, FilterChips, FilterSelect, SearchInput } from "@/components/
 import { PersonAvatar } from "@/components/ds/avatars";
 import { StatusBadge } from "@/components/ds/status-badge";
 import { VerifiedMark } from "@/components/ds/football-id";
-import { EmptyState } from "@/components/ds/states";
-import { getTeam, listPlayers, listTeams } from "@/data/repository";
+import { EmptyState, PermissionState } from "@/components/ds/states";
+import { getTeam, getWorkspaceActor, listPlayers, listTeams } from "@/data/repository";
 import type { Player } from "@/data/types";
 import { ageCategoryFor, fmtDate } from "@/lib/format";
 import { getCoachAssignedPlayers, getCoachAssignedTeams } from "@/lib/coach-access";
@@ -22,21 +22,23 @@ import {
   type PlayerDirectoryStatus,
 } from "./player-directory-model";
 
-const ORGANIZATION_ID = "garuda";
-
 export function PlayerDirectory() {
   const navigate = useNavigate();
-  const { role } = useRole();
-  const coachWorkspace = role === "coach";
-  const allPlayers = coachWorkspace
-    ? getCoachAssignedPlayers()
-    : listPlayers({ orgId: ORGANIZATION_ID });
-  const teams = coachWorkspace ? getCoachAssignedTeams() : listTeams(ORGANIZATION_ID);
+  const { role, ready } = useRole();
   const [search, setSearch] = useState("");
   const [membership, setMembership] = useState<PlayerDirectoryStatus>("all");
   const [teamId, setTeamId] = useState("all");
   const [ageCategory, setAgeCategory] = useState("all");
   const [verification, setVerification] = useState("all");
+  if (!ready || (role !== "coach" && role !== "org_admin")) {
+    return <PermissionState title="Player directory unavailable" description="This view requires a resolved coach assignment or organization-admin scope." />;
+  }
+  const coachWorkspace = role === "coach";
+  const organizationId = getWorkspaceActor(role).organizationId;
+  const allPlayers = coachWorkspace
+    ? getCoachAssignedPlayers()
+    : organizationId ? listPlayers({ orgId: organizationId }) : [];
+  const teams = coachWorkspace ? getCoachAssignedTeams() : organizationId ? listTeams(organizationId) : [];
   const rows = filterDirectoryPlayers(allPlayers, {
     search,
     membership,

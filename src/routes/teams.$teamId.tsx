@@ -28,6 +28,7 @@ import {
   getOrganization,
   getPlayer,
   getTeam,
+  getWorkspaceActor,
   listPlayers,
   recentMatches,
   removePlayerFromTeam,
@@ -75,7 +76,10 @@ const POS: { id: Position; label: string }[] = [
 
 function TeamPage() {
   const { team } = Route.useLoaderData();
-  const { role } = useRole();
+  const { role, ready } = useRole();
+  if (!ready) {
+    return <PermissionState title="Team access unavailable" description="The active workspace scope has not been resolved." />;
+  }
   const player = role === "player" ? getPlayer("p-123") : undefined;
 
   if (role === "player") {
@@ -113,10 +117,19 @@ function TeamPage() {
     return <CoachTeamWorkspace team={team} />;
   }
 
-  return <TeamManagementPage team={team} />;
+  if (role === "org_admin" && getWorkspaceActor(role).organizationId !== team.orgId) {
+    return (
+      <PermissionState
+        title="Team access restricted"
+        description="Organization administrators can manage teams only in their active organization scope."
+      />
+    );
+  }
+
+  return <TeamManagementPage team={team} actor={getWorkspaceActor(role)} />;
 }
 
-function TeamManagementPage({ team }: { team: Team }) {
+function TeamManagementPage({ team, actor }: { team: Team; actor: ReturnType<typeof getWorkspaceActor> }) {
   const org = getOrganization(team.orgId);
   const [roster, setRoster] = useState(() =>
     listPlayers({ teamId: team.id }).sort((a, b) => (a.jersey ?? 99) - (b.jersey ?? 99)),
@@ -155,7 +168,7 @@ function TeamManagementPage({ team }: { team: Team }) {
           </div>
           <p className="mt-1 text-small text-muted-foreground">{org?.name}</p>
         </div>
-        <Dialog open={rosterDialogOpen} onOpenChange={setRosterDialogOpen}>
+        {actor.role === "org_admin" && <Dialog open={rosterDialogOpen} onOpenChange={setRosterDialogOpen}>
           <DialogTrigger asChild>
             <Button>
               <UserPlus /> Add to roster
@@ -191,7 +204,7 @@ function TeamManagementPage({ team }: { team: Team }) {
                     <Button
                       size="sm"
                       onClick={() => {
-                        if (assignPlayerToTeam(player.id, team.id)) {
+                        if (assignPlayerToTeam(player.id, team.id, actor)) {
                           setRoster(
                             listPlayers({ teamId: team.id }).sort(
                               (a, b) => (a.jersey ?? 99) - (b.jersey ?? 99),
@@ -220,7 +233,7 @@ function TeamManagementPage({ team }: { team: Team }) {
               />
             )}
           </DialogContent>
-        </Dialog>
+        </Dialog>}
       </div>
 
       <div className="surface p-5">
@@ -307,7 +320,7 @@ function TeamManagementPage({ team }: { team: Team }) {
                           </span>
                           <StatusBadge status={p.membership} />
                         </Link>
-                        <ConfirmDialog
+                        {actor.role === "org_admin" && <ConfirmDialog
                           trigger={
                             <Button
                               variant="ghost"
@@ -322,7 +335,7 @@ function TeamManagementPage({ team }: { team: Team }) {
                           confirmLabel="Remove from team"
                           destructive
                           onConfirm={() => {
-                            if (removePlayerFromTeam(p.id, team.id)) {
+                            if (removePlayerFromTeam(p.id, team.id, actor)) {
                               setRoster(
                                 listPlayers({ teamId: team.id }).sort(
                                   (a, b) => (a.jersey ?? 99) - (b.jersey ?? 99),
@@ -331,7 +344,7 @@ function TeamManagementPage({ team }: { team: Team }) {
                               toast.success(`${p.name} removed from ${team.name}`);
                             }
                           }}
-                        />
+                        />}
                       </li>
                     ))}
                 </ul>

@@ -22,24 +22,24 @@ describe("check-in view model", () => {
     );
   });
 
-  it("keeps Parent check-in read-only and scoped to the linked child", () => {
+  it("denies Parent check-in history without an attendance grant", () => {
     const snapshot = getCheckInSnapshot("parent");
 
     expect(snapshot.canSelfCheckIn).toBe(false);
-    expect(snapshot.personId).toBe("p-123");
-    expect(snapshot.activities.every((activity) => activity.teamIds.includes("garuda-u10"))).toBe(
-      true,
-    );
+    expect(snapshot.access).toBe("restricted");
+    expect(snapshot.personId).toBe("");
+    expect(snapshot.activities).toEqual([]);
+    expect(snapshot.history).toEqual([]);
   });
 
-  it("supports switching to another linked child without granting check-in actions", () => {
+  it("denies expired linked-child consent before loading check-in history", () => {
     const snapshot = getCheckInSnapshot("parent", "p-125");
 
-    expect(snapshot.personId).toBe("p-125");
+    expect(snapshot.access).toBe("restricted");
+    expect(snapshot.personId).toBe("");
     expect(snapshot.canSelfCheckIn).toBe(false);
-    expect(
-      snapshot.activities.every((activity) => activity.teamIds.includes("garuda-putri-u9")),
-    ).toBe(true);
+    expect(snapshot.activities).toEqual([]);
+    expect(snapshot.history).toEqual([]);
   });
 
   it("restricts roles without an activity relationship", () => {

@@ -11,15 +11,13 @@ import { JourneyTimeline } from "@/components/ds/journey-timeline";
 import { StatusBadge } from "@/components/ds/status-badge";
 import { OrgCrest, TeamCrest } from "@/components/ds/team-crest";
 import { FilterChips } from "@/components/ds/filter-bar";
-import { EmptyState } from "@/components/ds/states";
+import { PermissionState } from "@/components/ds/states";
 import { CoachProfile } from "@/features/identity/coach-profile";
-import { guardians } from "@/data/mock";
 import {
-  getJourney,
-  getMemberships,
-  getCurrentUser,
+  getPlayerAccessForActor,
+  getWorkspaceActor,
+  listCurrentGuardianChildren,
   getOrganization,
-  getPlayer,
   getPlayerByFootballId,
   getTeam,
 } from "@/data/repository";
@@ -38,21 +36,40 @@ export const Route = createFileRoute("/football-id")({
 });
 
 function FootballIdPage() {
-  const { role } = useRole();
+  const { role, ready } = useRole();
   const navigate = useNavigate();
-  const childIds = guardians[0]?.childIds ?? [];
-  const [selected, setSelected] = useState<string>(childIds[0] ?? "p-123");
+  const [selected, setSelected] = useState("");
   const [lookup, setLookup] = useState("");
-  const player = role === "coach" ? undefined : getPlayer(role === "parent" ? selected : "p-123");
-  const journey = player ? getJourney(player.id) : [];
-  const relations = player ? getMemberships(player.id) : [];
+  if (!ready) {
+    return <PermissionState title="Football ID unavailable" description="The active workspace scope has not been resolved." />;
+  }
+  const children = role === "parent" ? listCurrentGuardianChildren() : [];
+  const playerId = role === "parent"
+    ? children.find((child) => child.id === selected)?.id ?? children[0]?.id
+    : role === "player" || role === "org_admin"
+      ? "p-123"
+      : undefined;
+  const decision = playerId ? getPlayerAccessForActor(playerId, getWorkspaceActor(role)) : undefined;
+  const access = decision?.ok ? decision.access : undefined;
+  const player = access?.player;
+  const journey = access?.journey ?? [];
+  const relations = access?.affiliations
+    .filter((affiliation) => affiliation.kind === "organization")
+    .map((affiliation) => ({
+      orgId: affiliation.organizationId,
+      role: affiliation.role,
+      from: affiliation.effectiveFrom,
+      to: affiliation.effectiveTo,
+      status: affiliation.status === "ended" ? "completed" as const : affiliation.status,
+      teams: affiliation.legacyTeamNames ?? [],
+    })) ?? [];
 
   if (role === "coach") {
     return <CoachProfile />;
   }
 
   if (!player) {
-    return <EmptyState title="Football ID unavailable" description="No player identity is connected to this view." />;
+    return <PermissionState title="Football ID unavailable" description="No player identity is available in this workspace scope." />;
   }
 
   const runLookup = () => {
@@ -79,7 +96,7 @@ function FootballIdPage() {
         <FilterChips
           value={selected}
           onChange={setSelected}
-          options={childIds.map((id) => ({ value: id, label: getPlayer(id)?.nickname ?? id }))}
+          options={children.map((child) => ({ value: child.id, label: child.nickname ?? child.name }))}
         />
       )}
 
@@ -113,7 +130,7 @@ function FootballIdPage() {
                 {
                   icon: KeyRound,
                   title: "Guardian manages",
-                  body: "Until age 18, a verified guardian controls access and consent.",
+                  body: "A verified guardian may access only the categories covered by current authorization.",
                 },
                 {
                   icon: Building2,

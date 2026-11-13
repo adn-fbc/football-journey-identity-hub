@@ -41,8 +41,8 @@ export function ParentOverview({ loading = false }: { loading?: boolean | undefi
 
       <ChildSelector children={children} value={child.id} onChange={setSelectedChildId} />
 
-      <Section title={`${child.nickname ?? child.name} · Today`} description={dashboard.todaySchedule.length ? "Your child's activities today." : "No activities are scheduled for this child today."} flush action={<Button asChild variant="ghost" size="sm"><Link to="/schedule"><CalendarDays /> Full schedule</Link></Button>}>
-        {dashboard.todaySchedule.length ? <div className="divide-y">{dashboard.todaySchedule.map((item) => <ScheduleRow key={item.id} item={item} />)}</div> : <div className="p-5"><EmptyState icon={CalendarDays} title="No activity today" description="Upcoming training and matches will appear in the schedule." /></div>}
+      <Section title={`${child.nickname ?? child.name} · Today`} description={!dashboard.hasScheduleAccess ? "A current schedule-category grant is required to view activities." : dashboard.todaySchedule.length ? "Your child's activities today." : "No activities are scheduled for this child today."} flush action={<Button asChild variant="ghost" size="sm"><Link to="/schedule"><CalendarDays /> Full schedule</Link></Button>}>
+        {dashboard.todaySchedule.length ? <div className="divide-y">{dashboard.todaySchedule.map((item) => <ScheduleRow key={item.id} item={item} />)}</div> : <div className="p-5"><EmptyState icon={CalendarDays} title={dashboard.hasScheduleAccess ? "No activity today" : "Schedule not shared"} description={dashboard.hasScheduleAccess ? "Upcoming training and matches will appear in the schedule." : "A current schedule grant is required before activities can be shown."} /></div>}
       </Section>
 
       <Section title={`Needs attention · ${dashboard.attentionCount}`} description="Items awaiting your review for this child.">
@@ -68,7 +68,7 @@ export function ParentOverview({ loading = false }: { loading?: boolean | undefi
               </li>
             ))}
           </ul>
-        ) : <EmptyState title="Nothing needs your attention" description="Consent, registration, and contribution updates will appear here." />}
+        ) : <EmptyState title={dashboard.hasNotificationAccess || dashboard.hasRegistrationAccess || dashboard.hasPaymentAccess ? "Nothing needs your attention" : "Attention categories not shared"} description={dashboard.hasNotificationAccess || dashboard.hasRegistrationAccess || dashboard.hasPaymentAccess ? "Consent, registration, and contribution updates will appear here." : "Current notification, registration, or payment grants are required before these records can be shown."} />}
       </Section>
 
       <div className="grid gap-6 lg:grid-cols-2">

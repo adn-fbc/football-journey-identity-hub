@@ -23,7 +23,7 @@ describe("CheckInPage", () => {
     expect(screen.getByText("Lapangan Hasanuddin")).toBeInTheDocument();
   });
 
-  it("keeps Parent check-in read-only while showing linked child activities", () => {
+  it("denies Parent check-in without an attendance grant", () => {
     render(
       <CheckInPage
         role="parent"
@@ -35,7 +35,9 @@ describe("CheckInPage", () => {
       />,
     );
 
-    expect(screen.getByText("Ball mastery · close control")).toBeInTheDocument();
+    expect(screen.getByText("Check-in unavailable")).toBeInTheDocument();
+    expect(screen.getByText(/current attendance grant is required/)).toBeInTheDocument();
+    expect(screen.queryByText("Ball mastery · close control")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /check in/i })).not.toBeInTheDocument();
   });
 });

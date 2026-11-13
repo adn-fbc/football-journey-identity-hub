@@ -188,7 +188,7 @@ export function PrimaryContextSection({ player }: { player: Player }) {
       )}
       {!canChangePrimaryContext && organizationAffiliations.length > 0 && (
         <p className="mt-3 text-small text-muted-foreground">
-          Only the player or a currently linked guardian can change this preference.
+          Only the player or a guardian with current primary-context authorization can change this preference.
         </p>
       )}
       {error && (
@@ -260,25 +260,39 @@ export function RelationshipSection({ player }: { player: Player }) {
   );
 }
 
-export function PlayerOverviewTab({ player }: { player: Player }) {
+export function PlayerOverviewTab({
+  player,
+  showStats = true,
+  showMatches = true,
+  showSchedule = true,
+  showAchievements = true,
+}: {
+  player: Player;
+  showStats?: boolean;
+  showMatches?: boolean;
+  showSchedule?: boolean;
+  showAchievements?: boolean;
+}) {
   const team = getTeam(player.teamId);
-  const matches = player.teamId
+  const matches = showMatches && player.teamId
     ? listMatches({ teamId: player.teamId })
         .filter((m) => m.status === "completed")
         .reverse()
         .slice(0, 3)
     : [];
-  const next = listSchedule(player.teamId ? [player.teamId] : []).find(
+  const next = showSchedule ? listSchedule(player.teamId ? [player.teamId] : []).find(
     (s) => s.teamId === player.teamId,
-  );
+  ) : undefined;
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatCard label="Matches" value={player.stats.matches} />
-        <StatCard label="Goals" value={player.stats.goals} />
-        <StatCard label="Assists" value={player.stats.assists} />
-        <StatCard label="Attendance" value={`${player.attendance}%`} hint="Last 30 days" />
-      </div>
+      {showStats && (
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <StatCard label="Matches" value={player.stats.matches} />
+          <StatCard label="Goals" value={player.stats.goals} />
+          <StatCard label="Assists" value={player.stats.assists} />
+          <StatCard label="Attendance" value={`${player.attendance}%`} hint="Last 30 days" />
+        </div>
+      )}
       <div className="grid gap-6 lg:grid-cols-2">
         <Section
           title="Identity"
@@ -337,7 +351,7 @@ export function PlayerOverviewTab({ player }: { player: Player }) {
         </Section>
         <RelationshipSection player={player} />
         <div className="space-y-6">
-          <Section title="Recent matches" flush>
+          {showMatches && <Section title="Recent matches" flush>
             {matches.length ? (
               <div className="divide-y">
                 {matches.map((m) => (
@@ -349,10 +363,10 @@ export function PlayerOverviewTab({ player }: { player: Player }) {
                 <EmptyState title="No matches yet" />
               </div>
             )}
-          </Section>
-          <Section title="Key achievements">
+          </Section>}
+          {showAchievements && <Section title="Key achievements">
             <AchievementList playerId={player.id} limit={3} />
-          </Section>
+          </Section>}
         </div>
       </div>
     </div>

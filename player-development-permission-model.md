@@ -117,6 +117,12 @@ A new organization affiliation grants only current operational scope, not access
 
 This is not a complete RBAC backend. It is a compatibility contract for the current UI and future modules. The current app already uses role-aware workspace switching and access checks. The goal is to define a common permission vocabulary so new modules are designed consistently.
 
+### Phase 1 mock authorization limitation
+
+Phase 1 repository checks, fixed mock actor identity, organization/team scope checks, relationship fixtures, and consent-grant fixtures are prototype safeguards for application behavior and regression tests only. A mock grant is not legally valid consent, and these checks do not protect data from a caller who can modify client state or invoke repository code directly. The current role switcher is user-controlled; client-supplied role and organization values are never proof of identity or authority. Adult-transition access fails closed when the fixture does not explicitly establish the required status; age or adulthood must not be inferred.
+
+Before production data access, a backend must independently authenticate the actor and derive current role, active organization, exact team assignments, verified guardian relationship, valid per-category grant, revocation/expiry state, and permission for each request. It must not trust role, organization, player, or guardian identifiers supplied by the browser.
+
 ## Future contract template
 
 Every newly activated module should define:

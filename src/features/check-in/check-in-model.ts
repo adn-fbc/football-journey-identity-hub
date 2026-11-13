@@ -1,6 +1,8 @@
 import type { RoleId } from "@/config/roles";
 import {
   getCurrentUser,
+  getCurrentGuardianId,
+  getGuardianAccessDecision,
   getMatch,
   getPlayer,
   getTeam,
@@ -149,14 +151,21 @@ export function getCheckInSnapshot(
     teamIds = getCoachAssignedTeams(currentUser.name).map((team) => team.id);
     canSelfCheckIn = teamIds.length > 0;
   } else if (role === "parent") {
+    const guardianId = getCurrentGuardianId();
     const children = listCurrentGuardianChildren();
     const child = children.find((item) => item.id === childId) ?? children[0];
-    access = "child";
-    personId = child?.id ?? "";
-    personName = child?.name ?? "your child";
-    teamIds = child?.teamId ? [child.teamId] : [];
-    message =
-      "Attendance is read-only in the Parent workspace. You can view the linked child's check-in history.";
+    if (!guardianId || !child || !getGuardianAccessDecision(guardianId, child.id, "attendance").allowed) {
+      access = "restricted";
+      personId = "";
+      personName = "your child";
+      message = "A current attendance grant is required to view a child's check-in records.";
+    } else {
+      access = "child";
+      personId = child.id;
+      personName = child.name;
+      teamIds = child.teamId ? [child.teamId] : [];
+      message = "Attendance is read-only in the Parent workspace.";
+    }
   } else if (role === "referee") {
     message =
       "Assigned match check-in will appear here when an assignment is connected to your Football ID.";

@@ -55,6 +55,7 @@ export interface Player {
   stats: { matches: number; goals: number; assists: number; minutes: number };
   attendance: number; // percent, last 30 days
   guardianIds: string[];
+  guardianAccessStatus?: "minor_confirmed" | "adult" | undefined;
 }
 
 export interface PlayerIdentity {
@@ -109,12 +110,14 @@ export type JourneySourceDomain =
   | "achievement"
   | "training_session"
   | "attendance_record"
-  | "development_assessment";
+  | "development_assessment"
+  | "coach_observation";
 
 export interface JourneyProvenance {
   sourceDomain: JourneySourceDomain;
   sourceRecordId: string;
   sourceOrganizationId?: string | undefined;
+  sourceTeamId?: string | undefined;
   recordedBy?: string | undefined;
   verificationStatus?: "verified" | "pending" | "unverified" | undefined;
 }
@@ -223,6 +226,42 @@ export interface Guardian {
   footballId: string;
   relation: string;
   childIds: string[];
+}
+
+export interface GuardianRelationship {
+  guardianId: string;
+  playerId: string;
+  verificationStatus: "pending" | "verified" | "revoked";
+}
+
+export type GuardianDataCategory =
+  | "profile"
+  | "journey"
+  | "affiliations"
+  | "matches"
+  | "competitions"
+  | "achievements"
+  | "development_assessments"
+  | "coach_observations"
+  | "schedule"
+  | "attendance"
+  | "registrations"
+  | "payments"
+  | "notifications"
+  | "primary_context"
+  | "sensitive_records";
+
+export interface GuardianConsentGrant {
+  id: string;
+  guardianId: string;
+  subjectPlayerId: string;
+  categories: GuardianDataCategory[];
+  purpose: string;
+  effectiveFrom: string;
+  effectiveTo?: string | undefined;
+  status: "active" | "revoked" | "suspended";
+  revokedAt?: string | undefined;
+  grantedBy: string;
 }
 
 export type RegistrationStatus = "pending" | "confirmed" | "cancelled";
