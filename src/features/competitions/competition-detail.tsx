@@ -15,6 +15,7 @@ import { StatusBadge } from "@/components/ds/status-badge";
 import { MatchRow } from "@/components/ds/match-card";
 import { TeamCrest } from "@/components/ds/team-crest";
 import { EmptyState } from "@/components/ds/states";
+import { InfoList, Section } from "@/components/ds/section";
 import { CompetitionCategoryCard, CompetitionCategorySelector } from "./competition-category";
 import { CompetitionMatchGroups } from "./competition-match-groups";
 import { StandingsTable } from "./standings-table";
@@ -260,7 +261,7 @@ export function CompetitionDetail({
                 return (
                   <Section
                     key={group.name}
-                    title={`${category.label} · ${group.name}`}
+                    title={`${category?.label ?? "Category"} · ${group.name}`}
                     description={`${visibleTeamIds.length} team${visibleTeamIds.length === 1 ? "" : "s"}`}
                     flush
                   >
@@ -343,7 +344,7 @@ export function CompetitionDetail({
                 .map((group) => (
                   <Section
                     key={group.name}
-                    title={`${category.label} · ${group.name}`}
+                    title={`${category?.label ?? "Category"} · ${group.name}`}
                     description="Calculated from completed results"
                     flush
                   >

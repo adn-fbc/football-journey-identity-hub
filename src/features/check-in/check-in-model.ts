@@ -46,7 +46,7 @@ export interface CheckInSnapshot {
   canSelfCheckIn: boolean;
   activities: CheckInActivity[];
   history: Array<{ record: CheckInRecord; activity: CheckInActivity }>;
-  message?: string;
+  message?: string | undefined;
 }
 
 export const DEMO_CHECK_IN_RECORDS: CheckInRecord[] = [

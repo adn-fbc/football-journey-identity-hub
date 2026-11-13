@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/ds/page-header";
 import { FilterSelect, SearchInput } from "@/components/ds/filter-bar";
 import { EmptyState, ErrorState, LoadingState, PermissionState } from "@/components/ds/states";
 import { StatusBadge } from "@/components/ds/status-badge";
-import { Avatar } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { listOrganizations } from "@/data/repository";
 import { useRole } from "@/lib/role-context";
 
@@ -199,7 +199,7 @@ export function OrganizationDirectory({
                   >
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <Avatar className="size-10" fallback={org.name.split(" ").slice(0, 2).map((part) => part[0]).join("").toUpperCase()} />
+                        <Avatar className="size-10"><AvatarFallback>{org.name.split(" ").slice(0, 2).map((part) => part[0]).join("").toUpperCase()}</AvatarFallback></Avatar>
                         <div className="min-w-0">
                           <div className="truncate font-semibold text-foreground">{org.name}</div>
                           <div className="text-small text-muted-foreground">{org.registration}</div>

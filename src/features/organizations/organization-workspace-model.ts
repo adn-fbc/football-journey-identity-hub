@@ -31,12 +31,12 @@ export function getOrganizationWorkspaceSnapshot(
   const teams = listTeams(organization.id);
   const teamIds = new Set(teams.map((team) => team.id));
   const players = listPlayers({ orgId: organization.id });
-  const attention = players.flatMap((player) => {
+  const attention = players.flatMap((player): OrganizationAttentionItem[] => {
     if (player.membership === "pending") {
-      return [{ id: player.id, player, reason: "Membership request" as const }];
+      return [{ id: player.id, player, reason: "Membership request" }];
     }
     if (player.verification === "pending") {
-      return [{ id: player.id, player, reason: "Football ID verification" as const }];
+      return [{ id: player.id, player, reason: "Football ID verification" }];
     }
     return [];
   });

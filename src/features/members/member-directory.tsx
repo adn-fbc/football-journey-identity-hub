@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/ds/page-header";
 import { FilterSelect, SearchInput } from "@/components/ds/filter-bar";
 import { EmptyState, ErrorState, LoadingState, PermissionState } from "@/components/ds/states";
 import { StatusBadge } from "@/components/ds/status-badge";
-import { Avatar } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { listOrganizations } from "@/data/repository";
 import { useRole } from "@/lib/role-context";
 
@@ -229,7 +229,7 @@ export function MemberDirectory({
                     >
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <Avatar className="size-10" fallback={member.name.split(" ").map((part) => part[0]).slice(0, 2).join("").toUpperCase()} />
+                          <Avatar className="size-10"><AvatarFallback>{member.name.split(" ").map((part) => part[0]).slice(0, 2).join("").toUpperCase()}</AvatarFallback></Avatar>
                           <div className="min-w-0">
                             <div className="truncate font-semibold text-foreground">{member.name}</div>
                             <div className="text-small text-muted-foreground">{member.footballId}</div>
@@ -268,7 +268,7 @@ export function MemberDirectory({
                   className="w-full rounded-lg border bg-card p-3 text-left shadow-sm"
                 >
                   <div className="flex items-start gap-3">
-                    <Avatar className="size-10" fallback={member.name.split(" ").map((part) => part[0]).slice(0, 2).join("").toUpperCase()} />
+                    <Avatar className="size-10"><AvatarFallback>{member.name.split(" ").map((part) => part[0]).slice(0, 2).join("").toUpperCase()}</AvatarFallback></Avatar>
                     <div className="min-w-0 flex-1">
                       <div className="truncate font-semibold text-foreground">{member.name}</div>
                       <div className="mt-1 text-small text-muted-foreground">{member.memberNumber}</div>

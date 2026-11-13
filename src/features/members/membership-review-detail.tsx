@@ -124,7 +124,7 @@ export function MembershipReviewDetail() {
       <PageHeader
         title={reviewDetailData.reviewType}
         description={`${reviewDetailData.reviewId} · ${reviewDetailData.submittedLabel}`}
-        action={
+        actions={
           <Button variant="outline" onClick={() => navigate({ to: "/members/review" })}>
             <ArrowLeft className="mr-2 size-4" />
             Back to review queue

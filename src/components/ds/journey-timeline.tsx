@@ -30,6 +30,7 @@ const SOURCE_LABELS: Record<JourneySourceDomain, string> = {
   training_session: "Training session",
   attendance_record: "Attendance record",
   development_assessment: "Development assessment",
+  coach_observation: "Coach observation",
 };
 
 /** The football passport timeline, grouped by year with a marker at today's date. */

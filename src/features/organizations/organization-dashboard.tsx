@@ -34,7 +34,7 @@ export function OrganizationDashboard({
       <OrganizationSectionHeading
         title="Organization dashboard"
         description={overviewDescription}
-        actions={
+        action={
           <Button variant="outline" onClick={() => onViewChange("training")}>
             <CalendarDays /> Training schedule
           </Button>

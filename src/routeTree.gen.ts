@@ -26,6 +26,7 @@ import { Route as MatchesMatchIdRouteImport } from './routes/matches.$matchId'
 import { Route as MembersIndexRouteImport } from './routes/members.index'
 import { Route as MembersMemberIdRouteImport } from './routes/members.$memberId'
 import { Route as MembersReviewRouteImport } from './routes/members.review'
+import { Route as ModulesIndexRouteImport } from './routes/modules.index'
 import { Route as ModulesModuleIdRouteImport } from './routes/modules.$moduleId'
 import { Route as OrganizationsIndexRouteImport } from './routes/organizations.index'
 import { Route as OrganizationsOrgIdRouteImport } from './routes/organizations.$orgId'
@@ -124,6 +125,11 @@ const MembersReviewRoute = MembersReviewRouteImport.update({
   path: '/members/review',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ModulesIndexRoute = ModulesIndexRouteImport.update({
+  id: '/modules/',
+  path: '/modules/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ModulesModuleIdRoute = ModulesModuleIdRouteImport.update({
   id: '/modules/$moduleId',
   path: '/modules/$moduleId',
@@ -204,6 +210,7 @@ export interface FileRoutesByFullPath {
   '/competitions/': typeof CompetitionsIndexRoute
   '/matches/': typeof MatchesIndexRoute
   '/members/': typeof MembersIndexRoute
+  '/modules/': typeof ModulesIndexRoute
   '/organizations/': typeof OrganizationsIndexRoute
   '/players/': typeof PlayersIndexRoute
   '/teams/': typeof TeamsIndexRoute
@@ -234,6 +241,7 @@ export interface FileRoutesByTo {
   '/competitions': typeof CompetitionsIndexRoute
   '/matches': typeof MatchesIndexRoute
   '/members': typeof MembersIndexRoute
+  '/modules': typeof ModulesIndexRoute
   '/organizations': typeof OrganizationsIndexRoute
   '/players': typeof PlayersIndexRoute
   '/teams': typeof TeamsIndexRoute
@@ -265,6 +273,7 @@ export interface FileRoutesById {
   '/competitions/': typeof CompetitionsIndexRoute
   '/matches/': typeof MatchesIndexRoute
   '/members/': typeof MembersIndexRoute
+  '/modules/': typeof ModulesIndexRoute
   '/organizations/': typeof OrganizationsIndexRoute
   '/players/': typeof PlayersIndexRoute
   '/teams/': typeof TeamsIndexRoute
@@ -297,6 +306,7 @@ export interface FileRouteTypes {
     | '/competitions/'
     | '/matches/'
     | '/members/'
+    | '/modules/'
     | '/organizations/'
     | '/players/'
     | '/teams/'
@@ -327,6 +337,7 @@ export interface FileRouteTypes {
     | '/competitions'
     | '/matches'
     | '/members'
+    | '/modules'
     | '/organizations'
     | '/players'
     | '/teams'
@@ -357,6 +368,7 @@ export interface FileRouteTypes {
     | '/competitions/'
     | '/matches/'
     | '/members/'
+    | '/modules/'
     | '/organizations/'
     | '/players/'
     | '/teams/'
@@ -388,6 +400,7 @@ export interface RootRouteChildren {
   CompetitionsIndexRoute: typeof CompetitionsIndexRoute
   MatchesIndexRoute: typeof MatchesIndexRoute
   MembersIndexRoute: typeof MembersIndexRoute
+  ModulesIndexRoute: typeof ModulesIndexRoute
   OrganizationsIndexRoute: typeof OrganizationsIndexRoute
   PlayersIndexRoute: typeof PlayersIndexRoute
   TeamsIndexRoute: typeof TeamsIndexRoute
@@ -513,6 +526,13 @@ declare module '@tanstack/react-router' {
       path: '/members/review'
       fullPath: '/members/review'
       preLoaderRoute: typeof MembersReviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/modules/': {
+      id: '/modules/'
+      path: '/modules'
+      fullPath: '/modules/'
+      preLoaderRoute: typeof ModulesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/modules/$moduleId': {
@@ -655,6 +675,7 @@ const rootRouteChildren: RootRouteChildren = {
   CompetitionsIndexRoute: CompetitionsIndexRoute,
   MatchesIndexRoute: MatchesIndexRoute,
   MembersIndexRoute: MembersIndexRoute,
+  ModulesIndexRoute: ModulesIndexRoute,
   OrganizationsIndexRoute: OrganizationsIndexRoute,
   PlayersIndexRoute: PlayersIndexRoute,
   TeamsIndexRoute: TeamsIndexRoute,
