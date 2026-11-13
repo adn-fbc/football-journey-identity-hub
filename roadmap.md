@@ -17,3 +17,4 @@
 - [x] In-app roadmap at /modules and per-module pages (verified in browser)
 - [x] Project baseline document future-modules-baseline.md, generated from the blueprint config
 - [x] Acceptance criteria and implementation checklist for every module in the baseline document
+- [x] Ready-to-use GitHub Copilot prompt per module in the baseline document

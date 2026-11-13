@@ -42,7 +42,7 @@
 - Each module below ends with **Acceptance criteria** (Given / When / Then) and an **Implementation checklist**.
 - Work one module at a time in wave order, and only after its dependencies are live.
 - Tick checklist items in your own copy or turn them into GitHub issues; the source list lives in the blueprint config.
-- Paste a module's acceptance criteria into GitHub Copilot Chat as the requirement, and ask for tests first.
+- Each module also has a ready-to-use **GitHub Copilot prompt**. It includes the module's dependencies, acceptance criteria, checklist and the rules that keep the design system and app shell unchanged. Paste it into Copilot Chat (agent mode) as is.
 - A module is done when every acceptance criterion has a passing test and every checklist item is ticked.
 
 ## How to ship a module
@@ -151,6 +151,85 @@ _None — can start independently._
 - [ ] Turn each acceptance criterion above into at least one test and make them pass (`bunx vitest run`)
 - [ ] Set `status: "live"` and the new `path` for `attendance` in `src/config/modules.ts`, remove its blueprint, and re-generate this document
 
+### GitHub Copilot prompt
+Paste into Copilot Chat (agent mode) from the repository root.
+
+```text
+You are working in the Youth Football Ecosystem Platform (TanStack Start, React 19, Tailwind CSS v4, TypeScript).
+Build the first release of the "Attendance" module (id `attendance`, currently a blueprint page at `/modules/attendance`).
+
+## Context
+Fast check-in for training sessions and matches, with attendance history for players, guardians and coaches.
+Problem: Most SSBs track attendance on paper or in chat groups, so coaches cannot see trends and guardians are not told when a child misses training.
+Core principle: the player owns the Football ID and journey; organizations only hold relationships with players.
+
+## Hard constraints: preserve the existing design system and application shell
+- Do NOT change src/styles.css design tokens, fonts, colors, spacing or radius. Use only existing semantic tokens; never hardcode colors (no text-white, bg-black, bg-[#...]).
+- Do NOT modify the application shell in src/components/shell/ (sidebar, top bar, role switcher, global search, notification center, mobile nav). The module appears in navigation only through src/config/modules.ts.
+- Build every screen from src/components/ds/ (PageHeader, PageTabs, Section, StatCard, DataTable, FilterBar, StatusBadge, states, ConfirmDialog, cards, JourneyTimeline) and src/components/ui/. Read src/components/ds/README.md first. Add a new shared component only when none fits, and put it in src/components/ds/.
+- Use the existing status system (StatusBadge) for every status.
+- Use mock data only: add types to src/data/types.ts, fictional Indonesian data to src/data/mock.ts, and read it only through src/data/repository.ts. No backend, external APIs or real payments.
+- Routes go in src/routes/ (TanStack file routes, each with its own head()). Never edit src/routeTree.gen.ts.
+- Do not touch unrelated pages or other modules.
+
+## Dependencies
+- None. This module can be built on the current live platform.
+
+## Who uses it
+- Coach: Take attendance at the pitch in under a minute and see who is falling behind.
+- Organization Admin: Monitor attendance rates per team and follow up on long absences.
+- Parent / Guardian: Check a child in, report an absence in advance and see attendance history.
+
+## First-release scope (build only this)
+- Coach roster check-in per session (present, late, excused, absent)
+- Guardian and player self check-in within an authorized activity window
+- Advance absence reporting with a reason
+- Attendance rate per player and per team (last 30 days, season)
+Not now: QR check-in at the venue; Automatic guardian notification on unexcused absence; Low-attendance alerts for coaches and admins; Offline check-in with sync; Attendance export for association reporting.
+Out of scope: GPS or location tracking of minors; Paying or penalizing based on attendance.
+
+## Data
+Owns: AttendanceRecord (One person, one activity, one status, with who recorded it and when.); AbsenceNotice (An advance absence reported by a guardian or adult player.); AttendanceSummary (Derived rates per player and team; never edited by hand.)
+Reads only, never owns: Schedule items (training and matches); Team rosters and active affiliations; Guardian relationships and consent
+Football Journey events: Attendance milestones (e.g. 50 sessions attended) as attendance_record events
+
+## Privacy & consent rules (enforce in src/lib/attendance-access.ts and test them)
+- Guardians see only their own linked children's records.
+- Coaches see records only for teams they are assigned to.
+- Attendance is evidence of participation, never a development score.
+
+## Acceptance criteria (each must become at least one test)
+1. Given a coach assigned to Garuda U10 opens today's training session, when they mark each rostered player present, late, excused or absent and save, then one AttendanceRecord per player is stored with the coach as recorder and a timestamp.
+2. Given a guardian with a linked child and an open check-in window, when they check the child in, then the child's record shows present, recorded by the guardian, and a check-in outside the window is rejected with a clear message.
+3. Given a guardian reports an absence with a reason before the session starts, when the coach opens the roster, then the child is pre-marked excused and the reason is visible to the coach only.
+4. Given a player with 20 recorded sessions this season, when an admin opens the team attendance view, then the 30-day and season rates match the records, and excused sessions are not counted as absences.
+5. Given a coach who is not assigned to a team, when they try to open that team's attendance, then access is denied and no records are shown.
+
+## Implementation checklist (work in this order)
+- [ ] Confirm every module in "Depends on" is live (none for this module)
+- [ ] Add types for `AttendanceRecord`, `AbsenceNotice`, `AttendanceSummary` to `src/data/types.ts`
+- [ ] Add realistic fictional mock data to `src/data/mock.ts` and expose it only through `src/data/repository.ts`
+- [ ] Write access rules in `src/lib/attendance-access.ts` with tests, covering every Privacy & consent rule
+- [ ] Extend the existing check-in model (src/features/check-in) instead of creating a second check-in flow
+- [ ] Derive AttendanceSummary from records in a pure function with unit tests; never store hand-edited rates
+- [ ] Add an attendance tab to the team page and a summary to the guardian child card
+- [ ] Add access rules (coach: assigned teams; guardian: linked children) with tests
+- [ ] Publish milestone journey events (e.g. 50 sessions) from the summary, not on every check-in
+- [ ] Build the UI in `src/features/attendance/` from `src/components/ds` and the existing status system; mobile-first for players and guardians
+- [ ] Create the route files that replace the `/modules/attendance` blueprint page, each with its own `head()`
+- [ ] Publish the Football Journey events listed above to the player timeline
+- [ ] Add loading, empty and error states for every new screen
+- [ ] Turn each acceptance criterion above into at least one test and make them pass (`bunx vitest run`)
+- [ ] Set `status: "live"` and the new `path` for `attendance` in `src/config/modules.ts`, remove its blueprint, and re-generate this document
+
+## How to work
+1. Briefly restate the plan and list the files you will create or change. Wait for my confirmation.
+2. Write the tests for the acceptance criteria and access rules first (Vitest, next to the code).
+3. Implement step by step, following the patterns in src/features/check-in and src/lib/coach-access.ts.
+4. Run `bunx vitest run` and `bunx tsc --noEmit` and fix all failures.
+5. Finish by listing changed files, which acceptance criteria are covered by which tests, and any checklist item left open.
+```
+
 ## Training
 
 **Session plans & drills** · Route: `/modules/training` · Wave 1
@@ -241,6 +320,83 @@ Session planning, a shared drill library and team training calendars for coaches
 - [ ] Add loading, empty and error states for every new screen
 - [ ] Turn each acceptance criterion above into at least one test and make them pass (`bunx vitest run`)
 - [ ] Set `status: "live"` and the new `path` for `training` in `src/config/modules.ts`, remove its blueprint, and re-generate this document
+
+### GitHub Copilot prompt
+Paste into Copilot Chat (agent mode) from the repository root.
+
+```text
+You are working in the Youth Football Ecosystem Platform (TanStack Start, React 19, Tailwind CSS v4, TypeScript).
+Build the first release of the "Training" module (id `training`, currently a blueprint page at `/modules/training`).
+
+## Context
+Session planning, a shared drill library and team training calendars for coaches.
+Problem: Coaches plan sessions in notebooks, so assistants, admins and guardians cannot see what is trained and nothing carries over between seasons.
+Core principle: the player owns the Football ID and journey; organizations only hold relationships with players.
+
+## Hard constraints: preserve the existing design system and application shell
+- Do NOT change src/styles.css design tokens, fonts, colors, spacing or radius. Use only existing semantic tokens; never hardcode colors (no text-white, bg-black, bg-[#...]).
+- Do NOT modify the application shell in src/components/shell/ (sidebar, top bar, role switcher, global search, notification center, mobile nav). The module appears in navigation only through src/config/modules.ts.
+- Build every screen from src/components/ds/ (PageHeader, PageTabs, Section, StatCard, DataTable, FilterBar, StatusBadge, states, ConfirmDialog, cards, JourneyTimeline) and src/components/ui/. Read src/components/ds/README.md first. Add a new shared component only when none fits, and put it in src/components/ds/.
+- Use the existing status system (StatusBadge) for every status.
+- Use mock data only: add types to src/data/types.ts, fictional Indonesian data to src/data/mock.ts, and read it only through src/data/repository.ts. No backend, external APIs or real payments.
+- Routes go in src/routes/ (TanStack file routes, each with its own head()). Never edit src/routeTree.gen.ts.
+- Do not touch unrelated pages or other modules.
+
+## Dependencies
+- Attendance (`attendance`): must already be live. If its status in src/config/modules.ts is still "soon", stop and tell me instead of building it.
+
+## Who uses it
+- Coach: Plan a session from drills, assign it to a team and reuse it next week.
+- Organization Admin: Keep a consistent club curriculum across age categories.
+
+## First-release scope (build only this)
+- Training session planner (objective, duration, drills, equipment)
+- Club drill library with age category and focus tags
+- Assign sessions to team schedules
+- Share plans with assistant coaches
+Not now: Season and term curriculum templates; Post-session coach notes; Session load overview per team; Video and diagram attachments; Shared drill library across organizations.
+Out of scope: Physical load monitoring with wearables; Paid drill marketplace.
+
+## Data
+Owns: TrainingSession (A scheduled session for a team, linked to a schedule item.); SessionPlan (The reusable plan: objectives, blocks and drills.); Drill (A library item with focus area, age range and instructions.); Curriculum (An ordered set of plans for an age category and term.)
+Reads only, never owns: Teams and coach assignments; Schedule items; Organization structure
+Football Journey events: Training session participation summaries as training_session events (via Attendance)
+
+## Privacy & consent rules (enforce in src/lib/training-access.ts and test them)
+- Session plans belong to the organization and are visible to its staff only.
+- No player-level data is stored in plans.
+
+## Acceptance criteria (each must become at least one test)
+1. Given a coach with access to the club drill library, when they create a session plan with an objective, duration and at least one drill, then the plan is saved and the total duration equals the sum of its blocks.
+2. Given a saved session plan, when the coach assigns it to Garuda U10 on a date, then a training item appears in the team schedule and on guardians' schedules for that team.
+3. Given a plan used last week, when the coach duplicates it for next week, then a new independent plan is created and editing it does not change the original.
+4. Given an assistant coach of the same team, when they open a shared plan, then they can view it, and can edit only if the head coach granted edit rights.
+5. Given a guardian or player, when they open a team's training session, then they see the time, place and objective but not internal coach notes.
+
+## Implementation checklist (work in this order)
+- [ ] Confirm every module in "Depends on" is live (Attendance)
+- [ ] Add types for `TrainingSession`, `SessionPlan`, `Drill`, `Curriculum` to `src/data/types.ts`
+- [ ] Add realistic fictional mock data to `src/data/mock.ts` and expose it only through `src/data/repository.ts`
+- [ ] Write access rules in `src/lib/training-access.ts` with tests, covering every Privacy & consent rule
+- [ ] Link TrainingSession to an existing schedule item instead of duplicating date and venue fields
+- [ ] Build the drill library with filters for age category and focus tags
+- [ ] Build the session planner with drag-to-reorder blocks and a running duration total
+- [ ] Add plan sharing rights (view or edit) for assistant coaches
+- [ ] Make sure no player-level data is stored in plans or drills
+- [ ] Build the UI in `src/features/training/` from `src/components/ds` and the existing status system; mobile-first for players and guardians
+- [ ] Create the route files that replace the `/modules/training` blueprint page, each with its own `head()`
+- [ ] Publish the Football Journey events listed above to the player timeline
+- [ ] Add loading, empty and error states for every new screen
+- [ ] Turn each acceptance criterion above into at least one test and make them pass (`bunx vitest run`)
+- [ ] Set `status: "live"` and the new `path` for `training` in `src/config/modules.ts`, remove its blueprint, and re-generate this document
+
+## How to work
+1. Briefly restate the plan and list the files you will create or change. Wait for my confirmation.
+2. Write the tests for the acceptance criteria and access rules first (Vitest, next to the code).
+3. Implement step by step, following the patterns in src/features/check-in and src/lib/coach-access.ts.
+4. Run `bunx vitest run` and `bunx tsc --noEmit` and fix all failures.
+5. Finish by listing changed files, which acceptance criteria are covered by which tests, and any checklist item left open.
+```
 
 ## Player Development
 
@@ -337,6 +493,89 @@ Competency-based development tracking: coach observations, periodic assessments,
 - [ ] Add loading, empty and error states for every new screen
 - [ ] Turn each acceptance criterion above into at least one test and make them pass (`bunx vitest run`)
 - [ ] Set `status: "live"` and the new `path` for `development` in `src/config/modules.ts`, remove its blueprint, and re-generate this document
+
+### GitHub Copilot prompt
+Paste into Copilot Chat (agent mode) from the repository root.
+
+```text
+You are working in the Youth Football Ecosystem Platform (TanStack Start, React 19, Tailwind CSS v4, TypeScript).
+Build the first release of the "Player Development" module (id `development`, currently a blueprint page at `/modules/development`).
+
+## Context
+Competency-based development tracking: coach observations, periodic assessments, player goals and season reviews.
+Problem: Feedback to young players is informal and lost when they change club; families never see structured progress.
+Core principle: the player owns the Football ID and journey; organizations only hold relationships with players.
+
+## Hard constraints: preserve the existing design system and application shell
+- Do NOT change src/styles.css design tokens, fonts, colors, spacing or radius. Use only existing semantic tokens; never hardcode colors (no text-white, bg-black, bg-[#...]).
+- Do NOT modify the application shell in src/components/shell/ (sidebar, top bar, role switcher, global search, notification center, mobile nav). The module appears in navigation only through src/config/modules.ts.
+- Build every screen from src/components/ds/ (PageHeader, PageTabs, Section, StatCard, DataTable, FilterBar, StatusBadge, states, ConfirmDialog, cards, JourneyTimeline) and src/components/ui/. Read src/components/ds/README.md first. Add a new shared component only when none fits, and put it in src/components/ds/.
+- Use the existing status system (StatusBadge) for every status.
+- Use mock data only: add types to src/data/types.ts, fictional Indonesian data to src/data/mock.ts, and read it only through src/data/repository.ts. No backend, external APIs or real payments.
+- Routes go in src/routes/ (TanStack file routes, each with its own head()). Never edit src/routeTree.gen.ts.
+- Do not touch unrelated pages or other modules.
+
+## Dependencies
+- Attendance (`attendance`): must already be live. If its status in src/config/modules.ts is still "soon", stop and tell me instead of building it.
+
+## Who uses it
+- Coach: Record quick observations and complete a periodic assessment against the competency framework.
+- Player: Set personal goals and see feedback in plain language.
+- Parent / Guardian: Read season reviews and support goals at home.
+- Organization Admin: Ensure every player receives a review each term.
+
+## First-release scope (build only this)
+- Coach observations linked to a session or match
+- Assessment against the platform competency framework
+- Player goals with progress status
+- Season review shared with the player and guardians
+Not now: Development plan per player; Self-assessment for older players; Review reminders for coaches; Portable development history across organizations with consent; Comparison to age-category benchmarks.
+Out of scope: Automated talent scores; Sharing development data with scouts without consent.
+
+## Data
+Owns: CoachObservation (A short, dated note on a player linked to an activity.); DevelopmentAssessment (A formal rating against competencies for a period.); PlayerGoal (A goal owned by the player with status and target date.); SeasonReview (A published summary visible to the player and guardians.)
+Reads only, never owns: Football ID and player profile; Attendance and training records; Match participation
+Football Journey events: Published season reviews as development_assessment events; Achieved goals as achievement events
+
+## Privacy & consent rules (enforce in src/lib/development-access.ts and test them)
+- Assessments are visible only to the player, linked guardians and the assessing organization.
+- Observations inform assessments but are never published raw.
+- Development data never becomes a public ranking.
+
+## Acceptance criteria (each must become at least one test)
+1. Given a coach assigned to a player's team, when they record an observation linked to a session or match, then the observation is saved against that activity and is not visible to the player or guardians.
+2. Given an assessment period is open, when the coach rates a player against every competency in the framework and submits, then the assessment is stored as a draft until the coach publishes it.
+3. Given a player who sets a goal with a target date, when the goal's status changes, then the change is shown on the player's profile and to linked guardians.
+4. Given a coach publishes a season review, when a linked guardian opens the child's profile, then the review is readable in plain language and appears on the Football Journey timeline.
+5. Given a user from another organization or a scout, when they open the player's development tab, then no assessments, observations or reviews are shown.
+
+## Implementation checklist (work in this order)
+- [ ] Confirm every module in "Depends on" is live (Attendance)
+- [ ] Add types for `CoachObservation`, `DevelopmentAssessment`, `PlayerGoal`, `SeasonReview` to `src/data/types.ts`
+- [ ] Add realistic fictional mock data to `src/data/mock.ts` and expose it only through `src/data/repository.ts`
+- [ ] Write access rules in `src/lib/development-access.ts` with tests, covering every Privacy & consent rule
+- [ ] Follow the deeper player-development documents listed below; they are the source of truth for this module
+- [ ] Load the competency framework from configuration, not hard-coded UI
+- [ ] Build the observation quick-entry flow from the session and match pages
+- [ ] Build the assessment form with draft and publish states
+- [ ] Build goals and season review on the existing player profile tabs
+- [ ] Add access rules for player, guardian, assessing organization and coach with tests
+- [ ] Build the UI in `src/features/development/` from `src/components/ds` and the existing status system; mobile-first for players and guardians
+- [ ] Create the route files that replace the `/modules/development` blueprint page, each with its own `head()`
+- [ ] Publish the Football Journey events listed above to the player timeline
+- [ ] Add loading, empty and error states for every new screen
+- [ ] Turn each acceptance criterion above into at least one test and make them pass (`bunx vitest run`)
+- [ ] Set `status: "live"` and the new `path` for `development` in `src/config/modules.ts`, remove its blueprint, and re-generate this document
+
+Read these documents first; they are the detailed source of truth: player-development-product-blueprint.md, player-development-competency-framework.md, player-development-data-model.md, player-development-permission-model.md, player-development-phase-1-specification.md.
+
+## How to work
+1. Briefly restate the plan and list the files you will create or change. Wait for my confirmation.
+2. Write the tests for the acceptance criteria and access rules first (Vitest, next to the code).
+3. Implement step by step, following the patterns in src/features/check-in and src/lib/coach-access.ts.
+4. Run `bunx vitest run` and `bunx tsc --noEmit` and fix all failures.
+5. Finish by listing changed files, which acceptance criteria are covered by which tests, and any checklist item left open.
+```
 
 ### Further documents
 - [player-development-product-blueprint.md](./player-development-product-blueprint.md)
@@ -436,6 +675,85 @@ _None — can start independently._
 - [ ] Turn each acceptance criterion above into at least one test and make them pass (`bunx vitest run`)
 - [ ] Set `status: "live"` and the new `path` for `finance` in `src/config/modules.ts`, remove its blueprint, and re-generate this document
 
+### GitHub Copilot prompt
+Paste into Copilot Chat (agent mode) from the repository root.
+
+```text
+You are working in the Youth Football Ecosystem Platform (TanStack Start, React 19, Tailwind CSS v4, TypeScript).
+Build the first release of the "Finance & Payments" module (id `finance`, currently a blueprint page at `/modules/finance`).
+
+## Context
+Membership fees, invoices and payment status for organizations and guardians.
+Problem: Fee collection is manual and tracked in spreadsheets; guardians lack clear invoices and admins cannot see who has paid.
+Core principle: the player owns the Football ID and journey; organizations only hold relationships with players.
+
+## Hard constraints: preserve the existing design system and application shell
+- Do NOT change src/styles.css design tokens, fonts, colors, spacing or radius. Use only existing semantic tokens; never hardcode colors (no text-white, bg-black, bg-[#...]).
+- Do NOT modify the application shell in src/components/shell/ (sidebar, top bar, role switcher, global search, notification center, mobile nav). The module appears in navigation only through src/config/modules.ts.
+- Build every screen from src/components/ds/ (PageHeader, PageTabs, Section, StatCard, DataTable, FilterBar, StatusBadge, states, ConfirmDialog, cards, JourneyTimeline) and src/components/ui/. Read src/components/ds/README.md first. Add a new shared component only when none fits, and put it in src/components/ds/.
+- Use the existing status system (StatusBadge) for every status.
+- Use mock data only: add types to src/data/types.ts, fictional Indonesian data to src/data/mock.ts, and read it only through src/data/repository.ts. No backend, external APIs or real payments.
+- Routes go in src/routes/ (TanStack file routes, each with its own head()). Never edit src/routeTree.gen.ts.
+- Do not touch unrelated pages or other modules.
+
+## Dependencies
+- None. This module can be built on the current live platform.
+
+## Who uses it
+- Organization Admin: Set fee plans, issue invoices and see outstanding balances.
+- Parent / Guardian: See what is owed for each child, pay and download receipts.
+
+## First-release scope (build only this)
+- Fee plans per organization (monthly, term, registration)
+- Invoices per player, payable by the linked guardian
+- Manual payment recording with proof upload
+- Outstanding balance overview
+Not now: Digital payment (QRIS and virtual account) through a licensed provider; Automatic reminders; Receipts as PDF; Competition entry fees; Financial reports for associations.
+Out of scope: Holding funds on the platform; Loans or credit.
+
+## Data
+Owns: FeePlan (Price, period and the teams or categories it applies to.); Invoice (Amount owed for a player and period, with due date and status.); Payment (A recorded payment against one or more invoices.)
+Reads only, never owns: Organization and team membership; Guardian relationships; Competition registrations
+Football Journey events: none; do not write to the timeline
+
+## Privacy & consent rules (enforce in src/lib/finance-access.ts and test them)
+- Payment status never appears on a player's Football ID or public profile.
+- Coaches do not see payment data.
+- Unpaid fees never block a child's identity or journey record.
+
+## Acceptance criteria (each must become at least one test)
+1. Given an admin creates a monthly fee plan for Garuda U10, when invoices are generated for the month, then each active member of the team gets exactly one invoice with the plan's amount and due date.
+2. Given a guardian with two linked children, when they open payments, then they see each child's invoices separately with the amount in Rupiah and the status.
+3. Given an admin records a manual payment with proof, when the payment covers the invoice amount, then the invoice becomes paid and the outstanding balance drops by that amount.
+4. Given a child with an overdue invoice, when anyone views the child's Football ID, journey or match pages, then no payment status is shown and the child can still be checked in and selected.
+5. Given a coach, when they open the team or a player, then no fee or payment data is visible.
+
+## Implementation checklist (work in this order)
+- [ ] Confirm every module in "Depends on" is live (none for this module)
+- [ ] Add types for `FeePlan`, `Invoice`, `Payment` to `src/data/types.ts`
+- [ ] Add realistic fictional mock data to `src/data/mock.ts` and expose it only through `src/data/repository.ts`
+- [ ] Write access rules in `src/lib/finance-access.ts` with tests, covering every Privacy & consent rule
+- [ ] Store amounts as integer Rupiah; format with the existing format helpers
+- [ ] Build fee plan setup, invoice list and outstanding balance overview for admins
+- [ ] Build the guardian payments view per child with receipt download
+- [ ] Add manual payment recording with proof upload
+- [ ] Keep payment data out of every player, team and journey view (add a test that guards this)
+- [ ] Do not start digital payments until a licensed provider is chosen
+- [ ] Build the UI in `src/features/finance/` from `src/components/ds` and the existing status system; mobile-first for players and guardians
+- [ ] Create the route files that replace the `/modules/finance` blueprint page, each with its own `head()`
+- [ ] Confirm the module writes nothing to the Football Journey timeline
+- [ ] Add loading, empty and error states for every new screen
+- [ ] Turn each acceptance criterion above into at least one test and make them pass (`bunx vitest run`)
+- [ ] Set `status: "live"` and the new `path` for `finance` in `src/config/modules.ts`, remove its blueprint, and re-generate this document
+
+## How to work
+1. Briefly restate the plan and list the files you will create or change. Wait for my confirmation.
+2. Write the tests for the acceptance criteria and access rules first (Vitest, next to the code).
+3. Implement step by step, following the patterns in src/features/check-in and src/lib/coach-access.ts.
+4. Run `bunx vitest run` and `bunx tsc --noEmit` and fix all failures.
+5. Finish by listing changed files, which acceptance criteria are covered by which tests, and any checklist item left open.
+```
+
 ---
 
 # Wave 2 — Professional networks
@@ -527,6 +845,80 @@ A coaching career on the coach's own Football ID: licences, courses and coaching
 - [ ] Turn each acceptance criterion above into at least one test and make them pass (`bunx vitest run`)
 - [ ] Set `status: "live"` and the new `path` for `coach` in `src/config/modules.ts`, remove its blueprint, and re-generate this document
 
+### GitHub Copilot prompt
+Paste into Copilot Chat (agent mode) from the repository root.
+
+```text
+You are working in the Youth Football Ecosystem Platform (TanStack Start, React 19, Tailwind CSS v4, TypeScript).
+Build the first release of the "Coach Platform" module (id `coach`, currently a blueprint page at `/modules/coach`).
+
+## Context
+A coaching career on the coach's own Football ID: licences, courses and coaching history across organizations.
+Problem: Coaching qualifications and experience are scattered across paper certificates and cannot be verified by clubs.
+Core principle: the player owns the Football ID and journey; organizations only hold relationships with players.
+
+## Hard constraints: preserve the existing design system and application shell
+- Do NOT change src/styles.css design tokens, fonts, colors, spacing or radius. Use only existing semantic tokens; never hardcode colors (no text-white, bg-black, bg-[#...]).
+- Do NOT modify the application shell in src/components/shell/ (sidebar, top bar, role switcher, global search, notification center, mobile nav). The module appears in navigation only through src/config/modules.ts.
+- Build every screen from src/components/ds/ (PageHeader, PageTabs, Section, StatCard, DataTable, FilterBar, StatusBadge, states, ConfirmDialog, cards, JourneyTimeline) and src/components/ui/. Read src/components/ds/README.md first. Add a new shared component only when none fits, and put it in src/components/ds/.
+- Use the existing status system (StatusBadge) for every status.
+- Use mock data only: add types to src/data/types.ts, fictional Indonesian data to src/data/mock.ts, and read it only through src/data/repository.ts. No backend, external APIs or real payments.
+- Routes go in src/routes/ (TanStack file routes, each with its own head()). Never edit src/routeTree.gen.ts.
+- Do not touch unrelated pages or other modules.
+
+## Dependencies
+- Training (`training`): must already be live. If its status in src/config/modules.ts is still "soon", stop and tell me instead of building it.
+
+## Who uses it
+- Coach: Show verified licences and coaching history when joining a new club.
+
+## First-release scope (build only this)
+- Licence records (e.g. PSSI/AFC levels) with expiry
+- Coaching history from team assignments
+- Verification by the issuing body
+Not now: Course catalogue and enrolment; Licence expiry reminders; Coach development credits (CPD); Coach availability for opportunities.
+Out of scope: Coach employment contracts; Salary handling.
+
+## Data
+Owns: CoachLicence (Level, issuer, issue and expiry date, verification status.); CoachingAssignment (A dated assignment to a team, derived from Teams.); CourseEnrolment (A course the coach is taking or has completed.)
+Reads only, never owns: Coach Football ID; Team coach assignments; Organization records
+Football Journey events: Coach licence verified (on the coach's own journey)
+
+## Privacy & consent rules (enforce in src/lib/coach-access.ts and test them)
+- The coach controls which licences and history are public.
+- Safeguarding checks are visible only to authorized administrators.
+
+## Acceptance criteria (each must become at least one test)
+1. Given a coach adds a licence with level, issuer and expiry, when the issuing body verifies it, then the licence shows as verified on the coach's own Football ID.
+2. Given a coach assigned to teams over several seasons, when they open their coaching history, then every assignment is listed with organization, team and dates, derived from Teams.
+3. Given a licence that expired, when a club views the coach's profile, then the licence is marked expired and is no longer counted as valid.
+4. Given a coach hides a licence from the public profile, when another organization views the profile, then that licence is not shown.
+
+## Implementation checklist (work in this order)
+- [ ] Confirm every module in "Depends on" is live (Training)
+- [ ] Add types for `CoachLicence`, `CoachingAssignment`, `CourseEnrolment` to `src/data/types.ts`
+- [ ] Add realistic fictional mock data to `src/data/mock.ts` and expose it only through `src/data/repository.ts`
+- [ ] Write access rules in `src/lib/coach-access.ts` with tests, covering every Privacy & consent rule
+- [ ] Add coach licences and history to the coach's existing Football ID page
+- [ ] Derive CoachingAssignment from team coach assignments; never let users edit it directly
+- [ ] Add licence verification states (pending, verified, expired, rejected) using the status system
+- [ ] Add per-item public or private visibility controls for the coach
+- [ ] Keep safeguarding checks visible only to authorized administrators
+- [ ] Build the UI in `src/features/coach/` from `src/components/ds` and the existing status system; mobile-first for players and guardians
+- [ ] Create the route files that replace the `/modules/coach` blueprint page, each with its own `head()`
+- [ ] Publish the Football Journey events listed above to the player timeline
+- [ ] Add loading, empty and error states for every new screen
+- [ ] Turn each acceptance criterion above into at least one test and make them pass (`bunx vitest run`)
+- [ ] Set `status: "live"` and the new `path` for `coach` in `src/config/modules.ts`, remove its blueprint, and re-generate this document
+
+## How to work
+1. Briefly restate the plan and list the files you will create or change. Wait for my confirmation.
+2. Write the tests for the acceptance criteria and access rules first (Vitest, next to the code).
+3. Implement step by step, following the patterns in src/features/check-in and src/lib/coach-access.ts.
+4. Run `bunx vitest run` and `bunx tsc --noEmit` and fix all failures.
+5. Finish by listing changed files, which acceptance criteria are covered by which tests, and any checklist item left open.
+```
+
 ## Referee Platform
 
 **Assignments & match reports** · Route: `/modules/referee` · Wave 2
@@ -613,6 +1005,82 @@ _None — can start independently._
 - [ ] Add loading, empty and error states for every new screen
 - [ ] Turn each acceptance criterion above into at least one test and make them pass (`bunx vitest run`)
 - [ ] Set `status: "live"` and the new `path` for `referee` in `src/config/modules.ts`, remove its blueprint, and re-generate this document
+
+### GitHub Copilot prompt
+Paste into Copilot Chat (agent mode) from the repository root.
+
+```text
+You are working in the Youth Football Ecosystem Platform (TanStack Start, React 19, Tailwind CSS v4, TypeScript).
+Build the first release of the "Referee Platform" module (id `referee`, currently a blueprint page at `/modules/referee`).
+
+## Context
+Match assignments, digital match reports and referee development for referees and organizers.
+Problem: Referee appointments are arranged by phone and match reports are on paper, which delays results and disciplinary decisions.
+Core principle: the player owns the Football ID and journey; organizations only hold relationships with players.
+
+## Hard constraints: preserve the existing design system and application shell
+- Do NOT change src/styles.css design tokens, fonts, colors, spacing or radius. Use only existing semantic tokens; never hardcode colors (no text-white, bg-black, bg-[#...]).
+- Do NOT modify the application shell in src/components/shell/ (sidebar, top bar, role switcher, global search, notification center, mobile nav). The module appears in navigation only through src/config/modules.ts.
+- Build every screen from src/components/ds/ (PageHeader, PageTabs, Section, StatCard, DataTable, FilterBar, StatusBadge, states, ConfirmDialog, cards, JourneyTimeline) and src/components/ui/. Read src/components/ds/README.md first. Add a new shared component only when none fits, and put it in src/components/ds/.
+- Use the existing status system (StatusBadge) for every status.
+- Use mock data only: add types to src/data/types.ts, fictional Indonesian data to src/data/mock.ts, and read it only through src/data/repository.ts. No backend, external APIs or real payments.
+- Routes go in src/routes/ (TanStack file routes, each with its own head()). Never edit src/routeTree.gen.ts.
+- Do not touch unrelated pages or other modules.
+
+## Dependencies
+- None. This module can be built on the current live platform.
+
+## Who uses it
+- Referee: Accept assignments and submit the official match report from the pitch.
+- Competition Organizer: Appoint referees to fixtures and confirm results from reports.
+
+## First-release scope (build only this)
+- Referee pool per competition
+- Assign and accept match appointments
+- Digital match report (score, cards, incidents)
+Not now: Availability calendar; Organizer confirmation of reports into results; Referee assessments; Licence and fitness test records.
+Out of scope: Referee payments; Live video review.
+
+## Data
+Owns: RefereeAppointment (A referee assigned to a match in a role (main, assistant).); MatchReport (The official record of a match submitted by the referee.); RefereeAssessment (A performance review by an assessor.)
+Reads only, never owns: Matches and competitions; Team sheets; Referee Football ID
+Football Journey events: Confirmed match reports feed match events on players' journeys
+
+## Privacy & consent rules (enforce in src/lib/referee-access.ts and test them)
+- Disciplinary details are visible to organizers and the teams involved only.
+- Assessments are private to the referee and assessors.
+
+## Acceptance criteria (each must become at least one test)
+1. Given an organizer with a referee pool for a competition, when they appoint a main referee and two assistants to a match, then each referee receives an appointment they can accept or decline.
+2. Given a referee declines an appointment, when the organizer opens the fixture, then the slot shows as open again.
+3. Given the appointed main referee after the final whistle, when they submit the match report with score, cards and incidents, then the report is stored as submitted and the match shows 'result pending confirmation'.
+4. Given a submitted report, when the organizer confirms it, then the match result and events update, and standings recalculate.
+5. Given a parent or a team not involved in the match, when they open the match, then disciplinary details from the report are not shown.
+
+## Implementation checklist (work in this order)
+- [ ] Confirm every module in "Depends on" is live (none for this module)
+- [ ] Add types for `RefereeAppointment`, `MatchReport`, `RefereeAssessment` to `src/data/types.ts`
+- [ ] Add realistic fictional mock data to `src/data/mock.ts` and expose it only through `src/data/repository.ts`
+- [ ] Write access rules in `src/lib/referee-access.ts` with tests, covering every Privacy & consent rule
+- [ ] Add referee pool management to competition pages for organizers
+- [ ] Build appointment accept and decline for the referee role
+- [ ] Build the mobile-first match report form, starting from the existing match event timeline
+- [ ] Route confirmed reports into results and the existing standings calculation
+- [ ] Add access rules for disciplinary details with tests
+- [ ] Build the UI in `src/features/referee/` from `src/components/ds` and the existing status system; mobile-first for players and guardians
+- [ ] Create the route files that replace the `/modules/referee` blueprint page, each with its own `head()`
+- [ ] Publish the Football Journey events listed above to the player timeline
+- [ ] Add loading, empty and error states for every new screen
+- [ ] Turn each acceptance criterion above into at least one test and make them pass (`bunx vitest run`)
+- [ ] Set `status: "live"` and the new `path` for `referee` in `src/config/modules.ts`, remove its blueprint, and re-generate this document
+
+## How to work
+1. Briefly restate the plan and list the files you will create or change. Wait for my confirmation.
+2. Write the tests for the acceptance criteria and access rules first (Vitest, next to the code).
+3. Implement step by step, following the patterns in src/features/check-in and src/lib/coach-access.ts.
+4. Run `bunx vitest run` and `bunx tsc --noEmit` and fix all failures.
+5. Finish by listing changed files, which acceptance criteria are covered by which tests, and any checklist item left open.
+```
 
 ## Opportunities
 
@@ -702,6 +1170,83 @@ _None — can start independently._
 - [ ] Turn each acceptance criterion above into at least one test and make them pass (`bunx vitest run`)
 - [ ] Set `status: "live"` and the new `path` for `opportunities` in `src/config/modules.ts`, remove its blueprint, and re-generate this document
 
+### GitHub Copilot prompt
+Paste into Copilot Chat (agent mode) from the repository root.
+
+```text
+You are working in the Youth Football Ecosystem Platform (TanStack Start, React 19, Tailwind CSS v4, TypeScript).
+Build the first release of the "Opportunities" module (id `opportunities`, currently a blueprint page at `/modules/opportunities`).
+
+## Context
+Trials, selection camps and scholarships that players can apply to with their Football ID.
+Problem: Opportunities are shared in chat groups and reach only well-connected families; applications are repeated paperwork.
+Core principle: the player owns the Football ID and journey; organizations only hold relationships with players.
+
+## Hard constraints: preserve the existing design system and application shell
+- Do NOT change src/styles.css design tokens, fonts, colors, spacing or radius. Use only existing semantic tokens; never hardcode colors (no text-white, bg-black, bg-[#...]).
+- Do NOT modify the application shell in src/components/shell/ (sidebar, top bar, role switcher, global search, notification center, mobile nav). The module appears in navigation only through src/config/modules.ts.
+- Build every screen from src/components/ds/ (PageHeader, PageTabs, Section, StatCard, DataTable, FilterBar, StatusBadge, states, ConfirmDialog, cards, JourneyTimeline) and src/components/ui/. Read src/components/ds/README.md first. Add a new shared component only when none fits, and put it in src/components/ds/.
+- Use the existing status system (StatusBadge) for every status.
+- Use mock data only: add types to src/data/types.ts, fictional Indonesian data to src/data/mock.ts, and read it only through src/data/repository.ts. No backend, external APIs or real payments.
+- Routes go in src/routes/ (TanStack file routes, each with its own head()). Never edit src/routeTree.gen.ts.
+- Do not touch unrelated pages or other modules.
+
+## Dependencies
+- None. This module can be built on the current live platform.
+
+## Who uses it
+- Player: Find opportunities for my age and position and apply with my Football ID.
+- Parent / Guardian: Approve a child's application and see its status.
+
+## First-release scope (build only this)
+- Opportunity listings by organizations
+- Eligibility by age category, gender and region
+- Apply with Football ID; guardian approval for minors
+Not now: Application status tracking; Shortlist and invitations; Scholarship programs with sponsors; Recommendations based on the journey.
+Out of scope: Paid placement fees; Agent representation.
+
+## Data
+Owns: Opportunity (A trial, camp or scholarship with dates, eligibility and capacity.); Application (A player's application, with guardian approval and status.)
+Reads only, never owns: Football ID and journey; Guardian consent; Organization records
+Football Journey events: Selection for a camp or academy as an achievement event
+
+## Privacy & consent rules (enforce in src/lib/opportunities-access.ts and test them)
+- Applicants share only the profile sections they choose.
+- Minors cannot apply without guardian approval.
+- Rejected applications are never visible to other organizations.
+
+## Acceptance criteria (each must become at least one test)
+1. Given an organization publishes a U12 trial for players born 2014-2015 in South Sulawesi, when a player outside that range browses, then the trial is shown as not eligible with the reason.
+2. Given an eligible minor applies with their Football ID, when the application is submitted, then it stays 'awaiting guardian approval' and the host organization cannot see it yet.
+3. Given a guardian approves the application, when the host organization opens applicants, then they see only the profile sections the family chose to share.
+4. Given an application is rejected, when another organization views the player, then the rejection is not visible anywhere.
+5. Given an opportunity reaches its capacity, when another player tries to apply, then applying is closed and the listing shows it is full.
+
+## Implementation checklist (work in this order)
+- [ ] Confirm every module in "Depends on" is live (none for this module)
+- [ ] Add types for `Opportunity`, `Application` to `src/data/types.ts`
+- [ ] Add realistic fictional mock data to `src/data/mock.ts` and expose it only through `src/data/repository.ts`
+- [ ] Write access rules in `src/lib/opportunities-access.ts` with tests, covering every Privacy & consent rule
+- [ ] Build opportunity listing and detail pages with eligibility checks as a tested pure function
+- [ ] Build the apply flow with share-section selection
+- [ ] Add guardian approval through the existing consent and notification patterns
+- [ ] Build application status tracking for families and an applicant list for the host
+- [ ] Publish a selection as an achievement journey event
+- [ ] Build the UI in `src/features/opportunities/` from `src/components/ds` and the existing status system; mobile-first for players and guardians
+- [ ] Create the route files that replace the `/modules/opportunities` blueprint page, each with its own `head()`
+- [ ] Publish the Football Journey events listed above to the player timeline
+- [ ] Add loading, empty and error states for every new screen
+- [ ] Turn each acceptance criterion above into at least one test and make them pass (`bunx vitest run`)
+- [ ] Set `status: "live"` and the new `path` for `opportunities` in `src/config/modules.ts`, remove its blueprint, and re-generate this document
+
+## How to work
+1. Briefly restate the plan and list the files you will create or change. Wait for my confirmation.
+2. Write the tests for the acceptance criteria and access rules first (Vitest, next to the code).
+3. Implement step by step, following the patterns in src/features/check-in and src/lib/coach-access.ts.
+4. Run `bunx vitest run` and `bunx tsc --noEmit` and fix all failures.
+5. Finish by listing changed files, which acceptance criteria are covered by which tests, and any checklist item left open.
+```
+
 ## Scouting
 
 **Consent-based talent discovery** · Route: `/modules/scouting` · Wave 2
@@ -776,7 +1321,7 @@ _Publishes no journey events._
 **Module-specific**
 - [ ] Build scout verification before any discovery feature
 - [ ] Connect discoverability to the existing Privacy & Consent controls in My Children (default off for minors)
-- [ ] Build discovery search over opted-in players only, filtered on the server side
+- [ ] Build discovery search over opted-in players only, filtered in the data layer (src/data/repository.ts), never in the UI
 - [ ] Build the contact request flow with guardian and club approvals
 - [ ] Add a profile view log visible to guardians
 - [ ] Add access tests that prove hidden players never leak into results
@@ -792,6 +1337,86 @@ _Publishes no journey events._
 - [ ] Add loading, empty and error states for every new screen
 - [ ] Turn each acceptance criterion above into at least one test and make them pass (`bunx vitest run`)
 - [ ] Set `status: "live"` and the new `path` for `scouting` in `src/config/modules.ts`, remove its blueprint, and re-generate this document
+
+### GitHub Copilot prompt
+Paste into Copilot Chat (agent mode) from the repository root.
+
+```text
+You are working in the Youth Football Ecosystem Platform (TanStack Start, React 19, Tailwind CSS v4, TypeScript).
+Build the first release of the "Scouting" module (id `scouting`, currently a blueprint page at `/modules/scouting`).
+
+## Context
+Consent-based talent discovery for verified scouts, with guardian-approved contact.
+Problem: Scouting of minors happens informally with no consent, verification or protection for families.
+Core principle: the player owns the Football ID and journey; organizations only hold relationships with players.
+
+## Hard constraints: preserve the existing design system and application shell
+- Do NOT change src/styles.css design tokens, fonts, colors, spacing or radius. Use only existing semantic tokens; never hardcode colors (no text-white, bg-black, bg-[#...]).
+- Do NOT modify the application shell in src/components/shell/ (sidebar, top bar, role switcher, global search, notification center, mobile nav). The module appears in navigation only through src/config/modules.ts.
+- Build every screen from src/components/ds/ (PageHeader, PageTabs, Section, StatCard, DataTable, FilterBar, StatusBadge, states, ConfirmDialog, cards, JourneyTimeline) and src/components/ui/. Read src/components/ds/README.md first. Add a new shared component only when none fits, and put it in src/components/ds/.
+- Use the existing status system (StatusBadge) for every status.
+- Use mock data only: add types to src/data/types.ts, fictional Indonesian data to src/data/mock.ts, and read it only through src/data/repository.ts. No backend, external APIs or real payments.
+- Routes go in src/routes/ (TanStack file routes, each with its own head()). Never edit src/routeTree.gen.ts.
+- Do not touch unrelated pages or other modules.
+
+## Dependencies
+- Player Development (`development`): must already be live. If its status in src/config/modules.ts is still "soon", stop and tell me instead of building it.
+- Opportunities (`opportunities`): must already be live. If its status in src/config/modules.ts is still "soon", stop and tell me instead of building it.
+
+## Who uses it
+- Scout: Discover players who opted in and request contact through the platform.
+- Parent / Guardian: Decide whether a child is discoverable and approve each contact request.
+- Organization Admin: See and approve scout interest in the club's players.
+
+## First-release scope (build only this)
+- Verified scout accounts
+- Player discoverability opt-in (guardian consent for minors)
+- Contact requests routed through guardian and club
+Not now: Scout watchlists; Match attendance requests; Scouting reports shared with consent; Cross-region discovery.
+Out of scope: Transfer negotiation; Public talent rankings.
+
+## Data
+Owns: ScoutVerification (Verified identity and affiliation of a scout.); DiscoverabilitySetting (What a player exposes to scouts, set by player or guardian.); ContactRequest (A scout's request to contact a player, with approvals.)
+Reads only, never owns: Football ID; Verified achievements and match history; Guardian consent grants
+Football Journey events: none; do not write to the timeline
+
+## Privacy & consent rules (enforce in src/lib/scouting-access.ts and test them)
+- Players under 18 are hidden from scouts by default.
+- Scouts never see contact details; all contact goes through the platform.
+- Every scout view of a profile is logged and visible to the guardian.
+
+## Acceptance criteria (each must become at least one test)
+1. Given a player under 18 with no guardian opt-in, when a verified scout searches, then the player never appears in results.
+2. Given an unverified scout account, when it tries to search or view profiles, then access is denied until verification is complete.
+3. Given a guardian turns on discoverability for selected profile sections, when a verified scout views the child, then only those sections are shown and no contact details are visible.
+4. Given a scout sends a contact request, when the guardian and club review it, then contact is only opened after both approve, and either can decline.
+5. Given a scout views a child's profile, when the guardian opens consent settings, then the view is listed with the scout's name, affiliation and date.
+
+## Implementation checklist (work in this order)
+- [ ] Confirm every module in "Depends on" is live (Player Development, Opportunities)
+- [ ] Add types for `ScoutVerification`, `DiscoverabilitySetting`, `ContactRequest` to `src/data/types.ts`
+- [ ] Add realistic fictional mock data to `src/data/mock.ts` and expose it only through `src/data/repository.ts`
+- [ ] Write access rules in `src/lib/scouting-access.ts` with tests, covering every Privacy & consent rule
+- [ ] Build scout verification before any discovery feature
+- [ ] Connect discoverability to the existing Privacy & Consent controls in My Children (default off for minors)
+- [ ] Build discovery search over opted-in players only, filtered in the data layer (src/data/repository.ts), never in the UI
+- [ ] Build the contact request flow with guardian and club approvals
+- [ ] Add a profile view log visible to guardians
+- [ ] Add access tests that prove hidden players never leak into results
+- [ ] Build the UI in `src/features/scouting/` from `src/components/ds` and the existing status system; mobile-first for players and guardians
+- [ ] Create the route files that replace the `/modules/scouting` blueprint page, each with its own `head()`
+- [ ] Confirm the module writes nothing to the Football Journey timeline
+- [ ] Add loading, empty and error states for every new screen
+- [ ] Turn each acceptance criterion above into at least one test and make them pass (`bunx vitest run`)
+- [ ] Set `status: "live"` and the new `path` for `scouting` in `src/config/modules.ts`, remove its blueprint, and re-generate this document
+
+## How to work
+1. Briefly restate the plan and list the files you will create or change. Wait for my confirmation.
+2. Write the tests for the acceptance criteria and access rules first (Vitest, next to the code).
+3. Implement step by step, following the patterns in src/features/check-in and src/lib/coach-access.ts.
+4. Run `bunx vitest run` and `bunx tsc --noEmit` and fix all failures.
+5. Finish by listing changed files, which acceptance criteria are covered by which tests, and any checklist item left open.
+```
 
 ---
 
@@ -883,6 +1508,82 @@ _Publishes no journey events._
 - [ ] Turn each acceptance criterion above into at least one test and make them pass (`bunx vitest run`)
 - [ ] Set `status: "live"` and the new `path` for `analytics` in `src/config/modules.ts`, remove its blueprint, and re-generate this document
 
+### GitHub Copilot prompt
+Paste into Copilot Chat (agent mode) from the repository root.
+
+```text
+You are working in the Youth Football Ecosystem Platform (TanStack Start, React 19, Tailwind CSS v4, TypeScript).
+Build the first release of the "Analytics" module (id `analytics`, currently a blueprint page at `/modules/analytics`).
+
+## Context
+Insights for organizations and organizers across attendance, development, competitions and membership.
+Problem: Clubs and organizers have data in the platform but no way to answer simple questions about growth, retention and results.
+Core principle: the player owns the Football ID and journey; organizations only hold relationships with players.
+
+## Hard constraints: preserve the existing design system and application shell
+- Do NOT change src/styles.css design tokens, fonts, colors, spacing or radius. Use only existing semantic tokens; never hardcode colors (no text-white, bg-black, bg-[#...]).
+- Do NOT modify the application shell in src/components/shell/ (sidebar, top bar, role switcher, global search, notification center, mobile nav). The module appears in navigation only through src/config/modules.ts.
+- Build every screen from src/components/ds/ (PageHeader, PageTabs, Section, StatCard, DataTable, FilterBar, StatusBadge, states, ConfirmDialog, cards, JourneyTimeline) and src/components/ui/. Read src/components/ds/README.md first. Add a new shared component only when none fits, and put it in src/components/ds/.
+- Use the existing status system (StatusBadge) for every status.
+- Use mock data only: add types to src/data/types.ts, fictional Indonesian data to src/data/mock.ts, and read it only through src/data/repository.ts. No backend, external APIs or real payments.
+- Routes go in src/routes/ (TanStack file routes, each with its own head()). Never edit src/routeTree.gen.ts.
+- Do not touch unrelated pages or other modules.
+
+## Dependencies
+- Attendance (`attendance`): must already be live. If its status in src/config/modules.ts is still "soon", stop and tell me instead of building it.
+- Player Development (`development`): must already be live. If its status in src/config/modules.ts is still "soon", stop and tell me instead of building it.
+
+## Who uses it
+- Organization Admin: Track retention, attendance and development coverage across teams.
+- Competition Organizer: See participation, results and fair-play trends across a competition.
+
+## First-release scope (build only this)
+- Organization dashboard: members, retention, attendance
+- Competition dashboard: participation and results
+Not now: Player pathway analytics (category to category); Exportable reports (CSV, PDF); Benchmarks across organizations (anonymized); Custom report builder.
+Out of scope: Selling data to third parties; Individual player rankings.
+
+## Data
+Owns: MetricSnapshot (Pre-computed metrics per organization or competition and period.); ReportDefinition (A saved report with filters and columns.)
+Reads only, never owns: All source domains (read-only)
+Football Journey events: none; do not write to the timeline
+
+## Privacy & consent rules (enforce in src/lib/analytics-access.ts and test them)
+- Analytics are derived and never overwrite official records.
+- Cross-organization benchmarks use anonymized, aggregated data only.
+- Small groups (fewer than 5 players) are not shown individually in aggregates.
+
+## Acceptance criteria (each must become at least one test)
+1. Given an organization admin, when they open analytics for the last season, then member count, retention and attendance rate match the source records.
+2. Given a competition organizer, when they open competition analytics, then participation by category and results match the competition's matches.
+3. Given a filter that leaves fewer than 5 players in a group, when the dashboard renders, then that group is hidden or merged and no individual values are shown.
+4. Given an admin exports a report, when the export completes, then the file contains the same numbers as the screen and no player contact details.
+
+## Implementation checklist (work in this order)
+- [ ] Confirm every module in "Depends on" is live (Attendance, Player Development)
+- [ ] Add types for `MetricSnapshot`, `ReportDefinition` to `src/data/types.ts`
+- [ ] Add realistic fictional mock data to `src/data/mock.ts` and expose it only through `src/data/repository.ts`
+- [ ] Write access rules in `src/lib/analytics-access.ts` with tests, covering every Privacy & consent rule
+- [ ] Compute metrics in pure, tested functions from repository data; never write back to source records
+- [ ] Build organization and competition dashboards with the existing stat card and data table components
+- [ ] Apply the small-group (fewer than 5) rule in one shared helper with tests
+- [ ] Add CSV export in the Next release
+- [ ] Make sure each role only sees metrics for organizations or competitions it manages
+- [ ] Build the UI in `src/features/analytics/` from `src/components/ds` and the existing status system; mobile-first for players and guardians
+- [ ] Create the route files that replace the `/modules/analytics` blueprint page, each with its own `head()`
+- [ ] Confirm the module writes nothing to the Football Journey timeline
+- [ ] Add loading, empty and error states for every new screen
+- [ ] Turn each acceptance criterion above into at least one test and make them pass (`bunx vitest run`)
+- [ ] Set `status: "live"` and the new `path` for `analytics` in `src/config/modules.ts`, remove its blueprint, and re-generate this document
+
+## How to work
+1. Briefly restate the plan and list the files you will create or change. Wait for my confirmation.
+2. Write the tests for the acceptance criteria and access rules first (Vitest, next to the code).
+3. Implement step by step, following the patterns in src/features/check-in and src/lib/coach-access.ts.
+4. Run `bunx vitest run` and `bunx tsc --noEmit` and fix all failures.
+5. Finish by listing changed files, which acceptance criteria are covered by which tests, and any checklist item left open.
+```
+
 ## Association
 
 **Regional governance** · Route: `/modules/association` · Wave 3
@@ -970,6 +1671,81 @@ Regional governance for city and provincial associations: club registry, sanctio
 - [ ] Turn each acceptance criterion above into at least one test and make them pass (`bunx vitest run`)
 - [ ] Set `status: "live"` and the new `path` for `association` in `src/config/modules.ts`, remove its blueprint, and re-generate this document
 
+### GitHub Copilot prompt
+Paste into Copilot Chat (agent mode) from the repository root.
+
+```text
+You are working in the Youth Football Ecosystem Platform (TanStack Start, React 19, Tailwind CSS v4, TypeScript).
+Build the first release of the "Association" module (id `association`, currently a blueprint page at `/modules/association`).
+
+## Context
+Regional governance for city and provincial associations: club registry, sanctioning and licensing.
+Problem: Associations keep club and competition records separately from clubs, so registration and sanctioning are slow and hard to verify.
+Core principle: the player owns the Football ID and journey; organizations only hold relationships with players.
+
+## Hard constraints: preserve the existing design system and application shell
+- Do NOT change src/styles.css design tokens, fonts, colors, spacing or radius. Use only existing semantic tokens; never hardcode colors (no text-white, bg-black, bg-[#...]).
+- Do NOT modify the application shell in src/components/shell/ (sidebar, top bar, role switcher, global search, notification center, mobile nav). The module appears in navigation only through src/config/modules.ts.
+- Build every screen from src/components/ds/ (PageHeader, PageTabs, Section, StatCard, DataTable, FilterBar, StatusBadge, states, ConfirmDialog, cards, JourneyTimeline) and src/components/ui/. Read src/components/ds/README.md first. Add a new shared component only when none fits, and put it in src/components/ds/.
+- Use the existing status system (StatusBadge) for every status.
+- Use mock data only: add types to src/data/types.ts, fictional Indonesian data to src/data/mock.ts, and read it only through src/data/repository.ts. No backend, external APIs or real payments.
+- Routes go in src/routes/ (TanStack file routes, each with its own head()). Never edit src/routeTree.gen.ts.
+- Do not touch unrelated pages or other modules.
+
+## Dependencies
+- Analytics (`analytics`): must already be live. If its status in src/config/modules.ts is still "soon", stop and tell me instead of building it.
+
+## Who uses it
+- Organization Admin: Register the organization with the association and keep its status valid.
+- Competition Organizer: Request sanctioning for a competition and receive approval.
+
+## First-release scope (build only this)
+- Organization registration and renewal with the association
+- Competition sanctioning requests
+- Status visible on organization and competition pages
+Not now: Organization licensing criteria checklist; Association announcements; Regional disciplinary records; Association fee collection (via Finance).
+Out of scope: Replacing national federation systems; Legal entity registration.
+
+## Data
+Owns: OrganizationRegistration (An organization's registration with an association, with validity.); SanctionRequest (A competition's request for official approval.); LicenceCriterion (A requirement an organization must meet.)
+Reads only, never owns: Organizations and competitions; Membership and Digital KTA; Association workspace
+Football Journey events: Participation in sanctioned competitions marked as verified on players' journeys
+
+## Privacy & consent rules (enforce in src/lib/association-access.ts and test them)
+- Associations see organization-level data; player data only as needed for registration.
+- Every approval is recorded with who approved and when.
+
+## Acceptance criteria (each must become at least one test)
+1. Given an organization admin submits a registration with the provincial association, when the association approves it, then the organization page shows 'Registered' with the validity end date.
+2. Given a registration whose validity has ended, when anyone views the organization, then the status shows as expired and the admin sees a renewal prompt.
+3. Given an organizer requests sanctioning for Makassar Youth Cup 2027, when the association approves it, then the competition shows 'Sanctioned' and the approval records who approved and when.
+4. Given an association official, when they review an organization, then they see organization-level data and only the player data needed for registration.
+
+## Implementation checklist (work in this order)
+- [ ] Confirm every module in "Depends on" is live (Analytics)
+- [ ] Add types for `OrganizationRegistration`, `SanctionRequest`, `LicenceCriterion` to `src/data/types.ts`
+- [ ] Add realistic fictional mock data to `src/data/mock.ts` and expose it only through `src/data/repository.ts`
+- [ ] Write access rules in `src/lib/association-access.ts` with tests, covering every Privacy & consent rule
+- [ ] Build on the existing association workspace, member directory, membership review and Digital KTA
+- [ ] Build organization registration and renewal with validity dates
+- [ ] Build competition sanctioning requests and the approval queue
+- [ ] Show registration and sanction status on organization and competition pages using the status system
+- [ ] Record every approval with approver and timestamp (audit trail)
+- [ ] Build the UI in `src/features/association/` from `src/components/ds` and the existing status system; mobile-first for players and guardians
+- [ ] Create the route files that replace the `/modules/association` blueprint page, each with its own `head()`
+- [ ] Publish the Football Journey events listed above to the player timeline
+- [ ] Add loading, empty and error states for every new screen
+- [ ] Turn each acceptance criterion above into at least one test and make them pass (`bunx vitest run`)
+- [ ] Set `status: "live"` and the new `path` for `association` in `src/config/modules.ts`, remove its blueprint, and re-generate this document
+
+## How to work
+1. Briefly restate the plan and list the files you will create or change. Wait for my confirmation.
+2. Write the tests for the acceptance criteria and access rules first (Vitest, next to the code).
+3. Implement step by step, following the patterns in src/features/check-in and src/lib/coach-access.ts.
+4. Run `bunx vitest run` and `bunx tsc --noEmit` and fix all failures.
+5. Finish by listing changed files, which acceptance criteria are covered by which tests, and any checklist item left open.
+```
+
 ## Federation
 
 **National registry & licensing** · Route: `/modules/federation` · Wave 3
@@ -1055,6 +1831,79 @@ A national player registry with transfers, eligibility checks and federation-wid
 - [ ] Turn each acceptance criterion above into at least one test and make them pass (`bunx vitest run`)
 - [ ] Set `status: "live"` and the new `path` for `federation` in `src/config/modules.ts`, remove its blueprint, and re-generate this document
 
+### GitHub Copilot prompt
+Paste into Copilot Chat (agent mode) from the repository root.
+
+```text
+You are working in the Youth Football Ecosystem Platform (TanStack Start, React 19, Tailwind CSS v4, TypeScript).
+Build the first release of the "Federation" module (id `federation`, currently a blueprint page at `/modules/federation`).
+
+## Context
+A national player registry with transfers, eligibility checks and federation-wide reporting.
+Problem: Eligibility and transfers between clubs are checked manually, which allows age fraud and duplicate registrations.
+Core principle: the player owns the Football ID and journey; organizations only hold relationships with players.
+
+## Hard constraints: preserve the existing design system and application shell
+- Do NOT change src/styles.css design tokens, fonts, colors, spacing or radius. Use only existing semantic tokens; never hardcode colors (no text-white, bg-black, bg-[#...]).
+- Do NOT modify the application shell in src/components/shell/ (sidebar, top bar, role switcher, global search, notification center, mobile nav). The module appears in navigation only through src/config/modules.ts.
+- Build every screen from src/components/ds/ (PageHeader, PageTabs, Section, StatCard, DataTable, FilterBar, StatusBadge, states, ConfirmDialog, cards, JourneyTimeline) and src/components/ui/. Read src/components/ds/README.md first. Add a new shared component only when none fits, and put it in src/components/ds/.
+- Use the existing status system (StatusBadge) for every status.
+- Use mock data only: add types to src/data/types.ts, fictional Indonesian data to src/data/mock.ts, and read it only through src/data/repository.ts. No backend, external APIs or real payments.
+- Routes go in src/routes/ (TanStack file routes, each with its own head()). Never edit src/routeTree.gen.ts.
+- Do not touch unrelated pages or other modules.
+
+## Dependencies
+- Association (`association`): must already be live. If its status in src/config/modules.ts is still "soon", stop and tell me instead of building it.
+
+## Who uses it
+- Competition Organizer: Check player eligibility against the national registry before a match.
+
+## First-release scope (build only this)
+- Registry sync of verified Football IDs
+- Eligibility check (age category, registration, suspension)
+Not now: Transfer requests between organizations; Duplicate identity detection; Integration with national federation systems; Federation-wide reporting.
+Out of scope: Professional contract registration; International transfers.
+
+## Data
+Owns: RegistryEntry (A verified player's national registration record.); Transfer (A move between organizations with approvals and dates.); EligibilityCheck (A logged check of a player for a competition category.)
+Reads only, never owns: Football ID verification; Affiliations; Association registrations
+Football Journey events: Approved transfers as join and leave events; Registry verification as a verification event
+
+## Privacy & consent rules (enforce in src/lib/federation-access.ts and test them)
+- Identity documents are visible only to verifying officials.
+- Transfers require the player's (or guardian's) confirmation.
+
+## Acceptance criteria (each must become at least one test)
+1. Given a player with a verified Football ID, when the registry sync runs, then exactly one registry entry exists for that player.
+2. Given an organizer checks a team sheet before a U10 match, when a player is too old, unregistered or suspended, then the player is flagged with the reason and the check is logged.
+3. Given a transfer request between two organizations, when the player (or guardian) has not confirmed, then the transfer cannot be approved.
+4. Given an approved transfer, when anyone views the player's journey, then it shows a leave event for the old organization and a join event for the new one with the same date.
+
+## Implementation checklist (work in this order)
+- [ ] Confirm every module in "Depends on" is live (Association)
+- [ ] Add types for `RegistryEntry`, `Transfer`, `EligibilityCheck` to `src/data/types.ts`
+- [ ] Add realistic fictional mock data to `src/data/mock.ts` and expose it only through `src/data/repository.ts`
+- [ ] Write access rules in `src/lib/federation-access.ts` with tests, covering every Privacy & consent rule
+- [ ] Build the registry entry for verified Football IDs only
+- [ ] Build the eligibility check as a tested pure function (age category, registration, suspension)
+- [ ] Add eligibility flags to team sheets in competition pages
+- [ ] Build the transfer flow with player or guardian confirmation and both organizations' approvals
+- [ ] Keep identity documents visible only to verifying officials
+- [ ] Build the UI in `src/features/federation/` from `src/components/ds` and the existing status system; mobile-first for players and guardians
+- [ ] Create the route files that replace the `/modules/federation` blueprint page, each with its own `head()`
+- [ ] Publish the Football Journey events listed above to the player timeline
+- [ ] Add loading, empty and error states for every new screen
+- [ ] Turn each acceptance criterion above into at least one test and make them pass (`bunx vitest run`)
+- [ ] Set `status: "live"` and the new `path` for `federation` in `src/config/modules.ts`, remove its blueprint, and re-generate this document
+
+## How to work
+1. Briefly restate the plan and list the files you will create or change. Wait for my confirmation.
+2. Write the tests for the acceptance criteria and access rules first (Vitest, next to the code).
+3. Implement step by step, following the patterns in src/features/check-in and src/lib/coach-access.ts.
+4. Run `bunx vitest run` and `bunx tsc --noEmit` and fix all failures.
+5. Finish by listing changed files, which acceptance criteria are covered by which tests, and any checklist item left open.
+```
+
 ## AI Assistant
 
 **Ask anything about your football data** · Route: `/modules/ai` · Wave 3
@@ -1138,4 +1987,81 @@ _Publishes no journey events._
 - [ ] Add loading, empty and error states for every new screen
 - [ ] Turn each acceptance criterion above into at least one test and make them pass (`bunx vitest run`)
 - [ ] Set `status: "live"` and the new `path` for `ai` in `src/config/modules.ts`, remove its blueprint, and re-generate this document
+
+### GitHub Copilot prompt
+Paste into Copilot Chat (agent mode) from the repository root.
+
+```text
+You are working in the Youth Football Ecosystem Platform (TanStack Start, React 19, Tailwind CSS v4, TypeScript).
+Build the first release of the "AI Assistant" module (id `ai`, currently a blueprint page at `/modules/ai`).
+
+## Context
+An assistant that answers questions about your own football data and drafts summaries, within your permissions.
+Problem: Useful information is spread across modules; busy coaches and guardians need quick answers and summaries.
+Core principle: the player owns the Football ID and journey; organizations only hold relationships with players.
+
+## Hard constraints: preserve the existing design system and application shell
+- Do NOT change src/styles.css design tokens, fonts, colors, spacing or radius. Use only existing semantic tokens; never hardcode colors (no text-white, bg-black, bg-[#...]).
+- Do NOT modify the application shell in src/components/shell/ (sidebar, top bar, role switcher, global search, notification center, mobile nav). The module appears in navigation only through src/config/modules.ts.
+- Build every screen from src/components/ds/ (PageHeader, PageTabs, Section, StatCard, DataTable, FilterBar, StatusBadge, states, ConfirmDialog, cards, JourneyTimeline) and src/components/ui/. Read src/components/ds/README.md first. Add a new shared component only when none fits, and put it in src/components/ds/.
+- Use the existing status system (StatusBadge) for every status.
+- Use mock data only: add types to src/data/types.ts, fictional Indonesian data to src/data/mock.ts, and read it only through src/data/repository.ts. No backend, external APIs or real payments.
+- Routes go in src/routes/ (TanStack file routes, each with its own head()). Never edit src/routeTree.gen.ts.
+- Do not touch unrelated pages or other modules.
+
+## Dependencies
+- Analytics (`analytics`): must already be live. If its status in src/config/modules.ts is still "soon", stop and tell me instead of building it.
+
+## Who uses it
+- Coach: Ask who missed training this month or draft session ideas.
+- Parent / Guardian: Get a plain-language summary of a child's month.
+- Organization Admin: Ask for quick operational summaries before meetings.
+
+## First-release scope (build only this)
+- Questions answered from data the user can already see
+- Summaries of a player's month for guardians
+- Every answer shows its sources
+Not now: Draft session plans from the drill library; Lineup suggestions based on availability; Bahasa Indonesia voice input; Proactive weekly digests.
+Out of scope: Automated selection or talent decisions; Medical advice.
+
+## Data
+Owns: AssistantConversation (A user's conversation, private to them.); AssistantAnswer (A response with the records it was based on.)
+Reads only, never owns: Any domain, strictly through the user's existing permissions
+Football Journey events: none; do not write to the timeline
+
+## Privacy & consent rules (enforce in src/lib/ai-access.ts and test them)
+- The assistant can only read what the signed-in user is allowed to see.
+- Suggestions are advisory and never change official records.
+- Children's data is never used to train external models.
+
+## Acceptance criteria (each must become at least one test)
+1. Given a coach asks 'who missed training this month?', when the assistant answers, then the answer lists only players from teams the coach is assigned to and links to the source records.
+2. Given a guardian asks for a summary of a child's month, when the assistant answers, then it covers only that guardian's linked children and is written in plain language.
+3. Given a user asks about data they cannot see, when the assistant answers, then it says it cannot access that information and reveals nothing.
+4. Given the assistant suggests a lineup or session, when the user does nothing, then no official record is changed.
+
+## Implementation checklist (work in this order)
+- [ ] Confirm every module in "Depends on" is live (Analytics)
+- [ ] Add types for `AssistantConversation`, `AssistantAnswer` to `src/data/types.ts`
+- [ ] Add realistic fictional mock data to `src/data/mock.ts` and expose it only through `src/data/repository.ts`
+- [ ] Write access rules in `src/lib/ai-access.ts` with tests, covering every Privacy & consent rule
+- [ ] Route every assistant data read through the same access rules the pages use
+- [ ] Run model calls on the server only, through the Lovable AI gateway
+- [ ] Show sources under every answer
+- [ ] Store conversations privately per user
+- [ ] Add tests that prove cross-role leaks are impossible before launch
+- [ ] Build the UI in `src/features/ai/` from `src/components/ds` and the existing status system; mobile-first for players and guardians
+- [ ] Create the route files that replace the `/modules/ai` blueprint page, each with its own `head()`
+- [ ] Confirm the module writes nothing to the Football Journey timeline
+- [ ] Add loading, empty and error states for every new screen
+- [ ] Turn each acceptance criterion above into at least one test and make them pass (`bunx vitest run`)
+- [ ] Set `status: "live"` and the new `path` for `ai` in `src/config/modules.ts`, remove its blueprint, and re-generate this document
+
+## How to work
+1. Briefly restate the plan and list the files you will create or change. Wait for my confirmation.
+2. Write the tests for the acceptance criteria and access rules first (Vitest, next to the code).
+3. Implement step by step, following the patterns in src/features/check-in and src/lib/coach-access.ts.
+4. Run `bunx vitest run` and `bunx tsc --noEmit` and fix all failures.
+5. Finish by listing changed files, which acceptance criteria are covered by which tests, and any checklist item left open.
+```
 
