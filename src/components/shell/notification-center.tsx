@@ -3,6 +3,7 @@ import { Bell } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { listNotifications } from "@/data/repository";
+import { getCoachAccessibleNotifications } from "@/lib/coach-access";
 import { useRole } from "@/lib/role-context";
 import { useNotificationState } from "@/lib/notification-state";
 import { NotificationItem } from "./notification-item";
@@ -10,7 +11,7 @@ import { NotificationItem } from "./notification-item";
 export function NotificationCenter() {
   const { role } = useRole();
   const { isRead, markAllRead } = useNotificationState();
-  const items = listNotifications(role);
+  const items = role === "coach" ? getCoachAccessibleNotifications() : listNotifications(role);
   const unread = items.filter((n) => !isRead(n)).length;
 
   return (

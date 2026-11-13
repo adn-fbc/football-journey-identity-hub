@@ -5,12 +5,15 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ds/page-header";
 import { DataTable, type Column } from "@/components/ds/data-table";
-import { FilterChips } from "@/components/ds/filter-bar";
+import { FilterBar, FilterChips, SearchInput } from "@/components/ds/filter-bar";
+import { EmptyState } from "@/components/ds/states";
 import { StatusBadge } from "@/components/ds/status-badge";
 import { listCompetitions } from "@/data/repository";
 import type { Competition, Status } from "@/data/types";
 import { fmtDate } from "@/lib/format";
 import { pageHead } from "@/lib/seo";
+import { getCoachAccessibleCompetitions } from "@/lib/coach-access";
+import { useRole } from "@/lib/role-context";
 
 export const Route = createFileRoute("/competitions/")({
   head: () => pageHead("Competitions", "Youth tournaments, festivals and leagues — categories, teams, schedules and standings."),
@@ -22,9 +25,14 @@ const teamsIn = (c: Competition) => c.categories.reduce((s, k) => s + k.teamIds.
 
 function CompetitionsPage() {
   const navigate = useNavigate();
+  const { role } = useRole();
   const [status, setStatus] = useState<"all" | Status>("all");
-  const all = listCompetitions();
-  const rows = all.filter((c) => status === "all" || c.status === status);
+  const [query, setQuery] = useState("");
+  const all = role === "coach" ? getCoachAccessibleCompetitions() : listCompetitions();
+  const rows = all.filter((c) =>
+    (status === "all" || c.status === status) &&
+    (!query || `${c.name} ${c.short} ${c.organizer} ${c.city}`.toLowerCase().includes(query.toLowerCase())),
+  );
 
   const columns: Column<Competition>[] = [
     { key: "name", header: "Competition", cell: (c) => <div><div className="font-semibold">{c.name}</div><div className="text-small text-muted-foreground">{c.organizer}</div></div> },
@@ -39,25 +47,30 @@ function CompetitionsPage() {
       <PageHeader
         title="Competitions"
         description="Tournaments, festivals and leagues across South Sulawesi."
-        actions={<Button onClick={() => toast("Create competition (prototype)")}><Plus /> New competition</Button>}
+        actions={role !== "coach" && <Button onClick={() => toast("Create competition (prototype)")}><Plus /> New competition</Button>}
       />
       <FilterChips
         value={status}
         onChange={setStatus}
         options={[
           { value: "all", label: "All", count: all.length },
-          { value: "active", label: "In progress" },
-          { value: "pending", label: "Registration open" },
-          { value: "draft", label: "Draft" },
-          { value: "completed", label: "Completed" },
-          { value: "cancelled", label: "Cancelled" },
+          { value: "active", label: "In progress", count: all.filter((c) => c.status === "active").length },
+          { value: "pending", label: "Registration open", count: all.filter((c) => c.status === "pending").length },
+          { value: "draft", label: "Draft", count: all.filter((c) => c.status === "draft").length },
+          { value: "completed", label: "Completed", count: all.filter((c) => c.status === "completed").length },
+          { value: "cancelled", label: "Cancelled", count: all.filter((c) => c.status === "cancelled").length },
         ]}
       />
+      <FilterBar>
+        <SearchInput value={query} onChange={setQuery} placeholder="Search name, organizer or city" className="sm:w-80" />
+      </FilterBar>
       <DataTable
         rows={rows}
         columns={columns}
         getRowId={(c) => c.id}
+        getRowLabel={(c) => c.name}
         onRowClick={(c) => navigate({ to: "/competitions/$competitionId", params: { competitionId: c.id } })}
+        empty={<EmptyState title="No competitions match" description="Try another status, organizer or city." />}
         mobileRow={(c) => (
           <div className="space-y-1.5">
             <div className="flex items-start justify-between gap-2"><span className="text-sm font-semibold">{c.name}</span><StatusBadge status={c.status} label={STATUS_LABEL[c.status]} /></div>

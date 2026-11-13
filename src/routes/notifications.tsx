@@ -8,6 +8,7 @@ import { Section } from "@/components/ds/section";
 import { EmptyState } from "@/components/ds/states";
 import { NotificationItem } from "@/components/shell/notification-item";
 import { listNotifications } from "@/data/repository";
+import { getCoachAccessibleNotifications } from "@/lib/coach-access";
 import { useNotificationState } from "@/lib/notification-state";
 import { useRole } from "@/lib/role-context";
 import { pageHead } from "@/lib/seo";
@@ -21,7 +22,7 @@ function NotificationsPage() {
   const { role } = useRole();
   const { isRead, markAllRead } = useNotificationState();
   const [f, setF] = useState<"all" | "unread">("all");
-  const all = listNotifications(role);
+  const all = role === "coach" ? getCoachAccessibleNotifications() : listNotifications(role);
   const rows = all.filter((n) => f === "all" || !isRead(n));
   return (
     <div className="space-y-6">

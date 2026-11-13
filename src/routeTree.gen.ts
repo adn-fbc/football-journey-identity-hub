@@ -10,7 +10,9 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CheckInRouteImport } from './routes/check-in'
 import { Route as FootballIdRouteImport } from './routes/football-id'
+import { Route as IdentityRouteImport } from './routes/identity'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as ScheduleRouteImport } from './routes/schedule'
 import { Route as SettingsRouteImport } from './routes/settings'
@@ -18,8 +20,12 @@ import { Route as ChildrenIndexRouteImport } from './routes/children.index'
 import { Route as ChildrenPlayerIdRouteImport } from './routes/children.$playerId'
 import { Route as CompetitionsIndexRouteImport } from './routes/competitions.index'
 import { Route as CompetitionsCompetitionIdRouteImport } from './routes/competitions.$competitionId'
+import { Route as CompetitionsOversightRouteImport } from './routes/competitions.oversight'
 import { Route as MatchesIndexRouteImport } from './routes/matches.index'
 import { Route as MatchesMatchIdRouteImport } from './routes/matches.$matchId'
+import { Route as MembersIndexRouteImport } from './routes/members.index'
+import { Route as MembersMemberIdRouteImport } from './routes/members.$memberId'
+import { Route as MembersReviewRouteImport } from './routes/members.review'
 import { Route as ModulesModuleIdRouteImport } from './routes/modules.$moduleId'
 import { Route as OrganizationsIndexRouteImport } from './routes/organizations.index'
 import { Route as OrganizationsOrgIdRouteImport } from './routes/organizations.$orgId'
@@ -27,15 +33,29 @@ import { Route as PlayersIndexRouteImport } from './routes/players.index'
 import { Route as PlayersPlayerIdRouteImport } from './routes/players.$playerId'
 import { Route as TeamsIndexRouteImport } from './routes/teams.index'
 import { Route as TeamsTeamIdRouteImport } from './routes/teams.$teamId'
+import { Route as CompetitionsOversightCompetitionIdRouteImport } from './routes/competitions.oversight.$competitionId'
+import { Route as MembersMemberIdKtaRouteImport } from './routes/members.$memberId.kta'
+import { Route as MembersReviewReviewIdRouteImport } from './routes/members.review.$reviewId'
+import { Route as PublicCompetitionsCompetitionIdRouteImport } from './routes/public.competitions.$competitionId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CheckInRoute = CheckInRouteImport.update({
+  id: '/check-in',
+  path: '/check-in',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FootballIdRoute = FootballIdRouteImport.update({
   id: '/football-id',
   path: '/football-id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IdentityRoute = IdentityRouteImport.update({
+  id: '/identity',
+  path: '/identity',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NotificationsRoute = NotificationsRouteImport.update({
@@ -74,6 +94,11 @@ const CompetitionsCompetitionIdRoute =
     path: '/competitions/$competitionId',
     getParentRoute: () => rootRouteImport,
   } as any)
+const CompetitionsOversightRoute = CompetitionsOversightRouteImport.update({
+  id: '/competitions/oversight',
+  path: '/competitions/oversight',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MatchesIndexRoute = MatchesIndexRouteImport.update({
   id: '/matches/',
   path: '/matches/',
@@ -82,6 +107,21 @@ const MatchesIndexRoute = MatchesIndexRouteImport.update({
 const MatchesMatchIdRoute = MatchesMatchIdRouteImport.update({
   id: '/matches/$matchId',
   path: '/matches/$matchId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MembersIndexRoute = MembersIndexRouteImport.update({
+  id: '/members/',
+  path: '/members/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MembersMemberIdRoute = MembersMemberIdRouteImport.update({
+  id: '/members/$memberId',
+  path: '/members/$memberId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MembersReviewRoute = MembersReviewRouteImport.update({
+  id: '/members/review',
+  path: '/members/review',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ModulesModuleIdRoute = ModulesModuleIdRouteImport.update({
@@ -119,16 +159,43 @@ const TeamsTeamIdRoute = TeamsTeamIdRouteImport.update({
   path: '/teams/$teamId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CompetitionsOversightCompetitionIdRoute =
+  CompetitionsOversightCompetitionIdRouteImport.update({
+    id: '/$competitionId',
+    path: '/$competitionId',
+    getParentRoute: () => CompetitionsOversightRoute,
+  } as any)
+const MembersMemberIdKtaRoute = MembersMemberIdKtaRouteImport.update({
+  id: '/kta',
+  path: '/kta',
+  getParentRoute: () => MembersMemberIdRoute,
+} as any)
+const MembersReviewReviewIdRoute = MembersReviewReviewIdRouteImport.update({
+  id: '/$reviewId',
+  path: '/$reviewId',
+  getParentRoute: () => MembersReviewRoute,
+} as any)
+const PublicCompetitionsCompetitionIdRoute =
+  PublicCompetitionsCompetitionIdRouteImport.update({
+    id: '/public/competitions/$competitionId',
+    path: '/public/competitions/$competitionId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/check-in': typeof CheckInRoute
   '/football-id': typeof FootballIdRoute
+  '/identity': typeof IdentityRoute
   '/notifications': typeof NotificationsRoute
   '/schedule': typeof ScheduleRoute
   '/settings': typeof SettingsRoute
   '/children/$playerId': typeof ChildrenPlayerIdRoute
   '/competitions/$competitionId': typeof CompetitionsCompetitionIdRoute
+  '/competitions/oversight': typeof CompetitionsOversightRouteWithChildren
   '/matches/$matchId': typeof MatchesMatchIdRoute
+  '/members/$memberId': typeof MembersMemberIdRouteWithChildren
+  '/members/review': typeof MembersReviewRouteWithChildren
   '/modules/$moduleId': typeof ModulesModuleIdRoute
   '/organizations/$orgId': typeof OrganizationsOrgIdRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
@@ -136,19 +203,29 @@ export interface FileRoutesByFullPath {
   '/children/': typeof ChildrenIndexRoute
   '/competitions/': typeof CompetitionsIndexRoute
   '/matches/': typeof MatchesIndexRoute
+  '/members/': typeof MembersIndexRoute
   '/organizations/': typeof OrganizationsIndexRoute
   '/players/': typeof PlayersIndexRoute
   '/teams/': typeof TeamsIndexRoute
+  '/competitions/oversight/$competitionId': typeof CompetitionsOversightCompetitionIdRoute
+  '/members/$memberId/kta': typeof MembersMemberIdKtaRoute
+  '/members/review/$reviewId': typeof MembersReviewReviewIdRoute
+  '/public/competitions/$competitionId': typeof PublicCompetitionsCompetitionIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/check-in': typeof CheckInRoute
   '/football-id': typeof FootballIdRoute
+  '/identity': typeof IdentityRoute
   '/notifications': typeof NotificationsRoute
   '/schedule': typeof ScheduleRoute
   '/settings': typeof SettingsRoute
   '/children/$playerId': typeof ChildrenPlayerIdRoute
   '/competitions/$competitionId': typeof CompetitionsCompetitionIdRoute
+  '/competitions/oversight': typeof CompetitionsOversightRouteWithChildren
   '/matches/$matchId': typeof MatchesMatchIdRoute
+  '/members/$memberId': typeof MembersMemberIdRouteWithChildren
+  '/members/review': typeof MembersReviewRouteWithChildren
   '/modules/$moduleId': typeof ModulesModuleIdRoute
   '/organizations/$orgId': typeof OrganizationsOrgIdRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
@@ -156,20 +233,30 @@ export interface FileRoutesByTo {
   '/children': typeof ChildrenIndexRoute
   '/competitions': typeof CompetitionsIndexRoute
   '/matches': typeof MatchesIndexRoute
+  '/members': typeof MembersIndexRoute
   '/organizations': typeof OrganizationsIndexRoute
   '/players': typeof PlayersIndexRoute
   '/teams': typeof TeamsIndexRoute
+  '/competitions/oversight/$competitionId': typeof CompetitionsOversightCompetitionIdRoute
+  '/members/$memberId/kta': typeof MembersMemberIdKtaRoute
+  '/members/review/$reviewId': typeof MembersReviewReviewIdRoute
+  '/public/competitions/$competitionId': typeof PublicCompetitionsCompetitionIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/check-in': typeof CheckInRoute
   '/football-id': typeof FootballIdRoute
+  '/identity': typeof IdentityRoute
   '/notifications': typeof NotificationsRoute
   '/schedule': typeof ScheduleRoute
   '/settings': typeof SettingsRoute
   '/children/$playerId': typeof ChildrenPlayerIdRoute
   '/competitions/$competitionId': typeof CompetitionsCompetitionIdRoute
+  '/competitions/oversight': typeof CompetitionsOversightRouteWithChildren
   '/matches/$matchId': typeof MatchesMatchIdRoute
+  '/members/$memberId': typeof MembersMemberIdRouteWithChildren
+  '/members/review': typeof MembersReviewRouteWithChildren
   '/modules/$moduleId': typeof ModulesModuleIdRoute
   '/organizations/$orgId': typeof OrganizationsOrgIdRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
@@ -177,21 +264,31 @@ export interface FileRoutesById {
   '/children/': typeof ChildrenIndexRoute
   '/competitions/': typeof CompetitionsIndexRoute
   '/matches/': typeof MatchesIndexRoute
+  '/members/': typeof MembersIndexRoute
   '/organizations/': typeof OrganizationsIndexRoute
   '/players/': typeof PlayersIndexRoute
   '/teams/': typeof TeamsIndexRoute
+  '/competitions/oversight/$competitionId': typeof CompetitionsOversightCompetitionIdRoute
+  '/members/$memberId/kta': typeof MembersMemberIdKtaRoute
+  '/members/review/$reviewId': typeof MembersReviewReviewIdRoute
+  '/public/competitions/$competitionId': typeof PublicCompetitionsCompetitionIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/check-in'
     | '/football-id'
+    | '/identity'
     | '/notifications'
     | '/schedule'
     | '/settings'
     | '/children/$playerId'
     | '/competitions/$competitionId'
+    | '/competitions/oversight'
     | '/matches/$matchId'
+    | '/members/$memberId'
+    | '/members/review'
     | '/modules/$moduleId'
     | '/organizations/$orgId'
     | '/players/$playerId'
@@ -199,19 +296,29 @@ export interface FileRouteTypes {
     | '/children/'
     | '/competitions/'
     | '/matches/'
+    | '/members/'
     | '/organizations/'
     | '/players/'
     | '/teams/'
+    | '/competitions/oversight/$competitionId'
+    | '/members/$memberId/kta'
+    | '/members/review/$reviewId'
+    | '/public/competitions/$competitionId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/check-in'
     | '/football-id'
+    | '/identity'
     | '/notifications'
     | '/schedule'
     | '/settings'
     | '/children/$playerId'
     | '/competitions/$competitionId'
+    | '/competitions/oversight'
     | '/matches/$matchId'
+    | '/members/$memberId'
+    | '/members/review'
     | '/modules/$moduleId'
     | '/organizations/$orgId'
     | '/players/$playerId'
@@ -219,19 +326,29 @@ export interface FileRouteTypes {
     | '/children'
     | '/competitions'
     | '/matches'
+    | '/members'
     | '/organizations'
     | '/players'
     | '/teams'
+    | '/competitions/oversight/$competitionId'
+    | '/members/$memberId/kta'
+    | '/members/review/$reviewId'
+    | '/public/competitions/$competitionId'
   id:
     | '__root__'
     | '/'
+    | '/check-in'
     | '/football-id'
+    | '/identity'
     | '/notifications'
     | '/schedule'
     | '/settings'
     | '/children/$playerId'
     | '/competitions/$competitionId'
+    | '/competitions/oversight'
     | '/matches/$matchId'
+    | '/members/$memberId'
+    | '/members/review'
     | '/modules/$moduleId'
     | '/organizations/$orgId'
     | '/players/$playerId'
@@ -239,20 +356,30 @@ export interface FileRouteTypes {
     | '/children/'
     | '/competitions/'
     | '/matches/'
+    | '/members/'
     | '/organizations/'
     | '/players/'
     | '/teams/'
+    | '/competitions/oversight/$competitionId'
+    | '/members/$memberId/kta'
+    | '/members/review/$reviewId'
+    | '/public/competitions/$competitionId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CheckInRoute: typeof CheckInRoute
   FootballIdRoute: typeof FootballIdRoute
+  IdentityRoute: typeof IdentityRoute
   NotificationsRoute: typeof NotificationsRoute
   ScheduleRoute: typeof ScheduleRoute
   SettingsRoute: typeof SettingsRoute
   ChildrenPlayerIdRoute: typeof ChildrenPlayerIdRoute
   CompetitionsCompetitionIdRoute: typeof CompetitionsCompetitionIdRoute
+  CompetitionsOversightRoute: typeof CompetitionsOversightRouteWithChildren
   MatchesMatchIdRoute: typeof MatchesMatchIdRoute
+  MembersMemberIdRoute: typeof MembersMemberIdRouteWithChildren
+  MembersReviewRoute: typeof MembersReviewRouteWithChildren
   ModulesModuleIdRoute: typeof ModulesModuleIdRoute
   OrganizationsOrgIdRoute: typeof OrganizationsOrgIdRoute
   PlayersPlayerIdRoute: typeof PlayersPlayerIdRoute
@@ -260,9 +387,11 @@ export interface RootRouteChildren {
   ChildrenIndexRoute: typeof ChildrenIndexRoute
   CompetitionsIndexRoute: typeof CompetitionsIndexRoute
   MatchesIndexRoute: typeof MatchesIndexRoute
+  MembersIndexRoute: typeof MembersIndexRoute
   OrganizationsIndexRoute: typeof OrganizationsIndexRoute
   PlayersIndexRoute: typeof PlayersIndexRoute
   TeamsIndexRoute: typeof TeamsIndexRoute
+  PublicCompetitionsCompetitionIdRoute: typeof PublicCompetitionsCompetitionIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -274,11 +403,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/check-in': {
+      id: '/check-in'
+      path: '/check-in'
+      fullPath: '/check-in'
+      preLoaderRoute: typeof CheckInRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/football-id': {
       id: '/football-id'
       path: '/football-id'
       fullPath: '/football-id'
       preLoaderRoute: typeof FootballIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/identity': {
+      id: '/identity'
+      path: '/identity'
+      fullPath: '/identity'
+      preLoaderRoute: typeof IdentityRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/notifications': {
@@ -330,6 +473,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CompetitionsCompetitionIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/competitions/oversight': {
+      id: '/competitions/oversight'
+      path: '/competitions/oversight'
+      fullPath: '/competitions/oversight'
+      preLoaderRoute: typeof CompetitionsOversightRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/matches/': {
       id: '/matches/'
       path: '/matches'
@@ -342,6 +492,27 @@ declare module '@tanstack/react-router' {
       path: '/matches/$matchId'
       fullPath: '/matches/$matchId'
       preLoaderRoute: typeof MatchesMatchIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/members/': {
+      id: '/members/'
+      path: '/members'
+      fullPath: '/members/'
+      preLoaderRoute: typeof MembersIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/members/$memberId': {
+      id: '/members/$memberId'
+      path: '/members/$memberId'
+      fullPath: '/members/$memberId'
+      preLoaderRoute: typeof MembersMemberIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/members/review': {
+      id: '/members/review'
+      path: '/members/review'
+      fullPath: '/members/review'
+      preLoaderRoute: typeof MembersReviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/modules/$moduleId': {
@@ -393,18 +564,89 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeamsTeamIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/competitions/oversight/$competitionId': {
+      id: '/competitions/oversight/$competitionId'
+      path: '/$competitionId'
+      fullPath: '/competitions/oversight/$competitionId'
+      preLoaderRoute: typeof CompetitionsOversightCompetitionIdRouteImport
+      parentRoute: typeof CompetitionsOversightRoute
+    }
+    '/members/$memberId/kta': {
+      id: '/members/$memberId/kta'
+      path: '/kta'
+      fullPath: '/members/$memberId/kta'
+      preLoaderRoute: typeof MembersMemberIdKtaRouteImport
+      parentRoute: typeof MembersMemberIdRoute
+    }
+    '/members/review/$reviewId': {
+      id: '/members/review/$reviewId'
+      path: '/$reviewId'
+      fullPath: '/members/review/$reviewId'
+      preLoaderRoute: typeof MembersReviewReviewIdRouteImport
+      parentRoute: typeof MembersReviewRoute
+    }
+    '/public/competitions/$competitionId': {
+      id: '/public/competitions/$competitionId'
+      path: '/public/competitions/$competitionId'
+      fullPath: '/public/competitions/$competitionId'
+      preLoaderRoute: typeof PublicCompetitionsCompetitionIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
+interface CompetitionsOversightRouteChildren {
+  CompetitionsOversightCompetitionIdRoute: typeof CompetitionsOversightCompetitionIdRoute
+}
+
+const CompetitionsOversightRouteChildren: CompetitionsOversightRouteChildren = {
+  CompetitionsOversightCompetitionIdRoute:
+    CompetitionsOversightCompetitionIdRoute,
+}
+
+const CompetitionsOversightRouteWithChildren =
+  CompetitionsOversightRoute._addFileChildren(
+    CompetitionsOversightRouteChildren,
+  )
+
+interface MembersMemberIdRouteChildren {
+  MembersMemberIdKtaRoute: typeof MembersMemberIdKtaRoute
+}
+
+const MembersMemberIdRouteChildren: MembersMemberIdRouteChildren = {
+  MembersMemberIdKtaRoute: MembersMemberIdKtaRoute,
+}
+
+const MembersMemberIdRouteWithChildren = MembersMemberIdRoute._addFileChildren(
+  MembersMemberIdRouteChildren,
+)
+
+interface MembersReviewRouteChildren {
+  MembersReviewReviewIdRoute: typeof MembersReviewReviewIdRoute
+}
+
+const MembersReviewRouteChildren: MembersReviewRouteChildren = {
+  MembersReviewReviewIdRoute: MembersReviewReviewIdRoute,
+}
+
+const MembersReviewRouteWithChildren = MembersReviewRoute._addFileChildren(
+  MembersReviewRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CheckInRoute: CheckInRoute,
   FootballIdRoute: FootballIdRoute,
+  IdentityRoute: IdentityRoute,
   NotificationsRoute: NotificationsRoute,
   ScheduleRoute: ScheduleRoute,
   SettingsRoute: SettingsRoute,
   ChildrenPlayerIdRoute: ChildrenPlayerIdRoute,
   CompetitionsCompetitionIdRoute: CompetitionsCompetitionIdRoute,
+  CompetitionsOversightRoute: CompetitionsOversightRouteWithChildren,
   MatchesMatchIdRoute: MatchesMatchIdRoute,
+  MembersMemberIdRoute: MembersMemberIdRouteWithChildren,
+  MembersReviewRoute: MembersReviewRouteWithChildren,
   ModulesModuleIdRoute: ModulesModuleIdRoute,
   OrganizationsOrgIdRoute: OrganizationsOrgIdRoute,
   PlayersPlayerIdRoute: PlayersPlayerIdRoute,
@@ -412,9 +654,11 @@ const rootRouteChildren: RootRouteChildren = {
   ChildrenIndexRoute: ChildrenIndexRoute,
   CompetitionsIndexRoute: CompetitionsIndexRoute,
   MatchesIndexRoute: MatchesIndexRoute,
+  MembersIndexRoute: MembersIndexRoute,
   OrganizationsIndexRoute: OrganizationsIndexRoute,
   PlayersIndexRoute: PlayersIndexRoute,
   TeamsIndexRoute: TeamsIndexRoute,
+  PublicCompetitionsCompetitionIdRoute: PublicCompetitionsCompetitionIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

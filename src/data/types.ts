@@ -84,6 +84,7 @@ export interface Competition {
   organizer: string;
   city: string;
   status: Status;
+  publicVisibility?: "public" | "private" | undefined;
   start: string;
   end: string;
   categories: CompetitionCategory[];
@@ -171,4 +172,27 @@ export interface Guardian {
   footballId: string;
   relation: string;
   childIds: string[];
+}
+
+export type RegistrationStatus = "pending" | "confirmed" | "cancelled";
+
+export interface ChildRegistration {
+  id: string;
+  childId: string;
+  title: string;
+  organization: string;
+  submittedAt: string;
+  status: RegistrationStatus;
+}
+
+export type PaymentStatus = "due" | "paid";
+
+export interface ChildPayment {
+  id: string;
+  childId: string;
+  title: string;
+  amount: number;
+  dueDate: string;
+  status: PaymentStatus;
+  paidAt?: string | undefined;
 }

@@ -5,6 +5,7 @@ import { ParentOverview } from "@/features/overview/parent-overview";
 import { PlayerOverview } from "@/features/overview/player-overview";
 import { CoachOverview } from "@/features/overview/coach-overview";
 import { OrganizerOverview } from "@/features/overview/organizer-overview";
+import { AssociationOverview } from "@/features/overview/association-overview";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -27,6 +28,7 @@ function Overview() {
     case "player": return <PlayerOverview />;
     case "coach": return <CoachOverview />;
     case "competition_organizer": return <OrganizerOverview />;
+    case "association": return <AssociationOverview />;
     default: return <OrgAdminOverview />;
   }
 }

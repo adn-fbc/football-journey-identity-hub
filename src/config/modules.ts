@@ -26,20 +26,21 @@ export interface AppModule {
   mobileFor?: RoleId[] | undefined;
 }
 
-const ALL: RoleId[] = ["player", "parent", "coach", "org_admin", "competition_organizer"];
+const ALL: RoleId[] = ["player", "parent", "coach", "org_admin", "competition_organizer", "referee", "scout"];
 
 export const MODULES: AppModule[] = [
-  { id: "overview", title: "Overview", description: "Your role-aware home", icon: LayoutDashboard, path: "/", group: "core", status: "live", roles: ALL, mobileFor: ALL },
+  { id: "overview", title: "Overview", description: "Your role-aware home", icon: LayoutDashboard, path: "/", group: "core", status: "live", roles: [...ALL, "association"], mobileFor: [...ALL, "association"] },
   { id: "children", title: "My Children", description: "Guardian view of your children", icon: Baby, path: "/children", group: "personal", status: "live", roles: ["parent"], mobileFor: ["parent"] },
   { id: "football-id", title: "Football ID", description: "Persistent football identity", icon: Fingerprint, path: "/football-id", group: "core", status: "live", roles: ALL, mobileFor: ["player"] },
   { id: "players", title: "Players", description: "Members & relationships", icon: Users, path: "/players", group: "manage", status: "live", roles: ["org_admin", "coach"], mobileFor: ["org_admin"] },
-  { id: "organizations", title: "Organizations", description: "SSB, academies & clubs", icon: Building2, path: "/organizations", group: "manage", status: "live", roles: ["org_admin", "competition_organizer", "parent", "coach"] },
+  { id: "members", title: "Members", description: "Member directory", icon: Users, path: "/members", group: "manage", status: "live", roles: ["association"], mobileFor: ["association"] },
+  { id: "organizations", title: "Organizations", description: "SSB, academies & clubs", icon: Building2, path: "/organizations", group: "manage", status: "live", roles: ["org_admin", "competition_organizer", "parent"] },
   { id: "teams", title: "Teams", description: "Squads & rosters", icon: Shield, path: "/teams", group: "manage", status: "live", roles: ["org_admin", "coach", "player"], mobileFor: ["coach"] },
   { id: "competitions", title: "Competitions", description: "Tournaments & leagues", icon: Trophy, path: "/competitions", group: "manage", status: "live", roles: ALL, mobileFor: ["competition_organizer"] },
-  { id: "matches", title: "Matches", description: "Fixtures & results", icon: Swords, path: "/matches", group: "core", status: "live", roles: ALL, mobileFor: ["player", "competition_organizer"] },
+  { id: "matches", title: "Matches", description: "Fixtures & results", icon: Swords, path: "/matches", group: "core", status: "live", roles: ALL, mobileFor: ["player", "competition_organizer", "referee", "scout"] },
   { id: "schedule", title: "Schedule", description: "Training, matches & events", icon: CalendarDays, path: "/schedule", group: "core", status: "live", roles: ALL, mobileFor: ["parent", "coach", "player", "org_admin"] },
-  { id: "notifications", title: "Notifications", description: "Updates & requests", icon: Bell, path: "/notifications", group: "core", status: "live", roles: ALL },
-  { id: "settings", title: "Settings", description: "Account, roles & privacy", icon: Settings, path: "/settings", group: "core", status: "live", roles: ALL },
+  { id: "notifications", title: "Notifications", description: "Updates & requests", icon: Bell, path: "/notifications", group: "core", status: "live", roles: [...ALL, "association"] },
+  { id: "settings", title: "Settings", description: "Account, roles & privacy", icon: Settings, path: "/settings", group: "core", status: "live", roles: [...ALL, "association"] },
 
   // ---- Future modules (architecture prepared, UI placeholder only) ----
   { id: "training", title: "Training", description: "Session plans & drills", icon: Dumbbell, path: "/modules/training", group: "future", status: "soon", roles: ["coach", "org_admin"] },
@@ -47,8 +48,8 @@ export const MODULES: AppModule[] = [
   { id: "development", title: "Player Development", description: "Skills, goals & progress", icon: TrendingUp, path: "/modules/development", group: "future", status: "soon", roles: ["coach", "parent", "player", "org_admin"] },
   { id: "finance", title: "Finance & Payments", description: "Fees, invoices & payouts", icon: Wallet, path: "/modules/finance", group: "future", status: "soon", roles: ["org_admin", "parent"] },
   { id: "coach", title: "Coach Platform", description: "Licences & coaching career", icon: Megaphone, path: "/modules/coach", group: "future", status: "soon", roles: ["coach"] },
-  { id: "referee", title: "Referee Platform", description: "Assignments & match reports", icon: Flag, path: "/modules/referee", group: "future", status: "soon", roles: ["competition_organizer"] },
-  { id: "scouting", title: "Scouting", description: "Consent-based talent discovery", icon: Telescope, path: "/modules/scouting", group: "future", status: "soon", roles: ["org_admin", "parent"] },
+  { id: "referee", title: "Referee Platform", description: "Assignments & match reports", icon: Flag, path: "/modules/referee", group: "future", status: "soon", roles: ["referee", "competition_organizer"] },
+  { id: "scouting", title: "Scouting", description: "Consent-based talent discovery", icon: Telescope, path: "/modules/scouting", group: "future", status: "soon", roles: ["scout", "org_admin", "parent"] },
   { id: "opportunities", title: "Opportunities", description: "Trials, camps & scholarships", icon: Sparkles, path: "/modules/opportunities", group: "future", status: "soon", roles: ["player", "parent"] },
   { id: "analytics", title: "Analytics", description: "Insights across your data", icon: BarChart3, path: "/modules/analytics", group: "future", status: "soon", roles: ["org_admin", "competition_organizer"] },
   { id: "association", title: "Association", description: "Regional governance", icon: Landmark, path: "/modules/association", group: "future", status: "soon", roles: ["org_admin", "competition_organizer"] },

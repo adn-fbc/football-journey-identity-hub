@@ -20,9 +20,10 @@ const hide = { sm: "hidden sm:table-cell", md: "hidden md:table-cell", lg: "hidd
  * On mobile, pass `mobileRow` to render a list instead of a table.
  */
 export function DataTable<T>({
-  rows, columns, getRowId, onRowClick, pageSize = 8, mobileRow, empty, className,
+  rows, columns, getRowId, getRowLabel, onRowClick, pageSize = 8, mobileRow, empty, className,
 }: {
   rows: T[]; columns: Column<T>[]; getRowId: (r: T) => string; onRowClick?: (r: T) => void; pageSize?: number | undefined;
+  getRowLabel?: ((r: T) => string) | undefined;
   mobileRow?: (r: T) => ReactNode; empty?: ReactNode | undefined; className?: string | undefined;
 }) {
   const [page, setPage] = useState(0);
@@ -61,7 +62,19 @@ export function DataTable<T>({
               <tr
                 key={getRowId(r)}
                 onClick={() => onRowClick?.(r)}
-                className={cn("transition-colors", onRowClick && "cursor-pointer hover:bg-muted/40")}
+                onKeyDown={(event) => {
+                  if (event.target !== event.currentTarget) return;
+                  if (event.key !== "Enter" && event.key !== " ") return;
+                  event.preventDefault();
+                  onRowClick?.(r);
+                }}
+                tabIndex={onRowClick ? 0 : undefined}
+                aria-label={onRowClick ? `Open ${getRowLabel?.(r) ?? getRowId(r)}` : undefined}
+                className={cn(
+                  "transition-colors",
+                  onRowClick &&
+                    "cursor-pointer hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
+                )}
               >
                 {columns.map((c) => (
                   <td key={c.key} className={cn("px-4 py-3 align-middle", c.hideBelow && hide[c.hideBelow], c.className)}>

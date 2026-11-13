@@ -4,6 +4,11 @@ import { useEffect, useState } from "react";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { modulesForRole } from "@/config/modules";
 import { listCompetitions, listOrganizations, listPlayers, listTeams } from "@/data/repository";
+import {
+  getCoachAccessibleCompetitions,
+  getCoachAssignedPlayers,
+  getCoachAssignedTeams,
+} from "@/lib/coach-access";
 import { useRole } from "@/lib/role-context";
 import { PersonAvatar } from "@/components/ds/avatars";
 import { TeamCrest, OrgCrest } from "@/components/ds/team-crest";
@@ -12,6 +17,10 @@ export function GlobalSearch() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const { role } = useRole();
+  const searchPlayers = role === "coach" ? getCoachAssignedPlayers() : listPlayers();
+  const searchTeams = role === "coach" ? getCoachAssignedTeams() : listTeams();
+  const searchCompetitions =
+    role === "coach" ? getCoachAccessibleCompetitions() : listCompetitions();
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -45,7 +54,7 @@ export function GlobalSearch() {
         <CommandList>
           <CommandEmpty>No results. Try a Football ID or player name.</CommandEmpty>
           <CommandGroup heading="Players">
-            {listPlayers().slice(0, 8).map((p) => (
+            {searchPlayers.slice(0, 8).map((p) => (
               <CommandItem key={p.id} value={`${p.name} ${p.footballId}`} onSelect={() => go(() => navigate({ to: "/players/$playerId", params: { playerId: p.id } }))}>
                 <PersonAvatar name={p.name} src={p.photo} size="xs" />
                 <span className="flex-1">{p.name}</span>
@@ -54,21 +63,23 @@ export function GlobalSearch() {
             ))}
           </CommandGroup>
           <CommandGroup heading="Teams">
-            {listTeams().slice(0, 6).map((t) => (
+            {searchTeams.slice(0, 6).map((t) => (
               <CommandItem key={t.id} value={`team ${t.name}`} onSelect={() => go(() => navigate({ to: "/teams/$teamId", params: { teamId: t.id } }))}>
                 <TeamCrest teamId={t.id} size="xs" /> {t.name}
               </CommandItem>
             ))}
           </CommandGroup>
-          <CommandGroup heading="Organizations">
-            {listOrganizations().map((o) => (
-              <CommandItem key={o.id} value={`org ${o.name}`} onSelect={() => go(() => navigate({ to: "/organizations/$orgId", params: { orgId: o.id } }))}>
-                <OrgCrest orgId={o.id} size="xs" /> {o.name}
-              </CommandItem>
-            ))}
-          </CommandGroup>
+          {role !== "coach" && (
+            <CommandGroup heading="Organizations">
+              {listOrganizations().map((o) => (
+                <CommandItem key={o.id} value={`org ${o.name}`} onSelect={() => go(() => navigate({ to: "/organizations/$orgId", params: { orgId: o.id } }))}>
+                  <OrgCrest orgId={o.id} size="xs" /> {o.name}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
           <CommandGroup heading="Competitions">
-            {listCompetitions().map((c) => (
+            {searchCompetitions.map((c) => (
               <CommandItem key={c.id} value={`competition ${c.name}`} onSelect={() => go(() => navigate({ to: "/competitions/$competitionId", params: { competitionId: c.id } }))}>
                 {c.name}
               </CommandItem>

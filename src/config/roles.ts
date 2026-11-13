@@ -2,7 +2,7 @@
  * Role model. One person = one account = one Football ID, with many roles.
  * Add a role here, then reference it from module `roles` in ./modules.ts.
  */
-export type RoleId = "player" | "parent" | "coach" | "org_admin" | "competition_organizer";
+export type RoleId = "player" | "parent" | "coach" | "org_admin" | "competition_organizer" | "referee" | "scout" | "association";
 
 export interface RoleDefinition {
   id: RoleId;
@@ -10,6 +10,7 @@ export interface RoleDefinition {
   /** Context the role applies to, shown under the role name in the switcher. */
   context: string;
   short: string;
+  identitySelectable?: boolean | undefined;
 }
 
 export const ROLES: RoleDefinition[] = [
@@ -18,6 +19,9 @@ export const ROLES: RoleDefinition[] = [
   { id: "coach", label: "Coach", short: "Coach", context: "Garuda U8" },
   { id: "competition_organizer", label: "Competition Organizer", short: "Organizer", context: "Makassar Youth Cup 2027" },
   { id: "player", label: "Player", short: "Player", context: "Preview as Rizky" },
+  { id: "referee", label: "Referee", short: "Referee", context: "Future professional workspace" },
+  { id: "scout", label: "Scout", short: "Scout", context: "Future professional workspace" },
+  { id: "association", label: "Association", short: "Association", context: "South Sulawesi · Provincial", identitySelectable: false },
 ];
 
 export const DEFAULT_ROLE: RoleId = "org_admin";

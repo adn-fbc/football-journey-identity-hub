@@ -6,6 +6,7 @@ import {
   useRouter,
   HeadContent,
   Scripts,
+  useRouterState,
   type ErrorComponentProps,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
@@ -128,16 +129,25 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const isPublicCompetition = useRouterState({
+    select: (state) => state.location.pathname.startsWith("/public/competitions/"),
+  });
 
   return (
     <QueryClientProvider client={queryClient}>
       <RoleProvider>
         <NotificationProvider>
-          <AppShell>
-            {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+          {isPublicCompetition ? (
             <Outlet />
-          </AppShell>
-          <Toaster position="top-center" />
+          ) : (
+            <>
+              <AppShell>
+                {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+                <Outlet />
+              </AppShell>
+              <Toaster position="top-center" />
+            </>
+          )}
         </NotificationProvider>
       </RoleProvider>
     </QueryClientProvider>

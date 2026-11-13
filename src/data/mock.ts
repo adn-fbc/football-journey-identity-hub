@@ -5,8 +5,8 @@
 import rizkyPhoto from "@/assets/player-rizky.jpg";
 import aisyahPhoto from "@/assets/player-aisyah.jpg";
 import type {
-  Achievement, Competition, Guardian, JourneyEvent, Match, Membership, Notification, Organization,
-  Player, PlayerDocument, ScheduleItem, Team,
+  Achievement, ChildPayment, ChildRegistration, Competition, Guardian, JourneyEvent, Match, Membership,
+  Notification, Organization, Player, PlayerDocument, ScheduleItem, Team,
 } from "./types";
 
 export const MOCK_TODAY = "2027-02-14";
@@ -82,10 +82,21 @@ export const players: Player[] = [
   p(145, "Naila Ramadhani", 2018, "DF", "Defender", "Right", "garuda-putri-u9", 4, "active", "verified", "2026-01-18", { matches: 8, goals: 0, assists: 1, minutes: 300 }, 92, { gender: "F" }),
   p(146, "Bagas Setiawan", 2016, "MF", "Midfielder", "Right", "garuda-u10", 14, "pending", "pending", undefined, { matches: 0, goals: 0, assists: 0, minutes: 0 }, 0),
   p(147, "Fikri Anugrah", 2014, "GK", "Goalkeeper", "Right", "garuda-u12", 1, "active", "verified", "2022-07-02", { matches: 29, goals: 0, assists: 0, minutes: 1700 }, 96),
+  p(148, "Satria Ramadhan", 2016, "MF", "Midfielder", "Right", undefined, undefined, "active", "verified", "2026-09-11", { matches: 6, goals: 1, assists: 2, minutes: 240 }, 88, { orgId: "garuda" }),
 ];
 
 export const guardians: Guardian[] = [
   { id: "g-1", name: "Andi Pratama", footballId: CURRENT_USER.footballId, relation: "Father", childIds: ["p-123", "p-125"] },
+];
+
+export const childRegistrations: ChildRegistration[] = [
+  { id: "cr-1", childId: "p-123", title: "Makassar Youth Cup 2027 · U10", organization: "SSB Garuda Makassar", submittedAt: "2026-12-10", status: "confirmed" },
+  { id: "cr-2", childId: "p-125", title: "Festival Putri Sulsel 2027 · U9", organization: "SSB Garuda Makassar", submittedAt: "2027-02-10", status: "pending" },
+];
+
+export const childPayments: ChildPayment[] = [
+  { id: "cp-1", childId: "p-123", title: "Tournament registration · MYC 2027", amount: 250000, dueDate: "2027-01-20", status: "paid", paidAt: "2027-01-15" },
+  { id: "cp-2", childId: "p-125", title: "Training contribution · February", amount: 150000, dueDate: "2027-02-20", status: "due" },
 ];
 
 export const journeys: Record<string, JourneyEvent[]> = {
@@ -141,7 +152,7 @@ const cat = (id: string, label: string, birthYear: string, format: string, group
 export const competitions: Competition[] = [
   {
     id: "myc-2027", name: "Makassar Youth Cup 2027", short: "MYC 27", organizer: "Askot PSSI Makassar (fictional)", city: "Makassar",
-    status: "active", start: "2027-01-24", end: "2027-03-28", format: "Group stage + knockout", registrationDeadline: "2026-12-15",
+    status: "active", publicVisibility: "public", start: "2027-01-24", end: "2027-03-28", format: "Group stage + knockout", registrationDeadline: "2026-12-15",
     venues: ["Lapangan Hasanuddin", "Stadion Mini Tamalanrea", "Lapangan Pantai Losari"],
     description: "The city's largest grassroots tournament, bringing together SSBs and academies across South Sulawesi.",
     categories: [
@@ -155,7 +166,7 @@ export const competitions: Competition[] = [
   },
   {
     id: "liga-anak-2027", name: "Liga Anak Sulsel 2027", short: "LAS 27", organizer: "Liga Anak Sulsel (fictional)", city: "Makassar",
-    status: "pending", start: "2027-04-10", end: "2027-07-31", format: "Round robin league", registrationDeadline: "2027-03-01",
+    status: "pending", publicVisibility: "public", start: "2027-04-10", end: "2027-07-31", format: "Round robin league", registrationDeadline: "2027-03-01",
     venues: ["Multiple home venues"], description: "Season-long league for U10 and U12 teams. Registration currently open.",
     categories: [
       cat("u10", "U10", "2016–2017", "8v8 · 2×25 min", [{ name: "League", teamIds: ["garuda-u10", "phinisi-u10", "toraja-u10"] }]),
@@ -164,19 +175,19 @@ export const competitions: Competition[] = [
   },
   {
     id: "gowa-cup-2027", name: "Gowa Junior Cup 2027", short: "GJC 27", organizer: "Gowa Football Academy", city: "Sungguminasa",
-    status: "draft", start: "2027-05-15", end: "2027-05-23", format: "Festival", venues: ["Lapangan Syekh Yusuf"],
+    status: "draft", publicVisibility: "private", start: "2027-05-15", end: "2027-05-23", format: "Festival", venues: ["Lapangan Syekh Yusuf"],
     description: "Draft competition — categories and teams not yet published.",
     categories: [cat("u10", "U10", "2016–2017", "8v8", [{ name: "TBD", teamIds: [] }])],
   },
   {
     id: "festival-2026", name: "Festival Sepak Bola Usia Dini 2026", short: "FUD 26", organizer: "Dispora Makassar (fictional)", city: "Makassar",
-    status: "completed", start: "2026-10-03", end: "2026-10-11", format: "Festival · no standings", venues: ["Lapangan Karebosi"],
+    status: "completed", publicVisibility: "public", start: "2026-10-03", end: "2026-10-11", format: "Festival · no standings", venues: ["Lapangan Karebosi"],
     description: "Non-competitive festival celebrating early-age football.",
     categories: [cat("u8", "U8", "2018–2019", "5v5", [{ name: "Festival", teamIds: ["garuda-u8", "losari-u8", "garuda-u8b"] }])],
   },
   {
     id: "maros-open-2026", name: "Maros Open Youth 2026", short: "MOY 26", organizer: "SSB Alpha Maros", city: "Maros",
-    status: "cancelled", start: "2026-12-05", end: "2026-12-07", format: "Knockout", venues: ["Lapangan Pallantikang"],
+    status: "cancelled", publicVisibility: "private", start: "2026-12-05", end: "2026-12-07", format: "Knockout", venues: ["Lapangan Pallantikang"],
     description: "Cancelled due to venue flooding. Registered teams were notified.",
     categories: [cat("u10", "U10", "2016–2017", "8v8", [{ name: "Knockout", teamIds: ["alpha-u10", "garuda-u10"] }])],
   },
@@ -261,6 +272,7 @@ export const matches: Match[] = [
 ];
 
 export const schedule: ScheduleItem[] = [
+  { id: "s0", date: MOCK_TODAY, start: "16:00", end: "17:30", type: "training", title: "Ball mastery · close control", teamId: "garuda-u10", venue: "Lapangan Hasanuddin" },
   { id: "s1", date: "2027-02-14", start: "10:30", end: "11:30", type: "match", title: "Garuda U12 vs Toraja Raya U12", teamId: "garuda-u12", venue: "Lapangan Pantai Losari", matchId: "m-105" },
   { id: "s2", date: "2027-02-15", start: "16:00", end: "17:30", type: "training", title: "Technical session · finishing", teamId: "garuda-u10", venue: "Lapangan Hasanuddin" },
   { id: "s3", date: "2027-02-15", start: "16:00", end: "17:00", type: "training", title: "Fun games & coordination", teamId: "garuda-u8", venue: "Lapangan Hasanuddin" },

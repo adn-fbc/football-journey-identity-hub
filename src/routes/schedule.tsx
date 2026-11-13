@@ -1,16 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { History, ScanLine } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Link } from "@tanstack/react-router";
 import { PageHeader } from "@/components/ds/page-header";
 import { FilterChips } from "@/components/ds/filter-bar";
 import { Section } from "@/components/ds/section";
 import { ScheduleRow } from "@/components/ds/schedule-row";
 import { EmptyState } from "@/components/ds/states";
-import { guardians } from "@/data/mock";
-import { getPlayer, getTeam, listSchedule } from "@/data/repository";
+import { ChildSelector } from "@/features/children/child-selector";
+import { getTeam, listCurrentGuardianChildren, getPlayer, listSchedule } from "@/data/repository";
 import type { ScheduleItem } from "@/data/types";
 import { fmtDay, relativeDay } from "@/lib/format";
 import { useRole } from "@/lib/role-context";
 import { pageHead } from "@/lib/seo";
+import { getCoachAssignedTeams } from "@/lib/coach-access";
 
 export const Route = createFileRoute("/schedule")({
   head: () => pageHead("Schedule", "Training sessions, matches and club events in one agenda."),
@@ -22,33 +26,129 @@ type T = "all" | ScheduleItem["type"];
 function SchedulePage() {
   const { role } = useRole();
   const [type, setType] = useState<T>("all");
+  const [selectedChildId, setSelectedChildId] = useState("");
+  const children = role === "parent" ? listCurrentGuardianChildren() : [];
+  const selectedChild = children.find((child) => child.id === selectedChildId) ?? children[0];
+  const coachTeamIds =
+    role === "coach" ? getCoachAssignedTeams().map((team) => team.id) : undefined;
   const teamIds =
-    role === "parent" ? (guardians[0]?.childIds ?? []).map((id) => getPlayer(id)?.teamId).filter(Boolean) as string[]
-    : role === "player" ? ["garuda-u10"]
-    : role === "coach" ? ["garuda-u8"]
-    : undefined;
-  const items = listSchedule(teamIds).filter((s) => (!teamIds || !s.teamId || teamIds.includes(s.teamId)) && (type === "all" || s.type === type));
-  const days = Object.entries(items.reduce<Record<string, ScheduleItem[]>>((acc, s) => ((acc[s.date] ??= []).push(s), acc), {}));
+    role === "parent"
+      ? selectedChild?.teamId
+        ? [selectedChild.teamId]
+        : []
+      : role === "player"
+        ? [getPlayer("p-123")?.teamId].filter((teamId): teamId is string => Boolean(teamId))
+        : role === "coach"
+          ? coachTeamIds
+          : undefined;
+  const items = (role === "parent" && !selectedChild ? [] : listSchedule(teamIds)).filter(
+    (item) => {
+      const matchesScope =
+        role === "coach"
+          ? item.teamId !== undefined && coachTeamIds?.includes(item.teamId)
+          : !teamIds || !item.teamId || teamIds.includes(item.teamId);
+      return matchesScope && (type === "all" || item.type === type);
+    },
+  );
+  const days = Object.entries(
+    items.reduce<Record<string, ScheduleItem[]>>(
+      (acc, s) => ((acc[s.date] ??= []).push(s), acc),
+      {},
+    ),
+  );
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Schedule"
-        description={teamIds ? `Showing ${teamIds.map((t) => getTeam(t)?.name).join(" & ")} and club events.` : "All activities across SSB Garuda Makassar."}
+        description={
+          role === "coach"
+            ? teamIds?.length
+              ? `Showing assigned teams: ${teamIds.map((teamId) => getTeam(teamId)?.name).join(" & ")}.`
+              : "No teams are assigned to your Coach role yet."
+            : role === "parent"
+              ? selectedChild
+                ? `Showing ${selectedChild.nickname ?? selectedChild.name}${selectedChild.teamId ? ` · ${getTeam(selectedChild.teamId)?.name}` : ""}.`
+                : "Linked children will appear here once connected to your Football ID."
+              : teamIds
+                ? `Showing ${teamIds.map((t) => getTeam(t)?.name).join(" & ")} and club events.`
+                : "All activities across SSB Garuda Makassar."
+        }
+        actions={
+          ["player", "coach", "parent"].includes(role) ? (
+            <Button asChild variant="outline">
+              <Link to="/check-in" search={{ view: "history" }}>
+                <History /> Check-in history
+              </Link>
+            </Button>
+          ) : undefined
+        }
       />
-      <FilterChips value={type} onChange={setType} options={[
-        { value: "all", label: "All" }, { value: "training", label: "Training" }, { value: "match", label: "Matches" },
-        { value: "event", label: "Events" }, { value: "meeting", label: "Meetings" },
-      ]} />
-      {days.length ? (
-        <div className="space-y-4">
-          {days.map(([date, list]) => (
-            <Section key={date} title={relativeDay(date) === fmtDay(date) ? fmtDay(date) : `${relativeDay(date)} · ${fmtDay(date)}`} flush>
-              <div className="divide-y">{list.map((s) => <ScheduleRow key={s.id} item={s} showDate={false} />)}</div>
-            </Section>
-          ))}
-        </div>
-      ) : <EmptyState title="Nothing scheduled" description="No activities match this filter." />}
+      {role === "parent" && !selectedChild ? (
+        <EmptyState
+          title="No children linked"
+          description="Add or link a child to see their schedule here."
+        />
+      ) : (
+        <>
+          {role === "parent" && selectedChild && (
+            <ChildSelector
+              children={children}
+              value={selectedChild.id}
+              onChange={setSelectedChildId}
+            />
+          )}
+          <FilterChips
+            value={type}
+            onChange={setType}
+            options={[
+              { value: "all", label: "All" },
+              { value: "training", label: "Training" },
+              { value: "match", label: "Matches" },
+              { value: "event", label: "Events" },
+              { value: "meeting", label: "Meetings" },
+            ]}
+          />
+          {days.length ? (
+            <div className="space-y-4">
+              {days.map(([date, list]) => (
+                <Section
+                  key={date}
+                  title={
+                    relativeDay(date) === fmtDay(date)
+                      ? fmtDay(date)
+                      : `${relativeDay(date)} · ${fmtDay(date)}`
+                  }
+                  flush
+                >
+                  <div className="divide-y">
+                    {list.map((s) => (
+                      <div key={s.id} className="flex items-center gap-2 pr-3">
+                        <div className="min-w-0 flex-1">
+                          <ScheduleRow item={s} showDate={false} />
+                        </div>
+                        {["player", "coach"].includes(role) && s.teamId && (
+                          <Button asChild size="sm" variant="ghost" className="shrink-0">
+                            <Link
+                              to="/check-in"
+                              search={{ activityId: s.matchId ?? s.id }}
+                              aria-label={`Check in to ${s.title}`}
+                            >
+                              <ScanLine /> <span className="hidden sm:inline">Check in</span>
+                            </Link>
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </Section>
+              ))}
+            </div>
+          ) : (
+            <EmptyState title="Nothing scheduled" description="No activities match this filter." />
+          )}
+        </>
+      )}
     </div>
   );
 }
