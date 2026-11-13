@@ -86,7 +86,7 @@ export function GlobalSearch() {
             ))}
           </CommandGroup>
           <CommandGroup heading="Go to">
-            {modulesForRole(role).filter((m) => m.status === "live").map((m) => (
+            {modulesForRole(role).filter((m) => m.status !== "soon").map((m) => (
               <CommandItem key={m.id} value={`page ${m.title}`} onSelect={() => go(() => navigate({ to: m.path }))}>
                 <m.icon /> {m.title}
               </CommandItem>

@@ -46,7 +46,10 @@ export function ModuleRoadmapPage() {
                   >
                     <div className="flex items-center justify-between">
                       <span className="grid size-10 place-items-center rounded-xl bg-ink text-signal"><mod.icon className="size-5" /></span>
-                      {forYou && <span className="rounded-full bg-primary/10 px-2 py-0.5 text-label text-primary">For your role</span>}
+                      <div className="flex gap-1.5">
+                        {mod.status === "preview" && <span className="rounded-full bg-ink px-2 py-0.5 text-label text-signal">Prototype</span>}
+                        {forYou && <span className="rounded-full bg-primary/10 px-2 py-0.5 text-label text-primary">For your role</span>}
+                      </div>
                     </div>
                     <div>
                       <h3 className="text-h3">{mod.title}</h3>

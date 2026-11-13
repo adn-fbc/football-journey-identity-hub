@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { MODULES } from "./modules";
 import { MODULE_BLUEPRINTS, getBlueprint } from "./module-blueprints";
 
-const soon = MODULES.filter((m) => m.status === "soon");
+const soon = MODULES.filter((m) => m.status !== "live");
 
 describe("future module blueprints", () => {
   it("has a blueprint for every coming-soon module", () => {

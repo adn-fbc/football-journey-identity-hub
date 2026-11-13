@@ -23,8 +23,10 @@ function NavItem({ m, collapsed, active }: { m: AppModule; collapsed: boolean; a
       {active && <span className="absolute -left-3 top-1.5 bottom-1.5 w-[3px] rounded-r-full bg-sidebar-primary" />}
       <m.icon className={cn("size-[18px] shrink-0", active && "text-sidebar-primary")} />
       {!collapsed && <span className="truncate">{m.title}</span>}
-      {!collapsed && m.status === "soon" && (
-        <span className="ml-auto rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-sidebar-foreground/50 ring-1 ring-sidebar-border">Soon</span>
+      {!collapsed && m.status !== "live" && (
+        <span className={cn("ml-auto rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ring-1", m.status === "preview" ? "text-sidebar-primary ring-sidebar-primary/40" : "text-sidebar-foreground/50 ring-sidebar-border")}>
+          {m.status === "preview" ? "Preview" : "Soon"}
+        </span>
       )}
     </Link>
   );

@@ -20,11 +20,15 @@ export function ModuleBlueprintPage({ module: mod, blueprint }: { module: AppMod
     <div className="space-y-6">
       <PageHeader
         crumbs={[{ label: "Roadmap", to: "/modules" }, { label: mod.title }]}
-        eyebrow={`Coming soon · ${wave.label} — ${wave.title}`}
+        eyebrow={`${mod.status === "preview" ? "Prototype available" : "Coming soon"} · ${wave.label} — ${wave.title}`}
         title={mod.title}
         description={blueprint.summary}
         actions={
-          <Button onClick={() => toast.success("We'll let you know", { description: `${mod.title} early access` })}>
+          mod.status === "preview" ? (
+            <Button asChild>
+              <Link to={mod.path}>Open prototype <ArrowRight /></Link>
+            </Button>
+          ) : <Button onClick={() => toast.success("We'll let you know", { description: `${mod.title} early access` })}>
             <BellRing /> Notify me
           </Button>
         }
