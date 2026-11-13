@@ -66,7 +66,7 @@ const lifecycleLabel = (status: Status) => {
   }
 };
 
-function getOversightStatus(competition: Competition) {
+function getOversightStatus(competition: Competition): keyof typeof GOVERNANCE_LABELS {
   if (competition.status === "draft" || competition.name.toLowerCase().includes("gowa")) {
     return "attention";
   }
@@ -230,9 +230,9 @@ export function CompetitionOversight({
             <SearchInput value={query} onChange={setQuery} placeholder="Search competition or organizer" className="w-full lg:max-w-md" />
           </FilterBar>
           <div className="grid gap-2 sm:grid-cols-3 lg:w-auto">
-            <FilterSelect value={statusFilter} onChange={setStatusFilter} options={lifecycleOptions as any} placeholder="Status" className="sm:w-36" />
-            <FilterSelect value={typeFilter} onChange={setTypeFilter} options={typeOptions as any} placeholder="Type" className="sm:w-36" />
-            <FilterSelect value={locationFilter} onChange={setLocationFilter} options={locationOptions as any} placeholder="Location" className="sm:w-36" />
+            <FilterSelect value={statusFilter} onChange={(v) => setStatusFilter(v as typeof statusFilter)} options={lifecycleOptions as any} placeholder="Status" className="sm:w-36" />
+            <FilterSelect value={typeFilter} onChange={(v) => setTypeFilter(v as typeof typeFilter)} options={typeOptions as any} placeholder="Type" className="sm:w-36" />
+            <FilterSelect value={locationFilter} onChange={(v) => setLocationFilter(v as typeof locationFilter)} options={locationOptions as any} placeholder="Location" className="sm:w-36" />
           </div>
         </div>
 

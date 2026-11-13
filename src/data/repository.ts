@@ -461,7 +461,7 @@ export const listNotifications = (role: string) => notifications.filter((n) => n
 
 export function listPlayerJourney(
   playerId: string,
-  options: { from?: string | undefined; to?: string | undefined; sourceDomain?: JourneyEvent["provenance"]["sourceDomain"] | undefined } = {},
+  options: { from?: string | undefined; to?: string | undefined; sourceDomain?: JourneySourceDomain | undefined } = {},
 ): JourneyEvent[] {
   if (!getPlayer(playerId)) return [];
   return [...(journeys[playerId] ?? []), ...(journeyUpdates.get(playerId) ?? [])]
@@ -496,7 +496,7 @@ export interface PlayerAccessProjection {
 
 export type PlayerAccessResult =
   | { ok: true; access: PlayerAccessProjection }
-  | { ok: false; reason: "player_not_found" | "forbidden" | "scope_unavailable" | GuardianAccessDecision["reason"] };
+  | { ok: false; reason: "player_not_found" | "forbidden" | "scope_unavailable" | Extract<GuardianAccessDecision, { allowed: false }>["reason"] };
 
 function normalizedActorName(name: string) {
   return name.trim().replace(/^coach\s+/i, "").toLowerCase();
@@ -598,7 +598,7 @@ export function getPlayerAccessForActor(playerId: string, actor: WorkspaceActor)
     const assignedTeamIds = assignedTeamIdsForCurrentCoach();
     const activeTeamAffiliation = allPlayerAffiliations(playerId).find((affiliation) =>
       affiliation.kind === "team" && affiliation.status === "active" &&
-      affiliation.teamId === player?.teamId && Boolean(player.teamId && assignedTeamIds.has(player.teamId)),
+      Boolean(player?.teamId && affiliation.teamId === player.teamId && assignedTeamIds.has(player.teamId)),
     );
     if (!activeTeamAffiliation?.teamId) return { ok: false, reason: "forbidden" };
     scope = { kind: "team", teamId: activeTeamAffiliation.teamId };
