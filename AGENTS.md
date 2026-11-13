@@ -28,3 +28,8 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Project rules
+
+- Future ("Coming soon") module scope lives only in `src/config/module-blueprints.ts`; `/modules` pages render it and `future-modules-baseline.md` is generated from it via `bun scripts/generate-module-baseline.ts` — never hand-edit the markdown, so app and document cannot drift.
+- Navigation reads from the module registry in `src/config/modules.ts`; shipping a module means flipping its `status` to "live" and pointing `path` at the new route, so the shell never needs redesign.

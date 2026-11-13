@@ -11,3 +11,8 @@
 - [ ] Review app, preserve design system + shell, don't redesign unrelated pages
 - [ ] Improve Football ID: information hierarchy, player identity, Football Journey Timeline
 - [ ] Improve Player Profile: hierarchy, identity header, journey, reusable components
+
+## Future modules baseline
+- [x] Blueprint for all 12 upcoming modules (scope, roles, data, privacy, dependencies, waves)
+- [x] In-app roadmap at /modules and per-module pages (verified in browser)
+- [x] Project baseline document future-modules-baseline.md, generated from the blueprint config
