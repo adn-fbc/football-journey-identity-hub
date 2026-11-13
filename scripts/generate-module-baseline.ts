@@ -16,14 +16,17 @@ const checks = (items: string[]) => items.map((i) => `- [ ] ${i}`).join("\n");
 
 /** Steps every module needs before it can go live, in build order. */
 const standardChecklist = (b: (typeof MODULE_BLUEPRINTS)[number]) => {
-  const path = getModule(b.id)?.path ?? `/${b.id}`;
+  const mod = getModule(b.id);
+  const routeStep = mod?.status === "preview"
+    ? `Promote the prototype route \`${mod.path}\` from sample data to the real data layer, keeping its \`head()\``
+    : `Create the route files that replace the \`/modules/${b.id}\` blueprint page, each with its own \`head()\``;
   return [
     `Confirm every module in "Depends on" is live${b.dependsOn.length ? ` (${b.dependsOn.map(title).join(", ")})` : " (none for this module)"}`,
     `Add types for ${b.entities.map((e) => `\`${e.name}\``).join(", ")} to \`src/data/types.ts\``,
     "Add realistic fictional mock data to `src/data/mock.ts` and expose it only through `src/data/repository.ts`",
     `Write access rules in \`src/lib/${b.id}-access.ts\` with tests, covering every Privacy & consent rule`,
     `Build the UI in \`src/features/${b.id}/\` from \`src/components/ds\` and the existing status system; mobile-first for players and guardians`,
-    `Create the route files that replace the \`${path}\` blueprint page, each with its own \`head()\``,
+    routeStep,
     b.journeyEvents.length ? "Publish the Football Journey events listed above to the player timeline" : "Confirm the module writes nothing to the Football Journey timeline",
     "Add loading, empty and error states for every new screen",
     "Turn each acceptance criterion above into at least one test and make them pass (`bunx vitest run`)",
@@ -39,7 +42,7 @@ const copilotPrompt = (b: (typeof MODULE_BLUEPRINTS)[number]) => {
     ? b.dependsOn.map((d) => `- ${title(d)} (\`${d}\`): must already be live. If its status in src/config/modules.ts is still "soon", stop and tell me instead of building it.`).join("\n")
     : "- None. This module can be built on the current live platform.";
   return `You are working in the Youth Football Ecosystem Platform (TanStack Start, React 19, Tailwind CSS v4, TypeScript).
-Build the first release of the "${name}" module (id \`${b.id}\`, currently a blueprint page at \`${m?.path ?? "/modules/" + b.id}\`).
+Build the first release of the "${name}" module (id \`${b.id}\`, ${m?.status === "preview" ? `an interactive prototype on sample data at \`${m.path}\`; extend it instead of starting over` : `currently a blueprint page at \`/modules/${b.id}\``}).
 
 ## Context
 ${b.summary}
