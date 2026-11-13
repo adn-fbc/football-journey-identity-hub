@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ds/page-header";
 import { Section } from "@/components/ds/section";
 import { StatusBadge } from "@/components/ds/status-badge";
-import { Avatar } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { EmptyState, ErrorState, LoadingState, PermissionState } from "@/components/ds/states";
 import { useRole } from "@/lib/role-context";
 
@@ -114,7 +114,7 @@ export function MemberDetail({
       <div className="surface rounded-xl p-5 md:p-6">
         <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">
-            <Avatar className="size-16" fallback="MR" />
+            <Avatar className="size-16"><AvatarFallback>MR</AvatarFallback></Avatar>
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-h1">{mockMember.name}</h1>

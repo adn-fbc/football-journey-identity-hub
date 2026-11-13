@@ -9,7 +9,7 @@ import {
 } from "./mock";
 import type {
   GuardianConsentGrant, GuardianDataCategory, JourneyEvent, Match, Membership, Player, PlayerAffiliation,
-  PlayerIdentity, PrimaryPlayerContext,
+  JourneySourceDomain, PlayerIdentity, PrimaryPlayerContext,
 } from "./types";
 import type { RoleId } from "@/config/roles";
 import { ageCategoryFor } from "@/lib/format";
