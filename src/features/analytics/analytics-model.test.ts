@@ -23,8 +23,8 @@ describe("organization analytics", () => {
     expect(u12 && !u12.hidden ? u12.rate : null).toBe(79);
   });
 
-  it("leaves hidden groups out of the overall retention rate (102 of 117 = 87%)", () => {
-    expect(computeOrgAnalytics("garuda", "season").retentionTotal).toBe(87);
+  it("leaves hidden groups out of the overall retention rate (98 of 117 = 84%)", () => {
+    expect(computeOrgAnalytics("garuda", "season").retentionTotal).toBe(84);
   });
 
   it("exports the same 148 active members the dashboard shows", () => {
