@@ -18,3 +18,10 @@
 - [x] Project baseline document future-modules-baseline.md, generated from the blueprint config
 - [x] Acceptance criteria and implementation checklist for every module in the baseline document
 - [x] Ready-to-use GitHub Copilot prompt per module in the baseline document
+
+## Wave 3 UI/UX prototypes (preview status, mock data)
+- [ ] Analytics (/analytics)
+- [ ] Association (/association)
+- [ ] Federation (/federation)
+- [ ] AI Assistant (/assistant)
+- [ ] Verify all four in browser (desktop + mobile, role-aware)

@@ -6,11 +6,11 @@ import { getBlueprint } from "@/config/module-blueprints";
 import { ModuleBlueprintPage } from "@/features/modules/module-blueprint-page";
 import { pageHead } from "@/lib/seo";
 
-/** Blueprint page for every future module registered in config/modules.ts with status "soon". */
+/** Blueprint page for every future module registered in config/modules.ts with status "soon" or "preview". */
 export const Route = createFileRoute("/modules/$moduleId")({
   loader: ({ params }) => {
     const mod = getModule(params.moduleId);
-    if (!mod || mod.status !== "soon" || !getBlueprint(mod.id)) throw notFound();
+    if (!mod || mod.status === "live" || !getBlueprint(mod.id)) throw notFound();
     return { id: mod.id };
   },
   head: ({ loaderData }) => {

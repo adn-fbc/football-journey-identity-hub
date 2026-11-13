@@ -32,4 +32,5 @@ use the editor.
 ## Project rules
 
 - Future ("Coming soon") module scope lives only in `src/config/module-blueprints.ts`; `/modules` pages render it and `future-modules-baseline.md` is generated from it via `bun scripts/generate-module-baseline.ts` — never hand-edit the markdown, so app and document cannot drift.
-- Navigation reads from the module registry in `src/config/modules.ts`; shipping a module means flipping its `status` to "live" and pointing `path` at the new route, so the shell never needs redesign.
+- Navigation reads from the module registry in `src/config/modules.ts`; a module moves `soon` → `preview` (interactive prototype on mock data, keeps its blueprint, still under "Coming soon") → `live` (blueprint removed), changing only `status` and `path`, so the shell never needs redesign.
+- Preview modules keep their own mock data and access in `src/data/<id>-mock.ts` + `src/data/<id>-repository.ts` and `src/lib/<id>-access.ts`, so parallel module work never collides in the shared mock files.

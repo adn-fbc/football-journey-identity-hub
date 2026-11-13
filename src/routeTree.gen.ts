@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as CheckInRouteImport } from './routes/check-in'
 import { Route as FootballIdRouteImport } from './routes/football-id'
 import { Route as IdentityRouteImport } from './routes/identity'
@@ -42,6 +43,11 @@ import { Route as PublicCompetitionsCompetitionIdRouteImport } from './routes/pu
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AnalyticsRoute = AnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CheckInRoute = CheckInRouteImport.update({
@@ -190,6 +196,7 @@ const PublicCompetitionsCompetitionIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/analytics': typeof AnalyticsRoute
   '/check-in': typeof CheckInRoute
   '/football-id': typeof FootballIdRoute
   '/identity': typeof IdentityRoute
@@ -221,6 +228,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/analytics': typeof AnalyticsRoute
   '/check-in': typeof CheckInRoute
   '/football-id': typeof FootballIdRoute
   '/identity': typeof IdentityRoute
@@ -253,6 +261,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/analytics': typeof AnalyticsRoute
   '/check-in': typeof CheckInRoute
   '/football-id': typeof FootballIdRoute
   '/identity': typeof IdentityRoute
@@ -286,6 +295,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/analytics'
     | '/check-in'
     | '/football-id'
     | '/identity'
@@ -317,6 +327,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/analytics'
     | '/check-in'
     | '/football-id'
     | '/identity'
@@ -348,6 +359,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/analytics'
     | '/check-in'
     | '/football-id'
     | '/identity'
@@ -380,6 +392,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AnalyticsRoute: typeof AnalyticsRoute
   CheckInRoute: typeof CheckInRoute
   FootballIdRoute: typeof FootballIdRoute
   IdentityRoute: typeof IdentityRoute
@@ -414,6 +427,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/analytics': {
+      id: '/analytics'
+      path: '/analytics'
+      fullPath: '/analytics'
+      preLoaderRoute: typeof AnalyticsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/check-in': {
@@ -655,6 +675,7 @@ const MembersReviewRouteWithChildren = MembersReviewRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AnalyticsRoute: AnalyticsRoute,
   CheckInRoute: CheckInRoute,
   FootballIdRoute: FootballIdRoute,
   IdentityRoute: IdentityRoute,

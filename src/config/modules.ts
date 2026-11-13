@@ -1,6 +1,7 @@
 /**
  * Module registry — the single source of truth for navigation.
  * The sidebar, mobile bottom bar, "More" sheet and global search all read from here.
+ * To prototype a future module: set `status` to "preview" and point `path` at its route.
  * To ship a future module: flip `status` to "live", set `path` to its route, and list its roles.
  */
 import {
@@ -10,7 +11,8 @@ import {
 } from "lucide-react";
 import type { RoleId } from "./roles";
 
-export type ModuleStatus = "live" | "soon";
+/** "preview" = interactive prototype with mock data; still listed under Coming soon and keeps its blueprint. */
+export type ModuleStatus = "live" | "preview" | "soon";
 export type ModuleGroup = "core" | "manage" | "personal" | "future";
 
 export interface AppModule {
@@ -51,10 +53,10 @@ export const MODULES: AppModule[] = [
   { id: "referee", title: "Referee Platform", description: "Assignments & match reports", icon: Flag, path: "/modules/referee", group: "future", status: "soon", roles: ["referee", "competition_organizer"] },
   { id: "scouting", title: "Scouting", description: "Consent-based talent discovery", icon: Telescope, path: "/modules/scouting", group: "future", status: "soon", roles: ["scout", "org_admin", "parent"] },
   { id: "opportunities", title: "Opportunities", description: "Trials, camps & scholarships", icon: Sparkles, path: "/modules/opportunities", group: "future", status: "soon", roles: ["player", "parent"] },
-  { id: "analytics", title: "Analytics", description: "Insights across your data", icon: BarChart3, path: "/modules/analytics", group: "future", status: "soon", roles: ["org_admin", "competition_organizer"] },
-  { id: "association", title: "Association", description: "Regional governance", icon: Landmark, path: "/modules/association", group: "future", status: "soon", roles: ["org_admin", "competition_organizer"] },
-  { id: "federation", title: "Federation", description: "National registry & licensing", icon: Globe2, path: "/modules/federation", group: "future", status: "soon", roles: ["competition_organizer"] },
-  { id: "ai", title: "AI Assistant", description: "Ask anything about your football data", icon: Bot, path: "/modules/ai", group: "future", status: "soon", roles: ALL },
+  { id: "analytics", title: "Analytics", description: "Insights across your data", icon: BarChart3, path: "/analytics", group: "future", status: "preview", roles: ["org_admin", "competition_organizer"] },
+  { id: "association", title: "Association", description: "Regional governance", icon: Landmark, path: "/association", group: "future", status: "preview", roles: ["org_admin", "competition_organizer", "association"] },
+  { id: "federation", title: "Federation", description: "National registry & licensing", icon: Globe2, path: "/federation", group: "future", status: "preview", roles: ["competition_organizer"] },
+  { id: "ai", title: "AI Assistant", description: "Ask anything about your football data", icon: Bot, path: "/assistant", group: "future", status: "preview", roles: ALL },
 ];
 
 export const GROUP_LABELS: Record<ModuleGroup, string> = {
