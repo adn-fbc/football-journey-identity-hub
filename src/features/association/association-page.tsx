@@ -352,8 +352,9 @@ function OrganizationView({ registration, onRenew }: { registration: OrgRegistra
 /* --------------------------------------------------------------- Organizer */
 
 function OrganizerView({ requests }: { requests: SanctionRequest[] }) {
-  const [local, setLocal] = useState(requests);
+  const local = requests;
   const sanctioned = useMemo(() => local.filter((r) => r.decision === "approved").length, [local]);
+  const hasPending = local.some((r) => r.decision === "pending");
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -363,7 +364,7 @@ function OrganizerView({ requests }: { requests: SanctionRequest[] }) {
       <Section
         title="Sanctioning requests"
         description={`Approved by ${ASSOCIATION_NAME}. Only association officials can approve.`}
-        action={
+        action={hasPending && (
           <ConfirmDialog
             trigger={<Button size="sm" variant="outline">Send reminder</Button>}
             title="Remind the association?"
@@ -371,7 +372,7 @@ function OrganizerView({ requests }: { requests: SanctionRequest[] }) {
             confirmLabel="Send reminder"
             onConfirm={() => toast.success("Reminder sent", { description: ASSOCIATION_NAME })}
           />
-        }
+        )}
         flush
       >
         <ul className="divide-y">
@@ -381,8 +382,6 @@ function OrganizerView({ requests }: { requests: SanctionRequest[] }) {
       <p className="text-small text-muted-foreground">
         Sanctioned competitions show their status on the competition page, and players' participation is marked verified on their Football Journey.
       </p>
-      {/* setLocal kept for future "new request" flow without changing layout */}
-      <span hidden onClick={() => setLocal((l) => l)} />
     </div>
   );
 }
