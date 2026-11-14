@@ -1,7 +1,7 @@
 import { CalendarClock, CheckCircle2, ClipboardList, FileCheck2, Landmark, ShieldCheck, Timer, XCircle } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { OrgCrest } from "@/components/ds/avatars";
+import { OrgCrest } from "@/components/ds/team-crest";
 import { ConfirmDialog } from "@/components/ds/confirm-dialog";
 import { PageHeader } from "@/components/ds/page-header";
 import { PageTabs, PageTabsContent, PageTabsList, PageTabsTrigger } from "@/components/ds/page-tabs";
